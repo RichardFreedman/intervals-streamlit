@@ -4,11 +4,9 @@ import streamlit.components.v1 as components
 import requests
 import sys, os
 import re
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..', 'intervals'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../', 'intervals'))
 from intervals.main_objs import *
-# the import above assumes that the parent "intervals" directory is two up from this intervals_streamlit.py file
-# i.e.: intervals/streamlit/intervals_streamlit.py
-
+# the import above assumes that the parent "intervals" directory is a sibling of this intervals-streamlit directory
 
 piece_list = []
 raw_prefix = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/"
