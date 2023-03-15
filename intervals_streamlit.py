@@ -1,47 +1,13 @@
 
 import streamlit as st
-from pathlib import Path
-import requests
-from requests.sessions import DEFAULT_REDIRECT_LIMIT
-import base64
-import verovio
-import os
-from streamlit import caching
-import requests
-import re
-
-import intervals
-from intervals import * 
-from intervals import main_objs
-import intervals.visualizations as viz
-import pandas as pd
-import re
-import altair as alt 
-from ipywidgets import interact
-from pandas.io.json import json_normalize
-from pyvis.network import Network
-import glob as glob
-import os
-from IPython.display import SVG
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.figure_factory as ff
-
 import streamlit.components.v1 as components
-
-from os import listdir 
-import os.path 
-
-path = '/Users/rfreedma/Documents/CRIM_Python/CRIM-online/crim/static/mei/MEI_4.0'
-file_list = os.listdir(path) 
-corpus_list = [ ] 
-for file in file_list: 
-    name = path + "/" + file 
-    corpus_list.append(name)
-
-first_piece = file_list[0]
-piece = path + "/" + file 
-
+import requests
+import sys, os
+import re
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..', 'intervals'))
+from intervals.main_objs import *
+# the import above assumes that the parent "intervals" directory is two up from this intervals_streamlit.py file
+# i.e.: intervals/streamlit/intervals_streamlit.py
 
 
 piece_list = []
@@ -50,11 +16,7 @@ URL = "https://api.github.com/repos/CRIM-Project/CRIM-online/git/trees/990f5eb3f
 piece_json = requests.get(URL).json()
 
 pattern = 'CRIM_Mass_([0-9]{4}).mei'
-
-# save
-# https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/CRIM_Mass_0001_1.mei
-
-# and now the request for all the files
+# build a list of all the file names
 for p in piece_json["tree"]:
     p_name = p["path"]
     if re.search(pattern, p_name):
@@ -62,24 +24,16 @@ for p in piece_json["tree"]:
     else:
         piece_list.append(p_name)
 
-
-# piece = piece_list[0]
-
-# fullpath = raw_prefix + "/" + piece
-
-piece = st.selectbox('Select Piece To View', piece_list)
-
 # display name of selected piece
+piece = st.selectbox('Select Piece To View', piece_list)
 st.write('You selected:', piece)
 
 # and create full URL to use in the Verovio html block below
 tune = raw_prefix + "/" + piece
 
 # insert html within Streamlit, using components()
-components.html(
-    
-    """
-    <div class="panel-body">
+components.html("""
+<div class="panel-body">
     <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
 </div>
 
@@ -98,28 +52,21 @@ components.html(
             app.loadData(text);
         });
 </script>
-    """,
-    height=800,
-    width=850,
+""",
+height=800,
+width=850,
 )
 
-
-
 if st.sidebar.button("Find Cadences"):
-
     piece = importScore(tune)
     cadences = piece.cadences()
-    # # col_list = ['Measure', 'Beat', 'CadType', 'Pattern', 'Key', 'Tone','LeadingTones', 'CVFs', 'Low','RelLow','RelTone', 'Sounding', 'Progress','SinceLast','ToNext']
-    # # cadences = cadences[col_list]
-
-    st.write("Detail View of Cadences")
-    cadences
+    st.write("Detailed View of Cadences")
+    st.dataframe(cadences)
 
     grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
     st.write("Summary of Cadences")
-    grouped
+    st.dataframe(grouped)
 
     st.write("Radar Plot of Cadences")
-    radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True)
+    radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
     st.plotly_chart(radar, use_container_width=True)
-    # st.write(radar)
