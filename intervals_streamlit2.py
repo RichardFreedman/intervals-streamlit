@@ -26,19 +26,38 @@ import streamlit.components.v1 as components
 from os import listdir 
 import os.path 
 
-path = '/Users/rfreedma/Documents/CRIM_Python/crim-local/CRIM-online/crim/static/mei/MEI_4.0'
-file_list = os.listdir(path) 
-piece_list = [ ] 
-for file in file_list: 
-    name = path + "/" + file 
-    piece_list.append(file)
-    piece_list = sorted(piece_list)
+# local pieces for dev
+# raw_prefix = '/Users/rfreedma/Documents/CRIM_Python/crim-local/CRIM-online/crim/static/mei/MEI_4.0'
+# file_list = os.listdir(raw_prefix) 
+# piece_list = [ ] 
+# for file in file_list: 
+#     name = raw_prefix + "/" + file 
+#     piece_list.append(file)
+#     piece_list = sorted(piece_list)
+
+# all pieces on git:
+piece_list = []
+raw_prefix = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/"
+URL = "https://api.github.com/repos/CRIM-Project/CRIM-online/git/trees/990f5eb3ff1e9623711514d6609da4076257816c"
+piece_json = requests.get(URL).json()
+# pattern to filter out empty header Mass files
+pattern = 'CRIM_Mass_([0-9]{4}).mei'
+
+# and now the request for all the files
+for p in piece_json["tree"]:
+    p_name = p["path"]
+    if re.search(pattern, p_name):
+        pass
+    else:
+        piece_list.append(p_name)
+        piece_list = sorted(piece_list)
+
 # select a piece
 piece_name = st.selectbox('Select Piece To View', piece_list)
 st.title("CRIM Intervals")
 
 # # and create full URL to use in the Verovio html block below
-filepath = path + "/" + piece_name
+filepath = raw_prefix + "/" + piece_name
 piece = importScore(filepath)
 
 # display file name and metadata
@@ -88,7 +107,7 @@ def notes_bar_chart(piece, combine_unisons_choice, combine_rests_choice):
     voices = nr.columns.to_list()   
     # Stacked bar chart using plotly
     pitch_chart = px.bar(nr, x="pitch", y=voices, title="Distribution of Pitches in " + piece_name)
-    st.plotly_chart(pitch_chart)
+    st.plotly_chart(pitch_chart, use_container_width = True)
 
 # melodic interval bar chart
 def mel_interval_bar_chart(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
@@ -111,7 +130,7 @@ def mel_interval_bar_chart(piece, combine_unisons_choice, combine_rests_choice, 
     voices = mel.columns.to_list()
     # set the figure size, type and colors
     fig = px.bar(mel, x="interval", y=voices, title="Distribution of Melodic Intervals in " + piece_name)
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width = True)
 
 def har_interval_bar_chart(piece, directed, compound, kind_choice):
     har = piece.harmonic(kind = kind_choice, 
@@ -129,7 +148,7 @@ def har_interval_bar_chart(piece, directed, compound, kind_choice):
     voices = har.columns.to_list()
     # # # set the figure size, type and colors
     fig = px.bar(har, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
-    st.plotly_chart(fig)  
+    st.plotly_chart(fig, use_container_width = True)  
 
 def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
     # find entries for model
