@@ -15,7 +15,6 @@ import intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
 from ipywidgets import interact
-from pandas.io.json import json_normalize
 from pyvis.network import Network
 import glob as glob
 from IPython.display import SVG
