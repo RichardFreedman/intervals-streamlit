@@ -191,8 +191,6 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         mel_ngrams = piece.ngrams(interval_settings = (kind_choice, directed, compound), 
                                   n = length_choice)  
         
-        mel_ngrams = piece.detailIndex(mel_ngrams, offset = True)
-        
         ng_heatmap = viz.plot_ngrams_heatmap(mel_ngrams, 
                                          mel_ngrams_duration, 
                                          selected_patterns=[], 
@@ -200,6 +198,8 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          heatmap_width = 1000,
                                          heatmap_height=300, 
                                          includeCount=True)
+        
+        mel_ngrams = piece.detailIndex(mel_ngrams, offset = True)
         
         # display the results
         st.dataframe(mel_ngrams, use_container_width = True)
