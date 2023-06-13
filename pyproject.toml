@@ -11,7 +11,7 @@ license = "creative commons"
 
 [[tool.poetry.source]]
 name = "intervals"
-url = "git+https://github.com/HCDigitalScholarship/intervals.git@rich_dev_22"
+url = "git+https://github.com/HCDigitalScholarship/intervals.git@rich_streamlit_dev"
 priority = "primary"
 
 [tool.poetry.dependencies]
