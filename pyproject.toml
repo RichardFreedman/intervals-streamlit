@@ -6,9 +6,8 @@ requires = ["setuptools", "wheel"]
 name = "crim intervals streamlit"
 version = "0.1.0"
 description = "Streamlit App for the CRIM Intervals Tools"
-authors = [
-    {name = "Richard Freedman", email = "rfreedma@haverford.edu"}
-]
+authors = ["Richard Freedman <rfreedma@haverford.edu>"]
+license = "creative commons"
 
 [tool.poetry.dependencies]
 altair = "4.2.0"
