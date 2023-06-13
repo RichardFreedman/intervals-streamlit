@@ -188,8 +188,8 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         st.altair_chart(ng_heatmap, use_container_width = True)
     # this is for all mel ngrams (iof entries is False in form)
     else:
-        mel_ngrams = piece.ngrams(interval_settings = (kind_choice, directed, compound), 
-                                  n = length_choice)  
+        # mel_ngrams = piece.ngrams(df = mel, interval_settings = (kind_choice, directed, compound), 
+        #                           n = length_choice)  
         
         ng_heatmap = viz.plot_ngrams_heatmap(mel_ngrams, 
                                          mel_ngrams_duration, 
