@@ -157,37 +157,41 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                         directed = directed,
                         compound = compound,
                         end = False)
-    
-    mel_ngrams = piece.ngrams(df = mel, n = length_choice)
 
-    # pass the following ngrams to the plot below as first df
-    entry_ngrams = piece.entries(df = mel, 
-                                 n = length_choice, 
-                                 thematic = True, 
-                                 anywhere = True)
-
-    # pass the ngram durations below to the plot as second df
-    mel_ngrams_duration = piece.durations(df = mel, 
-                                          n =length_choice, 
-                                          mask_df = entry_ngrams)
     # this is for entries only
     if entries_only == True:    
-        ng_heatmap = viz.plot_ngrams_heatmap(entry_ngrams, 
-                                         mel_ngrams_duration, 
+        # pass the following ngrams to the plot below as first df
+        entry_ngrams = piece.entries(df = mel, 
+                                    n = length_choice, 
+                                    thematic = True, 
+                                    anywhere = True)
+
+        # pass the ngram durations below to the plot as second df
+        entry_ngrams_duration = piece.durations(df = mel, 
+                                            n =length_choice, 
+                                            mask_df = entry_ngrams)
+        # make the heatmap
+        entry_ng_heatmap = viz.plot_ngrams_heatmap(entry_ngrams, 
+                                         entry_ngrams_duration, 
                                          selected_patterns=[], 
                                          voices=[], 
                                          heatmap_width= 1000,
                                          heatmap_height=300, 
                                          includeCount=True)
         # rename entry_ngrams df as mel_ngrams for display
-        mel_ngrams = piece.detailIndex(entry_ngrams, offset = True)
+        entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = True)
         # display the results
         st.subheader("Table of Ngrams for " + piece_name)
-        st.dataframe(mel_ngrams, use_container_width = True)
+        st.dataframe(entry_ngrams_detail, use_container_width = True)
         st.subheader("Ngram Heatmap for " + piece_name)
-        st.altair_chart(ng_heatmap, use_container_width = True)
+        st.altair_chart(entry_ng_heatmap, use_container_width = True)
     # this is for all mel ngrams (iof entries is False in form)
     else:
+        mel_ngrams = piece.ngrams(df = mel, n = length_choice)
+
+        mel_ngrams_duration = piece.durations(df = mel, 
+                                          n =length_choice)
+        
         ng_heatmap = viz.plot_ngrams_heatmap(mel_ngrams, 
                                          mel_ngrams_duration, 
                                          selected_patterns=[], 
@@ -196,9 +200,9 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          heatmap_height=300, 
                                          includeCount=True)
         
-        mel_ngrams = piece.detailIndex(mel_ngrams, offset = True)  
+        mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = True)  
         # display the results
-        st.dataframe(mel_ngrams, use_container_width = True)
+        st.dataframe(mel_ngrams_detail, use_container_width = True)
         st.altair_chart(ng_heatmap, use_container_width = True)
 
 # score tool
