@@ -1,7 +1,8 @@
 [build-system]
+build-backend = "poetry.core.masonry.api"
 requires = ["setuptools", "wheel"]
 
-[project]
+[tool.poetry]
 name = "crim intervals streamlit"
 version = "0.1.0"
 description = "Streamlit App for the CRIM Intervals Tools"
@@ -9,7 +10,7 @@ authors = [
     {name = "Richard Freedman", email = "rfreedma@haverford.edu"}
 ]
 
-[project.dependencies]
+[tool.poetry.dependencies]
 altair = "4.2.0"
 certifi = "2020.12.5"
 chardet = "^4.0.0"
@@ -44,4 +45,6 @@ textdistance = "4.2.1"
 verovio = "3.15.0"
 webcolors = "1.11.1"
 XlsxWriter = "3.0.2"
+
+[tool.poetry.dev-dependencies]
 
