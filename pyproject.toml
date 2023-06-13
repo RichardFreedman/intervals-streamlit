@@ -9,6 +9,11 @@ description = "Streamlit App for the CRIM Intervals Tools"
 authors = ["Richard Freedman <rfreedma@haverford.edu>"]
 license = "creative commons"
 
+[[tool.poetry.source]]
+name = "intervals"
+url = "git+https://github.com/HCDigitalScholarship/intervals.git@rich_dev_22"
+priority = "primary"
+
 [tool.poetry.dependencies]
 altair = "4.2.0"
 certifi = "2020.12.5"
@@ -17,7 +22,7 @@ h11 = "0.12.0"
 httpcore = "0.13.2"
 httpx = "0.18.1"
 idna = "3.1"
-intervals = {source = "git+ssh://git@github.com/HCDigitalScholarship/intervals.git@rich_dev_22"}
+intervals = "0.3.3"
 ipython = "8.4.0"
 ipywidgets = "7.6.3"
 joblib = "1.0.1"
