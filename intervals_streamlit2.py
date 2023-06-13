@@ -66,8 +66,6 @@ st.write(piece.metadata['title'])
 
 show_score_checkbox = st.sidebar.checkbox('Show/Hide Score')
 
-
-
 # menu dictionaries
 
 interval_kinds = {'diatonic' : 'd',
@@ -131,6 +129,7 @@ def mel_interval_bar_chart(piece, combine_unisons_choice, combine_rests_choice, 
     fig = px.bar(mel, x="interval", y=voices, title="Distribution of Melodic Intervals in " + piece_name)
     st.plotly_chart(fig, use_container_width = True)
 
+# function for harmonic bar chart
 def har_interval_bar_chart(piece, directed, compound, kind_choice):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
@@ -149,6 +148,7 @@ def har_interval_bar_chart(piece, directed, compound, kind_choice):
     fig = px.bar(har, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
     st.plotly_chart(fig, use_container_width = True)  
 
+# function for ngram heatmap
 def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
@@ -188,9 +188,6 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         st.altair_chart(ng_heatmap, use_container_width = True)
     # this is for all mel ngrams (iof entries is False in form)
     else:
-        # mel_ngrams = piece.ngrams(df = mel, interval_settings = (kind_choice, directed, compound), 
-        #                           n = length_choice)  
-        
         ng_heatmap = viz.plot_ngrams_heatmap(mel_ngrams, 
                                          mel_ngrams_duration, 
                                          selected_patterns=[], 
@@ -199,14 +196,12 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          heatmap_height=300, 
                                          includeCount=True)
         
-        mel_ngrams = piece.detailIndex(mel_ngrams, offset = True)
-        
+        mel_ngrams = piece.detailIndex(mel_ngrams, offset = True)  
         # display the results
         st.dataframe(mel_ngrams, use_container_width = True)
         st.altair_chart(ng_heatmap, use_container_width = True)
 
 # score tool
-
 # TRUE shows the score
 if show_score_checkbox:
     # insert html within Streamlit, using components()
