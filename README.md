@@ -1,11 +1,15 @@
 # intervals-streamlit
 
-It is assumed that you are cloning this repo as a sibling of a directory called "intervals"
-which should containt the crim-intervals repo. After cloning, you can run:
+# A Streamlit Web Applciation for CRIM Intervals
 
-cd intervals-streamlit
-pip install -r requirements.txt
+Learn about CRIM Intervals here:  https://github.com/HCDigitalScholarship/intervals/tree/rich_dev_22
 
-And then run the app with:
+Learn about Streamlit functions here:  https://docs.streamlit.io/library/api-reference
 
-streamlit run intervals_streamlit.py
+To use and develop the application:
+
+* Create a virtual environment
+* Clone or branch this repository:  https://github.com/RichardFreedman/intervals-streamlit
+* Open the directory in which the files appear:  `cd intervals-streamlit`
+* Install the requirements via the terminal:  `pip install -r requirements.txt`
+* Start the app via the terminal with `streamlit run intervals_streamlit.py`
