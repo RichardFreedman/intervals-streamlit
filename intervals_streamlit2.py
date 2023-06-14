@@ -151,7 +151,7 @@ pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2',
 # plot functions
 
 # notes bar chart
-@st.cache_data
+
 def notes_bar_chart(piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
@@ -165,7 +165,7 @@ def notes_bar_chart(piece, combine_unisons_choice, combine_rests_choice):
     st.plotly_chart(pitch_chart, use_container_width = True)
 
 # melodic interval bar chart
-@st.cache_data
+
 def mel_interval_bar_chart(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
@@ -189,7 +189,7 @@ def mel_interval_bar_chart(piece, combine_unisons_choice, combine_rests_choice, 
     st.plotly_chart(fig, use_container_width = True)
 
 # function for harmonic bar chart
-@st.cache_data
+
 def har_interval_bar_chart(piece, directed, compound, kind_choice):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
@@ -209,7 +209,7 @@ def har_interval_bar_chart(piece, directed, compound, kind_choice):
     st.plotly_chart(fig, use_container_width = True)  
 
 # function for ngram heatmap
-@st.cache_data
+
 def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
