@@ -104,6 +104,17 @@ crim_view = 'https://crimproject.org/pieces/' + piece_name
 filepath = find_mei_link(piece_name, json_objects)
 piece = importScore(filepath)
 
+# load mei data from GIT
+mei_git_link = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+
+# load mei for verovio from CRIM
+
+# mei_link = 'https://crimproject.org/mei/CRIM_Model_0001.mei'
+# r = requests.get(filepath)
+# with open(piece_name + '.mei', 'r') as f:
+#     data = f.read()
+
+
 # display file name and metadata
 
 st.subheader("Selected Piece")
@@ -253,8 +264,11 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
 
 # score tool
 # TRUE shows the score
+
+
 if show_score_checkbox:
     # insert html within Streamlit, using components()
+    
     components.html(
         
         """
@@ -269,7 +283,8 @@ if show_score_checkbox:
         const app = new Verovio.App(document.getElementById("app"), {});
 
         // Load a file (MEI or MusicXML)
-        fetch('"""+filepath+"""')
+
+        fetch('"""+mei_git_link+"""')
             .then(function(response) {
                 return response.text();
             })
@@ -279,8 +294,9 @@ if show_score_checkbox:
     </script>
         """,
         height=800,
-        width=850,
+        # width=850,
     )
+
 # FALSE shows a blank bit of HTML
 else:
     components.html(
@@ -289,7 +305,7 @@ else:
         <div class="panel-body">
         """,
         height=1,
-        width=850,
+        # width=850,
     ) 
 
 # form for notes
@@ -313,6 +329,7 @@ if st.sidebar.checkbox("Explore Notes"):
 # form for melodic
 if st.sidebar.checkbox("Explore Melodic Intervals"):
     st.subheader("Explore Melodic Intervals")
+
     with st.form("Melodic Interval Settings"):
         combine_unisons_choice = st.selectbox(
             "Combine Unisons", [False, True])
