@@ -93,8 +93,10 @@ composer_title_list = make_composer_title_list(json_objects)
 
 # select a piece
 # piece_id = st.selectbox('Select Piece To View', composer_title_list)
-piece_name = st.selectbox('Select Piece To View', piece_list)
+
 st.title("CRIM Intervals")
+piece_name = st.selectbox('Select Piece To View', piece_list)
+
 
 crim_view = 'https://crimproject.org/pieces/' + piece_name
 
@@ -103,12 +105,12 @@ filepath = find_mei_link(piece_name, json_objects)
 piece = importScore(filepath)
 
 # display file name and metadata
-st.write('View Piece on CRIM: ' + crim_view)
-st.write(piece_name)
-st.write(piece.metadata['composer'])
-st.write(piece.metadata['title'])
 
-show_score_checkbox = st.sidebar.checkbox('Show/Hide Score')
+st.subheader("Selected Piece")
+st.write(piece_name)
+st.write(piece.metadata['composer'] + ': ' + piece.metadata['title'])
+st.write('View Piece on CRIM: ' + crim_view)
+show_score_checkbox = st.checkbox('Show/Hide Score with Verovio')
 
 # menu dictionaries
 
