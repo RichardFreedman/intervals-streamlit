@@ -343,6 +343,8 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)  
 
         return mel_ngrams_detail, ng_heatmap
+# hr function
+
 
 # score tool
 # TRUE shows the score
@@ -600,7 +602,11 @@ if st.sidebar.checkbox("Explore Cadences"):
     if st.checkbox("Show Full Cadence Table"):
         cadences = piece.cadences()
         st.subheader("Detailed View of Cadences")
-        st.dataframe(filter_dataframe(cadences), use_container_width = True)
+        filtered_cadences = filter_dataframe(cadences)
+        st.dataframe(filtered_cadences, use_container_width = True)
+        if st.button("Print Filtered Cadences with Verovio"):
+            piece.verovioCadences(df = filtered_cadences)
+
     # summary of tone and type
     if st.checkbox("Summary of Cadences by Tone and Type"):
         cadences = piece.cadences()
