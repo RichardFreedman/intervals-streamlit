@@ -173,23 +173,8 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
-    # modify = st.checkbox("Filter Results", key='filter')
-
-    # if not modify:
-    #     return df
-
+ 
     df = df.copy()
-
-    # Try to convert datetimes into a standard format (datetime, no timezone)
-    # for col in df.columns:
-    #     if is_object_dtype(df[col]):
-    #         try:
-    #             df[col] = pd.to_datetime(df[col])
-    #         except Exception:
-    #             pass
-
-    #     if is_datetime64_any_dtype(df[col]):
-    #         df[col] = df[col].dt.tz_localize(None)
 
     modification_container = st.container()
 
@@ -216,18 +201,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     (_min, _max)
                 )
                 df = df[df[column].between(*user_num_input)]
-            # elif is_datetime64_any_dtype(df[column]):
-            #     user_date_input = right.date_input(
-            #         f"Values for {column}",
-            #         value=(
-            #             df[column].min(),
-            #             df[column].max(),
-            #         ),
-            #     )
-            #     if len(user_date_input) == 2:
-            #         user_date_input = tuple(map(pd.to_datetime, user_date_input))
-            #         start_date, end_date = user_date_input
-            #         df = df.loc[df[column].between(start_date, end_date)]
+            
             else:
                 user_text_input = right.text_input(
                     f"Substring or regex in {column}",
@@ -349,12 +323,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          includeCount=True)
         # rename entry_ngrams df as mel_ngrams for display
         entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = False)
-        # display the results
-        # st.subheader("Table of Ngrams for " + piece_name)
-        # st.dataframe(entry_ngrams_detail, use_container_width = True)
-        # st.subheader("Ngram Heatmap for " + piece_name)
-        # st.altair_chart(entry_ng_heatmap, use_container_width = True)
-
+        
         return entry_ngrams_detail, entry_ng_heatmap
     # this is for all mel ngrams (iof entries is False in form)
     else:
@@ -372,20 +341,14 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          includeCount=True)
         
         mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)  
-        # display the results
-        # st.dataframe(mel_ngrams_detail, use_container_width = True)
-
-        # st.altair_chart(ng_heatmap, use_container_width = True)
 
         return mel_ngrams_detail, ng_heatmap
 
 # score tool
 # TRUE shows the score
 
-
 if show_score_checkbox:
     # insert html within Streamlit, using components()
-    
     components.html(
         
         """
@@ -620,17 +583,15 @@ if st.sidebar.checkbox("Explore ngrams"):
     if 'ngrams' not in st.session_state:
         pass
     else:
-        # st.session_state.ngrams = st.session_state.ngrams.applymap(convertTuple).fillna('-')
-        # st.write(st.session_state.ngrams)
         filtered_ngrams = filter_dataframe(st.session_state.ngrams.applymap(convertTuple).fillna('-'))
         st.dataframe((filtered_ngrams), use_container_width = True)
-        # csv = convert_df(filtered_ngrams)
-        # st.download_button(
-        #     label="Download Filtered Data as CSV",
-        #     data=csv,
-        #     file_name = piece_name + '_ngram_results.csv',
-        #     mime='text/csv',
-        #     )           
+        csv = convert_df(filtered_ngrams)
+        st.download_button(
+            label="Download Filtered Data as CSV",
+            data=csv,
+            file_name = piece_name + '_ngram_results.csv',
+            mime='text/csv',
+            )           
             
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
