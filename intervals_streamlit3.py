@@ -154,14 +154,10 @@ pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2',
                 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
                 'C4', 'C#4','D4', 'E-4', 'E4', 'F4', 'F#4','G4', 'A4', 'B-4', 'B4',
                 'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5']
-# filter and download functions
-def convertTuple(tup):
-    out = ""
-    if isinstance(tup, tuple):
-        out = ', '.join(tup)
-    return out  
 
+# filter function
 
+# filter function
 st.cache_data(experimental_allow_widgets=True)
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -181,15 +177,15 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     # Try to convert datetimes into a standard format (datetime, no timezone)
-    # for col in df.columns:
-    #     if is_object_dtype(df[col]):
-    #         try:
-    #             df[col] = pd.to_datetime(df[col])
-    #         except Exception:
-    #             pass
+    for col in df.columns:
+        if is_object_dtype(df[col]):
+            try:
+                df[col] = pd.to_datetime(df[col])
+            except Exception:
+                pass
 
-    #     if is_datetime64_any_dtype(df[col]):
-    #         df[col] = df[col].dt.tz_localize(None)
+        if is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].dt.tz_localize(None)
 
     modification_container = st.container()
 
@@ -199,7 +195,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             left, right = st.columns((1, 20))
             left.write("↳")
             # Treat columns with < 10 unique values as categorical
-            if is_categorical_dtype(df[column]) or df[column].nunique() < 2:
+            if is_categorical_dtype(df[column]) or df[column].nunique() < 10:
                 user_cat_input = right.multiselect(
                     f"Values for {column}",
                     df[column].unique(),
@@ -216,18 +212,18 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     (_min, _max)
                 )
                 df = df[df[column].between(*user_num_input)]
-            # elif is_datetime64_any_dtype(df[column]):
-            #     user_date_input = right.date_input(
-            #         f"Values for {column}",
-            #         value=(
-            #             df[column].min(),
-            #             df[column].max(),
-            #         ),
-            #     )
-            #     if len(user_date_input) == 2:
-            #         user_date_input = tuple(map(pd.to_datetime, user_date_input))
-            #         start_date, end_date = user_date_input
-            #         df = df.loc[df[column].between(start_date, end_date)]
+            elif is_datetime64_any_dtype(df[column]):
+                user_date_input = right.date_input(
+                    f"Values for {column}",
+                    value=(
+                        df[column].min(),
+                        df[column].max(),
+                    ),
+                )
+                if len(user_date_input) == 2:
+                    user_date_input = tuple(map(pd.to_datetime, user_date_input))
+                    start_date, end_date = user_date_input
+                    df = df.loc[df[column].between(start_date, end_date)]
             else:
                 user_text_input = right.text_input(
                     f"Substring or regex in {column}",
@@ -244,24 +240,28 @@ def convert_df(filtered):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return filtered.to_csv().encode('utf-8')
 
-
 # plot functions
 
-# notes bar chart
+#  
 
-def notes_bar_chart(piece, combine_unisons_choice, combine_rests_choice):
+# notes bar chart
+def notes_bar_chart(_piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
     nr_counts = nr.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
     nr_counts.rename(columns = {'index':'pitch'}, inplace = True)  
     nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
     nr_counts = nr_counts.sort_values(by = "pitch").dropna().copy()
+
     voices = nr.columns.to_list()   
     # Stacked bar chart using plotly
-    nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + piece_name)
-    # st.plotly_chart(pitch_chart, use_container_width = True)
-    nr = piece.detailIndex(nr)
-    return nr, nr_chart
+    nr = nr.fillna('-')
+    nr_filtered = filter_dataframe(nr)
+    st.write(nr_filtered)
+    pitch_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + piece_name)
+    st.plotly_chart(pitch_chart, use_container_width = True)
+
+    # return nr, pitch_chart
 
 # melodic interval bar chart
 
@@ -284,41 +284,36 @@ def mel_interval_bar_chart(_piece, combine_unisons_choice, combine_rests_choice,
     mel_counts.index.rename('interval', inplace=True)
     voices = mel.columns.to_list()
 
-    # temp
-    mel = piece.detailIndex(mel)
-
     # set the figure size, type and colors
-    mel_chart = px.bar(mel_counts, x="interval", y=voices, title="Distribution of Melodic Intervals in " + piece_name)
+    fig = px.bar(mel_counts, x="interval", y=voices, title="Distribution of Melodic Intervals in " + piece_name)
     # st.plotly_chart(fig, use_container_width = True)
-    return mel, mel_chart
+    return mel, fig
 
     
 
 # function for harmonic bar chart
 
-def har_interval_bar_chart(piece, directed, compound, kind_choice):
+def har_interval_bar_chart(_piece, directed, compound, kind_choice):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
                          compound = compound).fillna('')
     # count up the values in each item column--sum for each pitch. make a copy 
-    har_counts = har.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
+    har = har.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
     # rename the index column to something more useful
-    har_counts.rename(columns = {'index':'interval'}, inplace = True)
+    har.rename(columns = {'index':'interval'}, inplace = True)
     # apply the categorical list and sort.  
     if interval_kinds[select_kind] == 'q':
-        har_counts['interval'] = pd.Categorical(har_counts["interval"], categories=interval_order_quality)
-    har_counts = har_counts.sort_values(by = "interval").dropna().copy()
-    har_counts.index.rename('interval', inplace=True)
+        har['interval'] = pd.Categorical(har["interval"], categories=interval_order_quality)
+    har = har.sort_values(by = "interval").dropna().copy()
+    har.index.rename('interval', inplace=True)
     voices = har.columns.to_list()
-    # set the figure size, type and colors
-    har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
-    
-    har = piece.detailIndex(har)
-    return har, har_chart
+    # # # set the figure size, type and colors
+    fig = px.bar(har, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
+    st.plotly_chart(fig, use_container_width = True)  
 
 # function for ngram heatmap
 
-def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
+def ngram_heatmap(_piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
     mel = piece.melodic(df = nr, 
@@ -348,14 +343,12 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          heatmap_height=300, 
                                          includeCount=True)
         # rename entry_ngrams df as mel_ngrams for display
-        entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = False)
+        entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = True)
         # display the results
-        # st.subheader("Table of Ngrams for " + piece_name)
-        # st.dataframe(entry_ngrams_detail, use_container_width = True)
-        # st.subheader("Ngram Heatmap for " + piece_name)
-        # st.altair_chart(entry_ng_heatmap, use_container_width = True)
-
-        return entry_ngrams_detail, entry_ng_heatmap
+        st.subheader("Table of Ngrams for " + piece_name)
+        st.dataframe(entry_ngrams_detail, use_container_width = True)
+        st.subheader("Ngram Heatmap for " + piece_name)
+        st.altair_chart(entry_ng_heatmap, use_container_width = True)
     # this is for all mel ngrams (iof entries is False in form)
     else:
         mel_ngrams = piece.ngrams(df = mel, n = length_choice)
@@ -371,13 +364,10 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          heatmap_height=300, 
                                          includeCount=True)
         
-        mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)  
+        mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = True)  
         # display the results
-        # st.dataframe(mel_ngrams_detail, use_container_width = True)
-
-        # st.altair_chart(ng_heatmap, use_container_width = True)
-
-        return mel_ngrams_detail, ng_heatmap
+        st.dataframe(mel_ngrams_detail, use_container_width = True)
+        st.altair_chart(ng_heatmap, use_container_width = True)
 
 # score tool
 # TRUE shows the score
@@ -424,7 +414,27 @@ else:
         height=1,
         # width=850,
     ) 
+# +++++++++++++++++++++
+# this all works
+# nr = piece.notes().fillna('-')
 
+# filtered = filter_dataframe(nr)
+
+# st.dataframe(filtered)
+
+
+
+# csv = convert_df(filtered)
+
+# st.download_button(
+#     label="Download data as CSV",
+#     data=csv,
+#     file_name='large_df.csv',
+#     mime='text/csv',
+# )
+
+
+# +++++++++++++++++++++
 # form for notes
 
 if st.sidebar.checkbox("Explore Notes"):
@@ -439,36 +449,16 @@ if st.sidebar.checkbox("Explore Notes"):
         # form submission button
         submitted = st.form_submit_button("Submit")
         if submitted:
-            for key in st.session_state.keys():
-                del st.session_state[key]
             # run the function here, passing in settings from the form above
-            nr, nr_chart = notes_bar_chart(piece,
+            notes_output = notes_bar_chart(piece,
                             combine_unisons_choice, 
                             combine_rests_choice)
-            # Set up session state for these returns
-            if "nr_chart" not in st.session_state:
-                st.session_state.nr_chart = nr_chart
- 
-            if "nr" not in st.session_state:
-                st.session_state.nr = nr
-    
-    # and use the session state variables for display
-    if 'nr_chart' not in st.session_state:
-        pass
-    else:
-        st.plotly_chart(st.session_state.nr_chart, use_container_width = True)
-    if 'nr' not in st.session_state:
-        pass
-    else:
-        filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
-        st.dataframe(filtered_nr, use_container_width = True)
-        csv = convert_df(filtered_nr)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_notes_rests_results.csv',
-            mime='text/csv',
-            )
+        # if len(notes_output[0]) is not None:
+        #     nr_filtered = filter_dataframe(notes_output[0])
+        #     st.write(nr_filtered)
+        #     # st.dataframe(notes_output[0], use_container_width = True)
+        # # if notes_output[1] is not None:
+        # st.plotly_chart(notes_output[1], use_container_width = True)
 
 # form for melodic
 if st.sidebar.checkbox("Explore Melodic Intervals"):
@@ -495,30 +485,28 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
             # run the function here, passing in settings from the form above
             for key in st.session_state.keys():
                 del st.session_state[key]
-            mel, mel_chart = mel_interval_bar_chart(piece, 
+            mel, fig = mel_interval_bar_chart(piece, 
                                     combine_unisons_choice, 
                                     combine_rests_choice, 
                                     kind_choice,
                                     directed,
                                     compound)
             # Set up session state for these returns
-            if "mel_chart" not in st.session_state:
-                st.session_state.mel_chart = mel_chart
- 
-            if "mel" not in st.session_state:
+            if 'fig' not in st.session_state:
+                st.session_state.fig = fig
+            if 'mel' not in st.session_state:
                 st.session_state.mel = mel
-    
-    # and use the session state variables for display
-    if 'mel_chart' not in st.session_state:
-        pass
+ 
+    if 'fig' not in st.session_state:
+        pass# and use the session state variables for display
     else:
-        st.plotly_chart(st.session_state.mel_chart, use_container_width = True)
+        st.plotly_chart(st.session_state.fig, use_container_width = True)
     if 'mel' not in st.session_state:
         pass
     else:
-        filtered_mel = filter_dataframe(st.session_state.mel.fillna('-'))
-        st.dataframe(filtered_mel, use_container_width = True)
-        csv = convert_df(filtered_mel)
+        filtered = filter_dataframe(st.session_state.mel.fillna('-'))
+        st.dataframe(filtered, use_container_width = True)
+        csv = convert_df(filtered)
         st.download_button(
             label="Download Filtered Data as CSV",
             data=csv,
@@ -543,39 +531,11 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
         # form submission button
         submitted = st.form_submit_button("Submit")
         if submitted:
-            # clear the session states
-            for key in st.session_state.keys():
-                del st.session_state[key]
             # run the function here, passing in settings from the form above
-            har, har_chart = har_interval_bar_chart(piece, 
+            har_interval_bar_chart(piece, 
                                 directed,
                                 compound, 
                                 kind_choice)
-            # Set up session state for these returns
-            if "har_chart" not in st.session_state:
-                st.session_state.har_chart = har_chart
- 
-            if "har" not in st.session_state:
-                st.session_state.har = har
-# and use the session state variables for display
-    if 'har_chart' not in st.session_state:
-        pass
-    else:
-        st.plotly_chart(st.session_state.har_chart, use_container_width = True)
-
-    if 'har' not in st.session_state:
-        pass
-    else:
-        filtered_har = filter_dataframe(st.session_state.har.fillna('-'))
-        st.dataframe(filtered_har, use_container_width = True)
-        csv = convert_df(filtered_har)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_harmonic_results.csv',
-            mime='text/csv',
-            )           
- 
 # ngram form
 if st.sidebar.checkbox("Explore ngrams"):
     st.subheader("Explore nGrams")
@@ -598,40 +558,13 @@ if st.sidebar.checkbox("Explore ngrams"):
             [True, False])
         # submit ngram form
         submitted = st.form_submit_button("Submit")
-    
         if submitted:
-            for key in st.session_state.keys():
-                del st.session_state[key]
-            ngrams, heatmap = ngram_heatmap(piece, 
+            ngram_heatmap(piece, 
                           combine_unisons_choice, 
                           kind_choice, 
                           directed, 
                           compound, 
                           length_choice)
-            if "ngrams" not in st.session_state:
-                st.session_state.ngrams = ngrams
-            if 'heatmap' not in st.session_state:
-                st.session_state.heatmap = heatmap
-    if 'heatmap' not in st.session_state:
-        pass
-    else:
-        st.altair_chart(st.session_state.heatmap, use_container_width = True)
-    
-    if 'ngrams' not in st.session_state:
-        pass
-    else:
-        # st.session_state.ngrams = st.session_state.ngrams.applymap(convertTuple).fillna('-')
-        # st.write(st.session_state.ngrams)
-        filtered_ngrams = filter_dataframe(st.session_state.ngrams.applymap(convertTuple).fillna('-'))
-        st.dataframe((filtered_ngrams), use_container_width = True)
-        # csv = convert_df(filtered_ngrams)
-        # st.download_button(
-        #     label="Download Filtered Data as CSV",
-        #     data=csv,
-        #     file_name = piece_name + '_ngram_results.csv',
-        #     mime='text/csv',
-        #     )           
-            
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
     st.subheader("Explore Cadences")
@@ -639,7 +572,7 @@ if st.sidebar.checkbox("Explore Cadences"):
     if st.checkbox("Show Full Cadence Table"):
         cadences = piece.cadences()
         st.subheader("Detailed View of Cadences")
-        st.dataframe(filter_dataframe(cadences), use_container_width = True)
+        cadences
     # summary of tone and type
     if st.checkbox("Summary of Cadences by Tone and Type"):
         cadences = piece.cadences()
