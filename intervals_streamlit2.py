@@ -345,7 +345,18 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         return mel_ngrams_detail, ng_heatmap
 # hr function
 
+def homorhythm_streamlit(ngram_length=4, full_hr=True):
+    hr = piece.homorhythm(ngram_length=length_choice, 
+                    full_hr=full_hr_choice)
+    voices_list = list(piece.notes().columns)
+    hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
+    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
 
+    return hr
+
+# p type function
+
+# def presentation_types_streamlit()
 # score tool
 # TRUE shows the score
 
@@ -604,8 +615,10 @@ if st.sidebar.checkbox("Explore Cadences"):
         st.subheader("Detailed View of Cadences")
         filtered_cadences = filter_dataframe(cadences)
         st.dataframe(filtered_cadences, use_container_width = True)
-        if st.button("Print Filtered Cadences with Verovio"):
-            piece.verovioCadences(df = filtered_cadences)
+        # possible Verovio Cadences use.  Needs to adapt renderer?
+        # if st.button("Print Filtered Cadences with Verovio"):
+        #     output = piece.verovioCadences(df = filtered_cadences)
+        #     components.html(output)
 
     # summary of tone and type
     if st.checkbox("Summary of Cadences by Tone and Type"):
@@ -626,6 +639,33 @@ if st.sidebar.checkbox("Explore Cadences"):
 
 if st.sidebar.checkbox("Explore Homorhythm"):
     st.subheader("Explore Homorhythm")
+    with st.form("Homorhythm Settings"):
+        full_hr_choice = st.selectbox(
+            "Select HR Full Status",
+            [True, False])
+        length_choice = st.number_input('Select ngram Length', value=4, step=1)
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            for key in st.session_state.keys():
+                del st.session_state[key]
+            hr = homorhythm_streamlit(full_hr = full_hr_choice, ngram_length = length_choice)
+
+            if "hr" not in st.session_state:
+                st.session_state.hr = hr
+# and use the session state variables for display
+    if 'hr' not in st.session_state:
+        pass
+
+    else:
+        filtered_hr = filter_dataframe(st.session_state.hr.fillna('-'))
+        st.dataframe(filtered_hr, use_container_width = True)
+        csv = convert_df(filtered_hr)
+        st.download_button(
+            label="Download Filtered Data as CSV",
+            data=csv,
+            file_name = piece_name + '_homorhytym_results.csv',
+            mime='text/csv',
+            )           
 
 if st.sidebar.checkbox("Explore Presentation Types"):
     st.subheader("Explore Presentation Types")
