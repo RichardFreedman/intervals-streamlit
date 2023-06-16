@@ -350,6 +350,7 @@ def homorhythm_streamlit(ngram_length=4, full_hr=True):
                     full_hr=full_hr_choice)
     voices_list = list(piece.notes().columns)
     hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
+    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
     hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
 
     return hr
