@@ -86,6 +86,11 @@ def find_mei_link(piece_id, json_objects):
         if key_value_pair in json_object.items():
             return json_object['mei_links'][0]
     return None
+    
+# Title and Introduction
+st.title("CRIM Intervals")
+st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
+st.write("More about CRIM Intervals at:  https://github.com/HCDigitalScholarship/intervals/blob/rich_dev_22/README.md")
 
 
 crim_url = 'https://crimproject.org/data/pieces/'
@@ -100,11 +105,8 @@ composer_title_list = make_composer_title_list(json_objects)
 
 # select a piece
 # piece_id = st.selectbox('Select Piece To View', composer_title_list)
-
-st.title("CRIM Intervals")
-piece_name = st.selectbox('Select Piece To View', piece_list)
-
-
+piece_name = st.selectbox('Select Piece To View from CRIM Django', 
+                            piece_list)
 crim_view = 'https://crimproject.org/pieces/' + piece_name
 
 # based on selected piece, get the mei file link and import it
@@ -114,21 +116,42 @@ piece = importScore(filepath)
 # load mei data from GIT
 mei_git_link = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
 
-# load mei for verovio from CRIM
-
-# mei_link = 'https://crimproject.org/mei/CRIM_Model_0001.mei'
-# r = requests.get(filepath)
-# with open(piece_name + '.mei', 'r') as f:
-#     data = f.read()
-
-
-# display file name and metadata
-
 st.subheader("Selected Piece")
-st.write(piece_name)
-st.write(piece.metadata['composer'] + ': ' + piece.metadata['title'])
-st.write('View Piece on CRIM: ' + crim_view)
-show_score_checkbox = st.checkbox('Show/Hide Score with Verovio')
+if piece_name is not None:
+    st.write(piece_name)
+    st.write(piece.metadata['composer'] + ': ' + piece.metadata['title'])
+    st.write('View Piece on CRIM: ' + crim_view)
+    show_score_checkbox = st.checkbox('Show/Hide Score with Verovio')
+
+# CRIM at GIT
+# piece_list = []
+# crim_git_prefix = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/"
+# crim_git_url = "https://api.github.com/repos/CRIM-Project/CRIM-online/git/trees/990f5eb3ff1e9623711514d6609da4076257816c"
+# piece_json = requests.get(crim_git_url).json()
+# # pattern to filter out empty header Mass files
+# pattern = 'CRIM_Mass_([0-9]{4}).mei'
+
+# # # and now the request for all the files
+# for p in piece_json["tree"]:
+#     name = p["path"]
+#     if re.search(pattern, name):
+#         pass
+#     else:
+#         piece_list.append(name)
+# # st.write(piece_list)
+# piece_list = sorted(piece_list)
+# piece_name = st.selectbox('Select Piece To View from CRIM@GIT', 
+#                            piece_list)
+# # based on selected piece, get the mei file link and import it
+# if piece_name is not None:
+#     filepath = crim_git_prefix + piece_name
+#     piece = importScore(filepath)
+#     st.subheader("Selected Piece")
+#     if piece_name is not None:
+#         st.write(piece_name)
+#         st.write(piece.metadata['composer'] + ': ' + piece.metadata['title'])
+#         show_score_checkbox = st.checkbox('Show/Hide Score with Verovio')
+
 
 # menu dictionaries
 
@@ -358,11 +381,14 @@ def homorhythm_streamlit(ngram_length=4, full_hr=True):
 # p type function
 
 # def presentation_types_streamlit()
+
 # score tool
 # TRUE shows the score
 
+
 if show_score_checkbox:
     # insert html within Streamlit, using components()
+    
     components.html(
         
         """
