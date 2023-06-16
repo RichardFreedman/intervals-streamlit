@@ -368,7 +368,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         return mel_ngrams_detail, ng_heatmap
 # hr function
 
-def homorhythm_streamlit(ngram_length=4, full_hr=True):
+def homorhythm_streamlit(length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
     voices_list = list(piece.notes().columns)
@@ -380,7 +380,22 @@ def homorhythm_streamlit(ngram_length=4, full_hr=True):
 
 # p type function
 
-# def presentation_types_streamlit()
+def presentation_types_streamlit(piece,
+                                 length_choice, 
+                                 limit_entries_choice,
+                                 body_flex_choice, 
+                                 head_flex_choice,
+                                 hidden_types_choice,
+                                 combine_unisons_choice): 
+    
+    p_types = piece.presentationTypes(melodic_ngram_length = length_choice, 
+                                      limit_to_entries = limit_entries_choice,
+                                      body_flex = body_flex_choice, 
+                                      head_flex = head_flex_choice,
+                                      include_hidden_types = combine_unisons_choice,
+                                      combine_unisons = combine_unisons_choice)
+    # p_types = piece.detailIndex(p_types)#.apply(lambda x: ', '.join(map(str, x))).copy()
+    return p_types
 
 # score tool
 # TRUE shows the score
@@ -696,4 +711,45 @@ if st.sidebar.checkbox("Explore Homorhythm"):
 
 if st.sidebar.checkbox("Explore Presentation Types"):
     st.subheader("Explore Presentation Types")
+    with st.form("Presentation Type Settings"):
+        combine_unisons_choice = st.selectbox(
+            "Combine Unisons", [False, True])
+        length_choice = st.number_input('Select ngram Length', value=4, step=1) 
+        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
+        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
+        limit_entries_choice = st.selectbox(
+            "Limit to Melodic Entries", [False, True])
+        hidden_types_choice = st.selectbox(
+            "Include Hidden Presentation Types", [False, True])
+        # form submission button
+        submitted = st.form_submit_button("Update and Submit")
+        if submitted:
+            # run the function here, passing in settings from the form above
+            for key in st.session_state.keys():
+                del st.session_state[key]
+            p_types = presentation_types_streamlit(piece, 
+                                    combine_unisons_choice,
+                                    length_choice,
+                                    head_flex_choice,
+                                    body_flex_choice,
+                                    limit_entries_choice,
+                                    hidden_types_choice)
+            # Set up session state for these returns
+            if "p_types" not in st.session_state:
+                st.session_state.p_types = p_types
+ 
+    # and use the session state variables for display
+    if 'p_types' not in st.session_state:
+        pass
+    else:
+        filtered_p_types = filter_dataframe(st.session_state.p_types)
+        st.dataframe(filtered_p_types, use_container_width = True)
+        csv = convert_df(filtered_p_types)
+        st.download_button(
+            label="Download Filtered Data as CSV",
+            data=csv,
+            file_name = piece_name + '_p_types_results.csv',
+            mime='text/csv',
+            )
+
 
