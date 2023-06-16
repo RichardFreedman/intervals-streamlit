@@ -380,7 +380,7 @@ def homorhythm_streamlit(length_choice, full_hr_choice):
 
 # p type function
 
-def presentation_types_streamlit(piece,
+def presentation_types_streamlit(piece, 
                                  length_choice, 
                                  limit_entries_choice,
                                  body_flex_choice, 
@@ -392,9 +392,14 @@ def presentation_types_streamlit(piece,
                                       limit_to_entries = limit_entries_choice,
                                       body_flex = body_flex_choice, 
                                       head_flex = head_flex_choice,
-                                      include_hidden_types = combine_unisons_choice,
+                                      include_hidden_types = hidden_types_choice,
                                       combine_unisons = combine_unisons_choice)
-    # p_types = piece.detailIndex(p_types)#.apply(lambda x: ', '.join(map(str, x))).copy()
+    
+#     # presentationTypes(self, melodic_ngram_length=4, limit_to_entries=True,
+#     #                       body_flex=0, head_flex=1, include_hidden_types=False,
+#     #                       combine_unisons=False)
+#     # p_types = piece.detailIndex(p_types)#.apply(lambda x: ', '.join(map(str, x))).copy()
+#     st.write(p_types)
     return p_types
 
 # score tool
@@ -690,7 +695,7 @@ if st.sidebar.checkbox("Explore Homorhythm"):
         if submitted:
             for key in st.session_state.keys():
                 del st.session_state[key]
-            hr = homorhythm_streamlit(full_hr = full_hr_choice, ngram_length = length_choice)
+            hr = homorhythm_streamlit(full_hr_choice, length_choice)
 
             if "hr" not in st.session_state:
                 st.session_state.hr = hr
@@ -724,32 +729,38 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         # form submission button
         submitted = st.form_submit_button("Update and Submit")
         if submitted:
-            # run the function here, passing in settings from the form above
             for key in st.session_state.keys():
                 del st.session_state[key]
             p_types = presentation_types_streamlit(piece, 
-                                    combine_unisons_choice,
-                                    length_choice,
-                                    head_flex_choice,
-                                    body_flex_choice,
-                                    limit_entries_choice,
-                                    hidden_types_choice)
+                                                   length_choice,
+                                                   limit_entries_choice,
+                                                   body_flex_choice,
+                                                   head_flex_choice,
+                                                   hidden_types_choice,
+                                                   combine_unisons_choice)
+            
+            p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+
             # Set up session state for these returns
             if "p_types" not in st.session_state:
                 st.session_state.p_types = p_types
- 
-    # and use the session state variables for display
+
+        # and use the session state variables for display
     if 'p_types' not in st.session_state:
         pass
     else:
         filtered_p_types = filter_dataframe(st.session_state.p_types)
-        st.dataframe(filtered_p_types, use_container_width = True)
-        csv = convert_df(filtered_p_types)
+        st.dataframe(st.session_state.p_types, use_container_width = True)
+        csv = convert_df(st.session_state.p_types)
         st.download_button(
             label="Download Filtered Data as CSV",
             data=csv,
             file_name = piece_name + '_p_types_results.csv',
             mime='text/csv',
             )
-
 
