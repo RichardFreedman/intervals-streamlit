@@ -207,7 +207,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             left, right = st.columns((1, 20))
             left.write("↳")
             # Treat columns with < 10 unique values as categorical
-            if is_categorical_dtype(df[column]) or df[column].nunique() < 2:
+            if is_categorical_dtype(df[column]) or df[column].nunique() < 20:
                 user_cat_input = right.multiselect(
                     f"Values for {column}",
                     df[column].unique(),
@@ -743,7 +743,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
             p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
             p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
             p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+            # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
             p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
 
             # Set up session state for these returns
@@ -755,8 +755,8 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         pass
     else:
         filtered_p_types = filter_dataframe(st.session_state.p_types)
-        st.dataframe(st.session_state.p_types, use_container_width = True)
-        csv = convert_df(st.session_state.p_types)
+        st.dataframe(filtered_p_types, use_container_width = True)
+        csv = convert_df(filtered_p_types)
         st.download_button(
             label="Download Filtered Data as CSV",
             data=csv,
