@@ -330,7 +330,8 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         entry_ngrams = piece.entries(df = mel, 
                                     n = length_choice, 
                                     thematic = True, 
-                                    anywhere = True)
+                                    anywhere = True,
+                                    exclude = ['Rest'])
 
         # pass the ngram durations below to the plot as second df
         entry_ngrams_duration = piece.durations(df = mel, 
@@ -350,7 +351,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         return entry_ngrams_detail, entry_ng_heatmap
     # this is for all mel ngrams (iof entries is False in form)
     else:
-        mel_ngrams = piece.ngrams(df = mel, n = length_choice)
+        mel_ngrams = piece.ngrams(df = mel, n = length_choice, exclude = ['Rest'])
 
         mel_ngrams_duration = piece.durations(df = mel, 
                                           n =length_choice)
