@@ -95,22 +95,24 @@ def find_mei_link(piece_id, json_objects):
 
 from tempfile import NamedTemporaryFile
 
-piece_list = []
-uploaded_files = st.file_uploader("Upload Files", 
-                                  accept_multiple_files = True, 
+# piece_list = []
+uploaded_file = st.file_uploader("Upload Files", 
+                                #   accept_multiple_files = True, 
                                   label_visibility = 'visible',
                                   type = ['.mei', '.xml', '.mid'])
-for file in uploaded_files:
-    with NamedTemporaryFile(dir='.', suffix='.mei') as f:
-        f.write(file.getbuffer())
-        piece_list.append(f.name)
+# uploaded_file = st.file_uploader("File upload", type='mei')
+with NamedTemporaryFile(dir='.', suffix='.mei') as f:
+    f.write(uploaded_file.getbuffer())
+    piece = importScore(f.name)
 
-        # piece = importScore(f.name)
+    # st.dataframe(piece.notes())
 
-st.write(str(piece_list))
+# st.write(str(piece_list))
 
     
-    
+# piece = importScore(f.name)
+
+    st.write(piece.cadences())
 
 # st.title("CRIM Intervals")
 # st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
