@@ -26,8 +26,6 @@ from os import listdir
 import os.path 
 import json
 import random
-import io
-from io import StringIO
 
 from pandas.api.types import (
     is_categorical_dtype,
@@ -65,7 +63,7 @@ from pandas.api.types import (
 # all pieces from CRIM Django
 
 
-# list of piece ids from json
+# list of piece ids from json.  Keep this!
 def make_piece_list(json_objects):
     piece_list = []
     for piece in json_objects:
@@ -84,7 +82,6 @@ def get_piece_data(piece, json_objects):
                       'Date' :  json_object['date']}     
     return piece_dict
  
-
 # get mei link for given piece
 def find_mei_link(piece_id, json_objects):
     key_value_pair = ('piece_id', piece_id)
@@ -104,6 +101,50 @@ uploaded_file = st.file_uploader("Upload Files",
 with NamedTemporaryFile(dir='.', suffix='.mei') as f:
     f.write(uploaded_file.getbuffer())
     piece = importScore(f.name)
+    mdata = piece.metadata
+    mei_file = piece.mei_doc
+    score = piece.score
+    path = piece.path
+
+
+# Assuming you have an ElementTree object named 'et'
+    # xmlstr = ElementTree.tostring(mei_file, encoding='utf8')
+    # text_obj = xmlstr.decode('UTF-8')
+
+    st.write(path)
+    st.write(mdata)
+    # st.write(text_obj)
+    st.write(score)
+
+    show_git_score = st.checkbox("Show Uploaded file as Score")
+    if show_git_score:
+        components.html(
+            
+            """
+                    <div class="panel-body">
+            <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+        </div>
+
+        <script type="module">
+            import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+
+            // Create the app - here with an empty option object
+            const app = new Verovio.App(document.getElementById("app"), {});
+
+            // Load a file (MEI or MusicXML)
+            fetch("mei_file")
+                .then(function(response) {
+                    return response.text();
+                })
+                .then(function(text) {
+                    app.loadData(text);
+                });
+        </script>
+ 
+            """,
+            height=800,
+            # width=850,
+        )
 
     # st.dataframe(piece.notes())
 
@@ -112,7 +153,7 @@ with NamedTemporaryFile(dir='.', suffix='.mei') as f:
     
 # piece = importScore(f.name)
 
-    st.write(piece.cadences())
+    
 
 # st.title("CRIM Intervals")
 # st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
@@ -139,14 +180,14 @@ json_objects = json.loads(json_str)
 
 # function to make list of pieces
 piece_list = make_piece_list(json_objects)
-# select one or more pieces
 piece_names = st.multiselect('Select Pieces To View from CRIM Django', 
                             piece_list)
 if len(piece_names) == 0:
     st.subheader("Please Select One or More Pieces")
+# for one piece
 elif len(piece_names) == 1:
     piece_name = piece_names[0]
-    crim_view = 'https://crimproject.org/pieces/' + piece_name
+    crim_view_url = 'https://crimproject.org/pieces/' + piece_name
 
     # based on selected piece, get the mei file link and import it
     filepath = find_mei_link(piece_name, json_objects)
@@ -158,14 +199,15 @@ elif len(piece_names) == 1:
     st.write("Selected Piece")
     if piece_name is not None:
         piece_data = {}
-        piece_data = get_piece_data(piece_name, json_objects)
-        piece_data["View on CRIM"] = crim_view
+        piece_data = piece.metadata
+        # piece_data = get_piece_data(piece_name, json_objects)
+        piece_data["View on CRIM"] = crim_view_url
         st.dataframe(piece_data, use_container_width = True)
         show_score_checkbox = st.checkbox('Show This Score with Verovio')
-        mei_file = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+        mei_git_link = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
         if show_score_checkbox:
-            show_score(mei_file)
-
+            show_score(mei_git_link)
+# for multiple pieces
 else:
     piece_list = []
     # make initial list of paths

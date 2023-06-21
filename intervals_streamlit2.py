@@ -25,6 +25,8 @@ import streamlit.components.v1 as components
 from os import listdir 
 import os.path 
 import json
+import random
+from tempfile import NamedTemporaryFile
 
 from pandas.api.types import (
     is_categorical_dtype,
@@ -86,6 +88,38 @@ def find_mei_link(piece_id, json_objects):
         if key_value_pair in json_object.items():
             return json_object['mei_links'][0]
     return None
+
+def show_score(mei_git_url):
+    # insert html within Streamlit, using components()
+    
+    components.html(
+        
+        """
+        <div class="panel-body">
+        <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+    </div>
+
+    <script type="module">
+        import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+
+        // Create the app - here with an empty option object
+        const app = new Verovio.App(document.getElementById("app"), {});
+
+        // Load a file (MEI or MusicXML)
+
+        fetch('"""+mei_git_url+"""')
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(text) {
+                app.loadData(text);
+            });
+    </script>
+        """,
+        height=800,
+        # width=850,
+    )
+
     
 # Title and Introduction
 st.title("CRIM Intervals")
@@ -98,30 +132,88 @@ all_pieces_json = requests.get(crim_url).json()
 json_str = json.dumps(all_pieces_json)
 json_objects = json.loads(json_str)
 
-# fun function to make list of pieces
+# function to make list of pieces
 piece_list = make_piece_list(json_objects)
-
-composer_title_list = make_composer_title_list(json_objects)
-
-# select a piece
-# piece_id = st.selectbox('Select Piece To View', composer_title_list)
-piece_name = st.selectbox('Select Piece To View from CRIM Django', 
+piece_names = st.multiselect('Select Pieces To View from CRIM Django', 
                             piece_list)
-crim_view = 'https://crimproject.org/pieces/' + piece_name
+if len(piece_names) == 0:
+    st.subheader("Please Select One or More Pieces")
+# for one piece
+elif len(piece_names) == 1:
+    piece_name = piece_names[0]
+    crim_view_url = 'https://crimproject.org/pieces/' + piece_name
 
-# based on selected piece, get the mei file link and import it
-filepath = find_mei_link(piece_name, json_objects)
-piece = importScore(filepath)
+    # based on selected piece, get the mei file link and import it
+    filepath = find_mei_link(piece_name, json_objects)
+    piece = importScore(filepath)
 
-# load mei data from GIT
-mei_git_link = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+    # load mei data from GIT  No longer needed?
+    mei_git_url = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
 
-st.subheader("Selected Piece")
-if piece_name is not None:
-    st.write(piece_name)
-    st.write(piece.metadata['composer'] + ': ' + piece.metadata['title'])
-    st.write('View Piece on CRIM: ' + crim_view)
-    show_score_checkbox = st.checkbox('Show/Hide Score with Verovio')
+    st.write("Selected Piece")
+    if piece_name is not None:
+        piece_data = {}
+        piece_data = piece.metadata
+        # piece_data = get_piece_data(piece_name, json_objects)
+        piece_data["View on CRIM"] = crim_view_url
+        st.dataframe(piece_data, use_container_width = True)
+        show_score_checkbox = st.checkbox('Show This Score with Verovio')
+        mei_git_url = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+        if show_score_checkbox:
+            show_score(mei_git_url)
+# for multiple pieces
+else:
+    piece_list = []
+    # make initial list of paths
+    for piece_name in piece_names:
+        filepath = find_mei_link(piece_name, json_objects)
+        piece_list.append(filepath)
+
+    # make corpus and associated session state object
+    if corpus in st.session_state:
+        del st.session_state.corpus
+    corpus = CorpusBase(piece_list)
+    if "corpus" not in st.session_state:
+        st.session_state.corpus = corpus
+    
+    # show summary of corpus
+    show_metadata_summary = st.checkbox("Show Summary of Corpus")
+    if show_metadata_summary:
+        summary_data = []
+        for piece_name in piece_names:
+            # piece_data_for_table = []
+            piece_data = {}
+            crim_view = 'https://crimproject.org/pieces/' + piece_name
+            piece_data = piece_name.metadata
+            # piece_data = get_piece_data(piece_name, json_objects)
+            piece_data["CRIM URL"] = crim_view
+            summary_data.append(piece_data)
+        st.dataframe(summary_data, use_container_width = True)
+
+    # show scores
+    show_scores = st.checkbox("Show Score for Each Piece")
+    if show_scores:
+        for piece_name in piece_names:
+            piece_data_for_table = []
+            piece_data = {}
+            crim_view = 'https://crimproject.org/pieces/' + piece_name
+            # piece_data = get_piece_data(piece_name, json_objects)
+            piece_data = piece_name.metadata
+            piece_data["View on CRIM"] = crim_view
+            st.dataframe(piece_data, use_container_width = True)
+            position = piece_names.index(piece_name)
+            # show score? 
+            piece_key = str(random.randint(0,1000))
+            
+            if "mei_file" in st.session_state:
+                del st.session_state.mei_file
+            mei_file = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+            if "mei_file" not in st.session_state:
+                st.session_state.mei_file = mei_file
+            show_score_checkbox = st.checkbox('Show This Score with Verovio', key = piece_key)
+            # if show_score_checkbox:
+            show_score(st.session_state.mei_file)
+                
 
 # CRIM at GIT
 # piece_list = []
@@ -177,6 +269,7 @@ pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2',
                 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
                 'C4', 'C#4','D4', 'E-4', 'E4', 'F4', 'F#4','G4', 'A4', 'B-4', 'B4',
                 'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5']
+
 # filter and download functions
 def convertTuple(tup):
     out = ""
@@ -242,76 +335,375 @@ def convert_df(filtered):
     return filtered.to_csv().encode('utf-8')
 
 
-# plot functions
+# intervals functions and forms
 
 # notes bar chart
-
-def notes_bar_chart(piece, combine_unisons_choice, combine_rests_choice):
+def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
-                              combineRests = combine_rests_choice)
-    nr_counts = nr.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
-    nr_counts.rename(columns = {'index':'pitch'}, inplace = True)  
-    nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
-    nr_counts = nr_counts.sort_values(by = "pitch").dropna().copy()
-    voices = nr.columns.to_list()   
-    # Stacked bar chart using plotly
-    nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + piece_name)
-    # st.plotly_chart(pitch_chart, use_container_width = True)
+                            combineRests = combine_rests_choice)
     nr = piece.detailIndex(nr)
-    return nr, nr_chart
+    return nr
+def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
+    func = ImportedPiece.notes  # <- NB there are no parentheses here
+    list_of_dfs = corpus.batch(func = func, 
+                                kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
+                                metadata=False)
+    func2 = ImportedPiece.detailIndex
+    list_of_nrs = corpus.batch(func = func2, 
+                            kwargs = {'df': list_of_dfs}, 
+                            metadata = True)
+    nr = pd.concat(list_of_nrs)
+
+    return nr
+
+# form for notes
+
+if st.sidebar.checkbox("Explore Notes"):
+
+    st.subheader("Explore Notes")
+    st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+
+    with st.form("Note Settings"):
+        combine_unisons_choice = st.selectbox(
+            "Combine Unisons", [False, True])
+        combine_rests_choice = st.selectbox(
+            "Combine Rests", [True, False])
+        # form submission button
+        submitted = st.form_submit_button("Run Search")
+        
+        if submitted:
+            if 'nr' in st.session_state:
+                del st.session_state.nr
+            # for one piece
+            if len(piece_names) == 1:
+                 nr = piece_notes(piece,
+                            combine_unisons_choice, 
+                            combine_rests_choice)
+            # for corpus
+            elif len(piece_names) > 1:
+                 nr = corpus_notes(st.session_state.corpus,
+                            combine_unisons_choice, 
+                            combine_rests_choice)
+            
+            if "nr" not in st.session_state:
+                st.session_state.nr = nr
+    
+    # and use the session state variables for display
+
+    if 'nr' not in st.session_state:
+        pass
+    else:
+        
+        # filter the nr results
+        st.write("Filter Results by Contents of Each Column")
+        filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
+        # for one piece
+        if len(piece_names) == 1:
+            if 'Composer' in filtered_nr.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                nr_counts = filtered_nr.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+                nr_counts.rename(columns = {'index':'pitch'}, inplace = True) 
+                # apply categorical for order
+                nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
+                nr_counts = nr_counts.sort_values(by = "pitch").dropna().copy()
+                voices = nr_counts.columns.to_list() 
+
+            # Show results
+                nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + ', '.join(piece_names))
+                st.plotly_chart(nr_chart, use_container_width = True)
+                st.dataframe(filtered_nr, use_container_width = True)
+
+                # download option
+                csv = convert_df(filtered_nr)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = piece_name + '_notes_results.csv',
+                    mime='text/csv',
+                    )
+        # for corpus:
+        elif len(piece_names) > 1:
+            if 'Composer' not in filtered_nr.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date"], axis=1)
+                nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+                nr_counts.rename(columns = {'index':'pitch'}, inplace = True) 
+                # apply categorical for order
+                nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
+                nr_counts = nr_counts.sort_values(by = "pitch").dropna().copy()
+                voices = nr_counts.columns.to_list() 
+
+            # Show results
+                nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + ', '.join(piece_names))
+                st.plotly_chart(nr_chart, use_container_width = True)
+                st.dataframe(filtered_nr, use_container_width = True)
+
+                # download option
+                csv = convert_df(filtered_nr)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = 'corpus_notes_results.csv',
+                    mime='text/csv',
+                    )
+        
+        
 
 # melodic interval bar chart
 
-def mel_interval_bar_chart(_piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
+def piece_mel(_piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
     mel = piece.melodic(df = nr, 
                         kind = kind_choice,
                         directed = directed,
-                        compound = compound)#.fillna('')
-    # count up the values in each item column--sum for each pitch.  
-    # make a copy 
-    mel_counts = mel.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
-    # rename the index column to something more useful
-    mel_counts.rename(columns = {'index':'interval'}, inplace = True)
-    # apply the categorical list and sort.  
-    if interval_kinds[select_kind] == 'q':
-        mel_counts['interval'] = pd.Categorical(mel_counts["interval"], categories=interval_order_quality)
-    mel_counts = mel_counts.sort_values(by = "interval").dropna().copy()
-    mel_counts.index.rename('interval', inplace=True)
-    voices = mel.columns.to_list()
-
-    # temp
-    mel = piece.detailIndex(mel)
-
-    # set the figure size, type and colors
-    mel_chart = px.bar(mel_counts, x="interval", y=voices, title="Distribution of Melodic Intervals in " + piece_name)
-    # st.plotly_chart(fig, use_container_width = True)
-    return mel, mel_chart
-
+                        compound = compound)
     
+    return mel
 
+def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
+    func = ImportedPiece.notes  # <- NB there are no parentheses here
+    list_of_dfs = corpus.batch(func = func, 
+                                kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
+                                metadata=False)
+    func2 = ImportedPiece.melodic
+    list_of_dfs = corpus.batch(func = func2,
+                               kwargs = {'df' : list_of_dfs, 'kind' : kind_choice, 'directed' : directed, 'compound' : compound},
+                               metadata = False)
+    func3 = ImportedPiece.detailIndex
+    list_of_dfs = corpus.batch(func = func3, 
+                            kwargs = {'df': list_of_dfs}, 
+                            metadata = True)
+    mel = pd.concat(list_of_dfs)
+
+    return mel
+
+# form for melodic
+if st.sidebar.checkbox("Explore Melodic Intervals"):
+    st.subheader("Explore Melodic Intervals")
+    st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+
+    with st.form("Melodic Interval Settings"):
+        combine_unisons_choice = st.selectbox(
+            "Combine Unisons", [False, True])
+        combine_rests_choice = st.selectbox(
+            "Combine Rests", [True, False])
+        select_kind = st.selectbox(
+            "Select Interval Kind", 
+            ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+        kind_choice = interval_kinds[select_kind]
+        directed = st.selectbox(
+            "Select Directed Interval Status",
+            [True, False])
+        compound = st.selectbox(
+            "Select Compound Interval Status",
+            [True, False])
+        # form submission button
+        submitted = st.form_submit_button("Update and Submit")
+        if submitted:
+            # run the function here, passing in settings from the form above
+            if 'mel' in st.session_state:
+                del st.session_state.mel
+            # run the function here, passing in settings from the form above
+            if len(piece_names) == 1:
+                 mel = piece_mel(piece,
+                            combine_unisons_choice, 
+                            combine_rests_choice, 
+                            kind_choice,
+                            directed,
+                            compound)
+            elif len(piece_names) > 1:
+                 mel = corpus_mel(st.session_state.corpus,
+                            combine_unisons_choice, 
+                            combine_rests_choice, 
+                            kind_choice,
+                            directed,
+                            compound)
+            
+            if "mel" not in st.session_state:
+                st.session_state.mel = mel
+    
+    # and use the session state variables for display
+    if 'mel' not in st.session_state:
+        pass
+    else:
+        # show corpus data for mel with filter options
+        st.write("Filter Results by Contents of Each Column")
+        filtered_mel = filter_dataframe(st.session_state.mel.fillna('-'))
+        
+# for one piece
+        if len(piece_names) == 1: 
+            if 'Composer' in filtered_mel.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                mel_counts = filtered_mel.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
+                mel_counts.rename(columns = {'index':'interval'}, inplace = True)
+                # apply the categorical list and sort.  
+                if interval_kinds[select_kind] == 'q':
+                    mel_counts['interval'] = pd.Categorical(mel_counts["interval"], categories=interval_order_quality)
+                else:
+                    mel_counts = mel_counts.sort_values(by = "interval").dropna().copy()
+                mel_counts.index.rename('interval', inplace=True)
+                voices = mel_counts.columns.to_list() 
+                mel_chart = px.bar(mel_counts, x="interval", y=voices, title="Distribution of Melodic Intervals in " + ', '.join(piece_names))
+                # and show results
+                st.plotly_chart(mel_chart, use_container_width = True)
+                st.dataframe(filtered_mel, use_container_width = True)
+                csv = convert_df(filtered_mel)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = piece_name + '_melodic_results.csv',
+                    mime='text/csv',
+                    )
+        # for corpus
+        elif len(piece_names) > 1:
+            # remove composer/title, then make counts
+            if 'Composer' not in filtered_mel.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                mel_no_mdata = filtered_mel.drop(['Composer', 'Title', "Date"], axis=1)
+                mel_counts = mel_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
+                mel_counts.rename(columns = {'index':'interval'}, inplace = True)
+                # apply the categorical list and sort.  
+                if interval_kinds[select_kind] == 'q':
+                    mel_counts['interval'] = pd.Categorical(mel_counts["interval"], categories=interval_order_quality)
+                else:
+                    mel_counts = mel_counts.sort_values(by = "interval").dropna().copy()
+                mel_counts.index.rename('interval', inplace=True)
+                voices = mel_counts.columns.to_list() 
+                mel_chart = px.bar(mel_counts, x="interval", y=voices, title="Distribution of Melodic Intervals in " + ', '.join(piece_names))
+                # and show results
+                st.plotly_chart(mel_chart, use_container_width = True)
+                st.dataframe(filtered_mel, use_container_width = True)
+                csv = convert_df(filtered_mel)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = 'corpus_melodic_results.csv',
+                    mime='text/csv',
+                    )
+        
 # function for harmonic bar chart
 
-def har_interval_bar_chart(piece, directed, compound, kind_choice):
+def piece_har(piece, kind_choice, directed, compound):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
                          compound = compound).fillna('')
-    # count up the values in each item column--sum for each pitch. make a copy 
-    har_counts = har.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
-    # rename the index column to something more useful
-    har_counts.rename(columns = {'index':'interval'}, inplace = True)
-    # apply the categorical list and sort.  
-    if interval_kinds[select_kind] == 'q':
-        har_counts['interval'] = pd.Categorical(har_counts["interval"], categories=interval_order_quality)
-    har_counts = har_counts.sort_values(by = "interval").dropna().copy()
-    har_counts.index.rename('interval', inplace=True)
-    voices = har.columns.to_list()
-    # set the figure size, type and colors
-    har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
-    
+
     har = piece.detailIndex(har)
-    return har, har_chart
+    return har
+
+def corpus_har(corpus, kind_choice, directed, compound):
+    func = ImportedPiece.harmonic
+    list_of_dfs = corpus.batch(func = func,
+                               kwargs = {'kind' : kind_choice, 'directed' : directed, 'compound' : compound},
+                               metadata = False)
+    func2 = ImportedPiece.detailIndex
+    list_of_dfs = corpus.batch(func = func2, 
+                            kwargs = {'df': list_of_dfs}, 
+                            metadata = True)
+    har = pd.concat(list_of_dfs)
+
+    return har
+
+# form for harmonic
+if st.sidebar.checkbox("Explore Harmonic Intervals"):
+    st.subheader("Explore Harmonic Intervals")
+    with st.form("Harmonic Interval Settings"):
+        directed = st.selectbox(
+            "Select Directed Interval Status",
+            [True, False])
+        compound = st.selectbox(
+            "Select Compound Interval Status",
+            [True, False])
+        select_kind = st.selectbox(
+            "Select Interval Kind", 
+            ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+        kind_choice = interval_kinds[select_kind]
+        # form submission button
+        submitted = st.form_submit_button("Update and Submit")
+        if submitted:
+            # run the function here, passing in settings from the form above
+            if 'har' in st.session_state:
+                del st.session_state.har
+            # run the function here, passing in settings from the form above
+            if len(piece_names) == 1:
+                 har = piece_har(piece,
+                            kind_choice,
+                            directed,
+                            compound)
+            elif len(piece_names) > 1:
+                 har = corpus_har(st.session_state.corpus,
+                            kind_choice,
+                            directed,
+                            compound)
+            
+            if "har" not in st.session_state:
+                st.session_state.har = har
+    # and use the session state variables for display
+    if 'har' not in st.session_state:
+        pass
+    else:
+        # count up the values in each item column--sum for each pitch. make a copy 
+        filtered_har = filter_dataframe(st.session_state.har.fillna('-'))
+        # for one piece
+        if len(piece_names) == 1: 
+            if 'Composer' in filtered_har.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                har_counts = filtered_har.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
+                # rename the index column to something more useful
+                har_counts.rename(columns = {'index':'interval'}, inplace = True)
+                # apply the categorical list and sort.  
+                if interval_kinds[select_kind] == 'q':
+                    har_counts['interval'] = pd.Categorical(har_counts["interval"], categories=interval_order_quality)
+                har_counts = har_counts.sort_values(by = "interval").dropna().copy()
+                har_counts.index.rename('interval', inplace=True)
+                voices = har.columns.to_list()
+                # set the figure size, type and colors
+                har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
+                # show results
+                st.plotly_chart(har_chart, use_container_width = True)
+                st.dataframe(filtered_har, use_container_width = True)
+                csv = convert_df(filtered_har)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = piece_name + '_harmonic_results.csv',
+                    mime='text/csv',
+                    )
+        elif len(piece_names) > 1: 
+            if 'Composer' not in filtered_har.columns:
+                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            else:
+                har_no_mdata = filtered_har.drop(['Composer', 'Title', "Date"], axis=1)
+                har_counts = har_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
+                # rename the index column to something more useful
+                har_counts.rename(columns = {'index':'interval'}, inplace = True)
+                # apply the categorical list and sort.  
+                if interval_kinds[select_kind] == 'q':
+                    har_counts['interval'] = pd.Categorical(har_counts["interval"], categories=interval_order_quality)
+                har_counts = har_counts.sort_values(by = "interval").dropna().copy()
+                har_counts.index.rename('interval', inplace=True)
+                voices = har_counts.columns.to_list()
+                # set the figure size, type and colors
+                har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
+
+                # show results
+                st.plotly_chart(har_chart, use_container_width = True)
+                st.dataframe(filtered_har, use_container_width = True)
+                csv = convert_df(filtered_har)
+                st.download_button(
+                    label="Download Filtered Data as CSV",
+                    data=csv,
+                    file_name = 'corpus_harmonic_results.csv',
+                    mime='text/csv',
+                    )           
+
+
 
 # function for ngram heatmap
 
@@ -407,198 +799,7 @@ def presentation_types_streamlit(piece,
 # TRUE shows the score
 
 
-if show_score_checkbox:
-    # insert html within Streamlit, using components()
-    
-    components.html(
-        
-        """
-        <div class="panel-body">
-        <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-    </div>
 
-    <script type="module">
-        import 'https://editor.verovio.org/javascript/app/verovio-app.js';
-
-        // Create the app - here with an empty option object
-        const app = new Verovio.App(document.getElementById("app"), {});
-
-        // Load a file (MEI or MusicXML)
-
-        fetch('"""+mei_git_link+"""')
-            .then(function(response) {
-                return response.text();
-            })
-            .then(function(text) {
-                app.loadData(text);
-            });
-    </script>
-        """,
-        height=800,
-        # width=850,
-    )
-
-# FALSE shows a blank bit of HTML
-else:
-    components.html(
-        
-        """
-        <div class="panel-body">
-        """,
-        height=1,
-        # width=850,
-    ) 
-
-# form for notes
-
-if st.sidebar.checkbox("Explore Notes"):
-
-    st.subheader("Explore Notes")
-
-    with st.form("Note Settings"):
-        combine_unisons_choice = st.selectbox(
-            "Combine Unisons", [False, True])
-        combine_rests_choice = st.selectbox(
-            "Combine Rests", [True, False])
-        # form submission button
-        submitted = st.form_submit_button("Submit")
-        if submitted:
-            for key in st.session_state.keys():
-                del st.session_state[key]
-            # run the function here, passing in settings from the form above
-            nr, nr_chart = notes_bar_chart(piece,
-                            combine_unisons_choice, 
-                            combine_rests_choice)
-            # Set up session state for these returns
-            if "nr_chart" not in st.session_state:
-                st.session_state.nr_chart = nr_chart
- 
-            if "nr" not in st.session_state:
-                st.session_state.nr = nr
-    
-    # and use the session state variables for display
-    if 'nr_chart' not in st.session_state:
-        pass
-    else:
-        st.plotly_chart(st.session_state.nr_chart, use_container_width = True)
-    if 'nr' not in st.session_state:
-        pass
-    else:
-        filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
-        st.dataframe(filtered_nr, use_container_width = True)
-        csv = convert_df(filtered_nr)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_notes_rests_results.csv',
-            mime='text/csv',
-            )
-
-# form for melodic
-if st.sidebar.checkbox("Explore Melodic Intervals"):
-    st.subheader("Explore Melodic Intervals")
-
-    with st.form("Melodic Interval Settings"):
-        combine_unisons_choice = st.selectbox(
-            "Combine Unisons", [False, True])
-        combine_rests_choice = st.selectbox(
-            "Combine Rests", [True, False])
-        select_kind = st.selectbox(
-            "Select Interval Kind", 
-            ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
-        kind_choice = interval_kinds[select_kind]
-        directed = st.selectbox(
-            "Select Directed Interval Status",
-            [True, False])
-        compound = st.selectbox(
-            "Select Compound Interval Status",
-            [True, False])
-        # form submission button
-        submitted = st.form_submit_button("Update and Submit")
-        if submitted:
-            # run the function here, passing in settings from the form above
-            for key in st.session_state.keys():
-                del st.session_state[key]
-            mel, mel_chart = mel_interval_bar_chart(piece, 
-                                    combine_unisons_choice, 
-                                    combine_rests_choice, 
-                                    kind_choice,
-                                    directed,
-                                    compound)
-            # Set up session state for these returns
-            if "mel_chart" not in st.session_state:
-                st.session_state.mel_chart = mel_chart
- 
-            if "mel" not in st.session_state:
-                st.session_state.mel = mel
-    
-    # and use the session state variables for display
-    if 'mel_chart' not in st.session_state:
-        pass
-    else:
-        st.plotly_chart(st.session_state.mel_chart, use_container_width = True)
-    if 'mel' not in st.session_state:
-        pass
-    else:
-        filtered_mel = filter_dataframe(st.session_state.mel.fillna('-'))
-        st.dataframe(filtered_mel, use_container_width = True)
-        csv = convert_df(filtered_mel)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_melodic_results.csv',
-            mime='text/csv',
-            )
-
-# form for harmonic
-if st.sidebar.checkbox("Explore Harmonic Intervals"):
-    st.subheader("Explore Harmonic Intervals")
-    with st.form("Harmonic Interval Settings"):
-        directed = st.selectbox(
-            "Select Directed Interval Status",
-            [True, False])
-        compound = st.selectbox(
-            "Select Compound Interval Status",
-            [True, False])
-        select_kind = st.selectbox(
-            "Select Interval Kind", 
-            ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
-        kind_choice = interval_kinds[select_kind]
-        # form submission button
-        submitted = st.form_submit_button("Submit")
-        if submitted:
-            # clear the session states
-            for key in st.session_state.keys():
-                del st.session_state[key]
-            # run the function here, passing in settings from the form above
-            har, har_chart = har_interval_bar_chart(piece, 
-                                directed,
-                                compound, 
-                                kind_choice)
-            # Set up session state for these returns
-            if "har_chart" not in st.session_state:
-                st.session_state.har_chart = har_chart
- 
-            if "har" not in st.session_state:
-                st.session_state.har = har
-# and use the session state variables for display
-    if 'har_chart' not in st.session_state:
-        pass
-    else:
-        st.plotly_chart(st.session_state.har_chart, use_container_width = True)
-
-    if 'har' not in st.session_state:
-        pass
-    else:
-        filtered_har = filter_dataframe(st.session_state.har.fillna('-'))
-        st.dataframe(filtered_har, use_container_width = True)
-        csv = convert_df(filtered_har)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_harmonic_results.csv',
-            mime='text/csv',
-            )           
  
 # ngram form
 if st.sidebar.checkbox("Explore ngrams"):
