@@ -93,34 +93,34 @@ def find_mei_link(piece_id, json_objects):
             return json_object['mei_links'][0]
     return None
 
-def show_score(mei_file):
-    # insert html within Streamlit, using components()
-    components.html(   
-        """
-        <div class="panel-body">
-        <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-    </div>
+# def show_score(mei_file):
+#     # insert html within Streamlit, using components()
+#     components.html(   
+#         """
+#         <div class="panel-body">
+#         <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+#     </div>
 
-    <script type="module">
-        import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+#     <script type="module">
+#         import 'https://editor.verovio.org/javascript/app/verovio-app.js';
 
-        // Create the app - here with an empty option object
-        const app = new Verovio.App(document.getElementById("app"), {});
+#         // Create the app - here with an empty option object
+#         const app = new Verovio.App(document.getElementById("app"), {});
 
-        // Load a file (MEI or MusicXML)
+#         // Load a file (MEI or MusicXML)
 
-        fetch('"""+mei_file+"""')
-            .then(function(response) {
-                return response.text();
-            })
-            .then(function(text) {
-                app.loadData(text);
-            });
-    </script>
-        """,
-        height=800,
-        # width=850,
-    )
+#         fetch('"""+mei_file+"""')
+#             .then(function(response) {
+#                 return response.text();
+#             })
+#             .then(function(text) {
+#                 app.loadData(text);
+#             });
+#     </script>
+#         """,
+#         height=800,
+#         # width=850,
+#     )
 
 # FALSE shows a blank bit of HTML
 # else:
@@ -137,37 +137,37 @@ def show_score(mei_file):
 mei_file = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + "CRIM_Model_0001" + ".mei"
 
 
-show_git_score = st.checkbox("score", key = 1)
-if show_git_score:
-        # insert html within Streamlit, using components()
+# show_git_score = st.checkbox("score", key = 1)
+# if show_git_score:
+#         # insert html within Streamlit, using components()
         
-        components.html(
+#         components.html(
             
-            """
-            <div class="panel-body">
-            <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-        </div>
+#             """
+#             <div class="panel-body">
+#             <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+#         </div>
 
-        <script type="module">
-            import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+#         <script type="module">
+#             import 'https://editor.verovio.org/javascript/app/verovio-app.js';
 
-            // Create the app - here with an empty option object
-            const app = new Verovio.App(document.getElementById("app"), {});
+#             // Create the app - here with an empty option object
+#             const app = new Verovio.App(document.getElementById("app"), {});
 
-            // Load a file (MEI or MusicXML)
+#             // Load a file (MEI or MusicXML)
 
-            fetch('"""+mei_file+"""')
-                .then(function(response) {
-                return response.text();
-            })
-                .then(function(text) {
-                    app.loadData(text);
-                });
-        </script>
-            """,
-            height=800,
-            # width=850,
-        )
+#             fetch('"""+mei_file+"""')
+#                 .then(function(response) {
+#                 return response.text();
+#             })
+#                 .then(function(text) {
+#                     app.loadData(text);
+#                 });
+#         </script>
+#             """,
+#             height=800,
+#             # width=850,
+#         )
 
     
 
@@ -182,48 +182,76 @@ uploaded_files = st.file_uploader("Choose a file",
 for uploaded_file in uploaded_files:
     byte_str = uploaded_file.read()
     text_obj = byte_str.decode('UTF-8')  # Or use the encoding you expect
-    score = converter.parse(text_obj)
-    score
-    show_score = st.checkbox("score", key = 2)
+    st.write(text_obj)
+    # score = converter.parse(text_obj)
+    # score
 
-    if show_score:
-        # insert html within Streamlit, using components()
+    
+    # insert html within Streamlit, using components()
+    
+    # components.html(
         
-        components.html(
+    #     """
+    #     <div class="panel-body">
+    #     <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+    # </div>
+
+    # <script type="module">
+    #     import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+
+    #     // Create the app - here with an empty option object
+    #     const app = new Verovio.App(document.getElementById("app"), {});
+
+    #     // Load a file (MEI or MusicXML)
+
+        
+    #     app.loadData('"""+text_obj+"""');
+
+    # </script>
+    #     """,
+    #     height=800,
+    #     # width=850,
+    # )
+    # show_score = st.checkbox("score", key = 2)
+
+    # if show_score:
+    #     # insert html within Streamlit, using components()
+        
+    #     components.html(
             
-            """
-            <div class="panel-body">
-            <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-        </div>
+    #         """
+    #         <div class="panel-body">
+    #         <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+    #     </div>
 
-        <script type="module">
-            import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+    #     <script type="module">
+    #         import 'https://editor.verovio.org/javascript/app/verovio-app.js';
 
-            // Create the app - here with an empty option object
-            const app = new Verovio.App(document.getElementById("app"), {});
+    #         // Create the app - here with an empty option object
+    #         const app = new Verovio.App(document.getElementById("app"), {});
 
-            // Load a file (MEI or MusicXML)
+    #         // Load a file (MEI or MusicXML)
 
-            fetch('"""+mei_file+"""')
-                .then(function(text) {
-                    app.loadData(text);
-                });
-        </script>
-            """,
-            height=800,
-            # width=850,
-        )
+    #         fetch('"""+mei_file+"""')
+    #             .then(function(text) {
+    #                 app.loadData(text);
+    #             });
+    #     </script>
+    #         """,
+    #         height=800,
+    #         # width=850,
+    #     )
 
-    # FALSE shows a blank bit of HTML
-    else:
-        components.html(
+    # # FALSE shows a blank bit of HTML
+    # else:
+    #     components.html(
             
-            """
-            <div class="panel-body">
-            """,
-            height=1,
-            # width=850,
-        ) 
+    #         """
+    #         <div class="panel-body">
+    #         """,
+    #         height=1,
+    #         # width=850,
+    #     ) 
 
 crim_url = 'https://crimproject.org/data/pieces/'
 all_pieces_json = requests.get(crim_url).json()
