@@ -152,7 +152,7 @@ elif len(piece_names) == 1:
 
     st.write("Selected Piece")
     if piece_name is not None:
-        piece_data = {}
+        # piece_data = {}
         piece_data = piece.metadata
         # piece_data = get_piece_data(piece_name, json_objects)
         piece_data["View on CRIM"] = crim_view_url
@@ -181,38 +181,29 @@ else:
     if show_metadata_summary:
         summary_data = []
         for piece_name in piece_names:
-            # piece_data_for_table = []
-            piece_data = {}
+            position = piece_names.index(piece_name)
+            piece_data = corpus.scores[position].metadata
             crim_view = 'https://crimproject.org/pieces/' + piece_name
-            piece_data = piece_name.metadata
-            # piece_data = get_piece_data(piece_name, json_objects)
             piece_data["CRIM URL"] = crim_view
             summary_data.append(piece_data)
         st.dataframe(summary_data, use_container_width = True)
 
-    # show scores
-    show_scores = st.checkbox("Show Score for Each Piece")
-    if show_scores:
+        # option to show individual scores
         for piece_name in piece_names:
-            piece_data_for_table = []
-            piece_data = {}
+            position = piece_names.index(piece_name)
+            piece_data = corpus.scores[position].metadata
             crim_view = 'https://crimproject.org/pieces/' + piece_name
-            # piece_data = get_piece_data(piece_name, json_objects)
-            piece_data = piece_name.metadata
             piece_data["View on CRIM"] = crim_view
             st.dataframe(piece_data, use_container_width = True)
-            position = piece_names.index(piece_name)
-            # show score? 
-            piece_key = str(random.randint(0,1000))
             
             if "mei_file" in st.session_state:
                 del st.session_state.mei_file
             mei_file = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
             if "mei_file" not in st.session_state:
                 st.session_state.mei_file = mei_file
-            show_score_checkbox = st.checkbox('Show This Score with Verovio', key = piece_key)
-            # if show_score_checkbox:
-            show_score(st.session_state.mei_file)
+            show_score_checkbox = st.checkbox('Show This Score with Verovio', key = position)
+            if show_score_checkbox:
+                show_score(st.session_state.mei_file)
                 
 
 # CRIM at GIT
