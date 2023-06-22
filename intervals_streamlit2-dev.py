@@ -34,7 +34,7 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-# local pieces for dev
+# local pieces for dev keep!
 # raw_prefix = '/Users/rfreedma/Documents/CRIM_Python/crim-local/CRIM-online/crim/static/mei/MEI_4.0'
 # file_list = os.listdir(raw_prefix) 
 # piece_list = [ ] 
@@ -90,21 +90,21 @@ def find_mei_link(piece_id, json_objects):
             return json_object['mei_links'][0]
     return None
 
-from tempfile import NamedTemporaryFile
+# from tempfile import NamedTemporaryFile
 
-# piece_list = []
-uploaded_file = st.file_uploader("Upload Files", 
-                                #   accept_multiple_files = True, 
-                                  label_visibility = 'visible',
-                                  type = ['.mei', '.xml', '.mid'])
-# uploaded_file = st.file_uploader("File upload", type='mei')
-with NamedTemporaryFile(dir='.', suffix='.mei') as f:
-    f.write(uploaded_file.getbuffer())
-    piece = importScore(f.name)
-    mdata = piece.metadata
-    mei_file = piece.mei_doc
-    score = piece.score
-    path = piece.path
+# # piece_list = []
+# uploaded_file = st.file_uploader("Upload Files", 
+#                                 #   accept_multiple_files = True, 
+#                                   label_visibility = 'visible',
+#                                   type = ['.mei', '.xml', '.mid'])
+# # uploaded_file = st.file_uploader("File upload", type='mei')
+# with NamedTemporaryFile(dir='.', suffix='.mei') as f:
+#     f.write(uploaded_file.getbuffer())
+#     piece = importScore(f.name)
+#     mdata = piece.metadata
+#     mei_file = piece.mei_doc
+#     score = piece.score
+#     path = piece.path
 
 
 # Assuming you have an ElementTree object named 'et'
