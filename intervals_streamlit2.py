@@ -141,9 +141,7 @@ all_piece_list = make_piece_list(json_objects)
 
 piece_names = st.multiselect('Select Pieces To View from CRIM Django', 
                             all_piece_list)
-corpus_list = []
-if len(corpus_list) > 1:
-    corpus = CorpusBase(corpus_list)
+
 if len(piece_names) == 0:
     st.subheader("Please Select One or More Pieces")
 
@@ -174,16 +172,22 @@ elif len(piece_names) == 1:
         mei_git_url = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
         if show_score_checkbox:
             show_score(mei_git_url)
+
 # for multiple pieces
-
 elif len(piece_names) > 1:
-
+    if "corpus" in st.session_state:
+        del st.session_state.corpus
+    corpus_list = [] 
 # make initial list of paths
     
     for piece_name in piece_names:
         filepath = find_mei_link(piece_name, json_objects)
         corpus_list.append(filepath)
     corpus = CorpusBase(corpus_list)
+
+    st.session_state.corpus = corpus
+
+    
  
     # show summary of corpus
     
@@ -214,7 +218,10 @@ elif len(piece_names) > 1:
             show_score_checkbox = st.checkbox('Show This Score with Verovio', key = position)
             if show_score_checkbox:
                 show_score(st.session_state.mei_file)
-       
+
+# check to see that corpus is updated
+if "corpus" in st.session_state:
+    st.write(st.session_state.corpus.paths)      
 # CRIM at GIT
 # piece_list = []
 # crim_git_prefix = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/"
@@ -336,8 +343,8 @@ def convert_df(filtered):
 # intervals functions and forms
 
 # notes piece
-@st.cache_data
-def piece_notes(_piece, combine_unisons_choice, combine_rests_choice):
+# @st.cache_data
+def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                             combineRests = combine_rests_choice)
     nr = piece.detailIndex(nr)
@@ -348,8 +355,8 @@ def piece_notes(_piece, combine_unisons_choice, combine_rests_choice):
     
     
     return nr
-@st.cache_data
-def corpus_notes(_corpus, combine_unisons_choice, combine_rests_choice):
+# @st.cache_data
+def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_dfs = corpus.batch(func = func, 
                                 kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
@@ -389,7 +396,7 @@ if st.sidebar.checkbox("Explore Notes"):
                             combine_rests_choice)
             # # for corpus
             elif len(piece_names) > 1:
-                nr = corpus_notes(corpus,
+                nr = corpus_notes(st.session_state.corpus,
                         combine_unisons_choice, 
                         combine_rests_choice) 
             if "nr" not in st.session_state:
@@ -400,13 +407,17 @@ if st.sidebar.checkbox("Explore Notes"):
         pass
     else:
         # filter the nr results
+        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
         st.write("Filter Results by Contents of Each Column")
-        filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
+        # filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
         # for one piece
         if len(piece_names) == 1:
             # filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
+            filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
             nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-            nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+            # nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+            nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).reset_index().copy()  
+
             nr_counts.rename(columns = {'index':'pitch'}, inplace = True) 
             # apply categorical for order
             nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
@@ -415,6 +426,7 @@ if st.sidebar.checkbox("Explore Notes"):
         # Show results
             nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + ', '.join(piece_names))
             st.plotly_chart(nr_chart, use_container_width = True)
+            
             st.dataframe(filtered_nr, use_container_width = True)
             # download option
             csv = convert_df(filtered_nr)
@@ -429,8 +441,11 @@ if st.sidebar.checkbox("Explore Notes"):
             
             st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
             # filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
+            filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
             nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-            nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+            # nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
+            nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).reset_index().copy()  
+
             nr_counts.rename(columns = {'index':'pitch'}, inplace = True) 
             # apply categorical for order
             nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order)  
@@ -439,6 +454,7 @@ if st.sidebar.checkbox("Explore Notes"):
             # Show results
             nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + ', '.join(piece_names))
             st.plotly_chart(nr_chart, use_container_width = True)
+            
             st.dataframe(filtered_nr, use_container_width = True)
     # download option
         
@@ -451,8 +467,8 @@ if st.sidebar.checkbox("Explore Notes"):
                 )
         
 # melodic functions
-@st.cache_data
-def piece_mel(_piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
+# @st.cache_data
+def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
     mel = piece.melodic(df = nr, 
@@ -466,8 +482,8 @@ def piece_mel(_piece, combine_unisons_choice, combine_rests_choice, kind_choice,
     
     return mel
 
-@st.cache_data
-def corpus_mel(_corpus, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
+# @st.cache_data
+def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_dfs = corpus.batch(func = func, 
                                 kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
@@ -521,7 +537,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             directed,
                             compound)
             elif len(piece_names) > 1:
-                 mel = corpus_mel(corpus,
+                 mel = corpus_mel(st.session_state.corpus,
                             combine_unisons_choice, 
                             combine_rests_choice, 
                             kind_choice,
@@ -535,7 +551,9 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
         pass
     else:
         # show corpus data for mel with filter options
+        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
         st.write("Filter Results by Contents of Each Column")
+        # st.dataframe(st.session_state.mel)
         filtered_mel = filter_dataframe(st.session_state.mel.fillna('-'))
         
 # for one piece
@@ -592,8 +610,8 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     )
         
 # harmonic functions
-@st.cache_data
-def piece_har(_piece, kind_choice, directed, compound):
+# @st.cache_data
+def piece_har(piece, kind_choice, directed, compound):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
                          compound = compound).fillna('')
@@ -605,8 +623,8 @@ def piece_har(_piece, kind_choice, directed, compound):
     har = har[cols_to_move + [col for col in har.columns if col not in cols_to_move]]
     return har
 
-@st.cache_data
-def corpus_har(_corpus, kind_choice, directed, compound):
+# @st.cache_data
+def corpus_har(corpus, kind_choice, directed, compound):
     func = ImportedPiece.harmonic
     list_of_dfs = corpus.batch(func = func,
                                kwargs = {'kind' : kind_choice, 'directed' : directed, 'compound' : compound},
@@ -648,7 +666,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                             directed,
                             compound)
             elif len(piece_names) > 1:
-                 har = corpus_har(corpus,
+                 har = corpus_har(st.session_state.corpus,
                             kind_choice,
                             directed,
                             compound)
@@ -660,6 +678,8 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
         pass
     else:
         # count up the values in each item column--sum for each pitch. make a copy 
+        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Filter Results by Contents of Each Column")
         filtered_har = filter_dataframe(st.session_state.har.fillna('-'))
         # for one piece
         if len(piece_names) == 1: 
@@ -702,7 +722,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                 har_counts.index.rename('interval', inplace=True)
                 voices = har_counts.columns.to_list()
                 # set the figure size, type and colors
-                har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + piece_name)
+                har_chart = px.bar(har_counts, x="interval", y=voices, title="Distribution of Harmonic Intervals in " + ', '.join(piece_names))
 
                 # show results
                 st.plotly_chart(har_chart, use_container_width = True)
@@ -718,8 +738,8 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
 
 
 # function for ngram heatmap
-@st.cache_data
-def ngram_heatmap(_piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
+# @st.cache_data
+def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
     mel = piece.melodic(df = nr, 
@@ -753,7 +773,7 @@ def ngram_heatmap(_piece, combine_unisons_choice, kind_choice, directed, compoun
         entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = False)
         
         return entry_ngrams_detail, entry_ng_heatmap
-    # this is for all mel ngrams (iof entries is False in form)
+    # this is for all mel ngrams (if entries is False in form)
     else:
         mel_ngrams = piece.ngrams(df = mel, n = length_choice, exclude = ['Rest'])
 
@@ -774,8 +794,8 @@ def ngram_heatmap(_piece, combine_unisons_choice, kind_choice, directed, compoun
 
 # hr functions
 # one piece
-@st.cache_data
-def piece_homorhythm(_piece, length_choice, full_hr_choice):
+# @st.cache_data
+def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
     # voices_list = list(piece.notes().columns)
@@ -791,8 +811,9 @@ def piece_homorhythm(_piece, length_choice, full_hr_choice):
     hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
     
     return hr
-@st.cache_data
-def corpus_homorhythm(_corpus, length_choice, full_hr_choice):
+# orpus
+# @st.cache_data
+def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     func = ImportedPiece.homorhythm
     list_of_dfs = corpus.batch(func = func,
                                kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
@@ -820,40 +841,43 @@ if st.sidebar.checkbox("Explore Homorhythm"):
             "Select HR Full Status",
             [True, False])
         length_choice = st.number_input('Select ngram Length', value=4, step=1)
-        submitted = st.form_submit_button("Submit")
+        submitted = st.form_submit_button("Update and Submit")
         if submitted:
             if 'hr' in st.session_state:
                 del st.session_state.hr
             if len(piece_names) == 1:
                  hr = piece_homorhythm(st.session_state.piece, length_choice, full_hr_choice)
             elif len(piece_names) > 1:
-                 hr = corpus_homorhythm(corpus, length_choice, full_hr_choice)
+                 hr = corpus_homorhythm(st.session_state.corpus, length_choice, full_hr_choice)
             if "hr" not in st.session_state:
                 st.session_state.hr = hr
 # and use the session state variables for display
     if 'hr' not in st.session_state:
         pass
     else:
+        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe(st.session_state.hr.fillna('-'))
         st.dataframe(filtered_hr, use_container_width = True)
         csv = convert_df(filtered_hr)
         st.download_button(
             label="Download Filtered Data as CSV",
             data=csv,
-            file_name = piece_name + '_homorhytym_results.csv',
+            file_name = piece_name + '_homorhythm_results.csv',
             mime='text/csv',
             ) 
         
 
 # p type function
-@st.cache_data
-def presentation_types_streamlit(_piece, 
-                                 length_choice, 
-                                 limit_entries_choice,
-                                 body_flex_choice, 
-                                 head_flex_choice,
-                                 hidden_types_choice,
-                                 combine_unisons_choice): 
+# piece
+# @st.cache_data
+def piece_presentation_types(piece, 
+                            length_choice, 
+                            limit_entries_choice,
+                            body_flex_choice, 
+                            head_flex_choice,
+                            hidden_types_choice,
+                            combine_unisons_choice): 
     
     p_types = piece.presentationTypes(melodic_ngram_length = length_choice, 
                                       limit_to_entries = limit_entries_choice,
@@ -862,15 +886,112 @@ def presentation_types_streamlit(_piece,
                                       include_hidden_types = hidden_types_choice,
                                       combine_unisons = combine_unisons_choice)
     
-#     # presentationTypes(self, melodic_ngram_length=4, limit_to_entries=True,
-#     #                       body_flex=0, head_flex=1, include_hidden_types=False,
-#     #                       combine_unisons=False)
-#     # p_types = piece.detailIndex(p_types)#.apply(lambda x: ', '.join(map(str, x))).copy()
-#     st.write(p_types)
+    # clean up for streamlit facets
+    p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+    p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+    p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+    p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+    # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+    p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+    
+    return p_types
+#corpus
+# @st.cache_data
+def presentation_types_corpus(corpus,
+                              length_choice, 
+                            limit_entries_choice,
+                            body_flex_choice, 
+                            head_flex_choice,
+                            hidden_types_choice,
+                            combine_unisons_choice):
+                            
+    func = ImportedPiece.presentationTypes
+    list_of_dfs = corpus.batch(func = func,
+                               kwargs = {'melodic_ngram_length' : length_choice, 
+                                      'limit_to_entries' : limit_entries_choice,
+                                      'body_flex' : body_flex_choice, 
+                                      'head_flex' : head_flex_choice,
+                                      'include_hidden_types' : hidden_types_choice,
+                                      'combine_unisons' : combine_unisons_choice},
+                                        metadata = True)
+    for p_types in list_of_dfs:
+        # clean up for streamlit facets
+        p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+        # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+#
+    # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+    p_types = pd.concat(list_of_dfs)
+
     return p_types
 
-# score tool
-# TRUE shows the score
+
+# p types form
+if st.sidebar.checkbox("Explore Presentation Types"):
+    st.subheader("Explore Presentation Types")
+    with st.form("Presentation Type Settings"):
+        combine_unisons_choice = st.selectbox(
+            "Combine Unisons", [False, True])
+        length_choice = st.number_input('Select ngram Length', value=4, step=1) 
+        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
+        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
+        limit_entries_choice = st.selectbox(
+            "Limit to Melodic Entries", [True, False])
+        hidden_types_choice = st.selectbox(
+            "Include Hidden Presentation Types", [False, True])
+        # form submission button
+        submitted = st.form_submit_button("Update and Submit")
+        if submitted:
+            if "p_types" in st.session_state.keys():
+                del st.session_state.p_types
+            # one piece
+            if len(piece_names) == 1:
+                p_types = piece_presentation_types(piece, 
+                                                    length_choice,
+                                                    limit_entries_choice,
+                                                    body_flex_choice,
+                                                    head_flex_choice,
+                                                    hidden_types_choice,
+                                                    combine_unisons_choice)
+                
+
+                # Set up session state for these returns
+                if "p_types" not in st.session_state:
+                    st.session_state.p_types = p_types
+            
+            # corpus
+            if len(piece_names) > 1:
+                p_types = presentation_types_corpus(st.session_state.corpus,
+                              length_choice, 
+                            limit_entries_choice,
+                            body_flex_choice, 
+                            head_flex_choice,
+                            hidden_types_choice,
+                            combine_unisons_choice)
+                
+                # Set up session state for these returns
+                if "p_types" not in st.session_state:
+                    st.session_state.p_types = p_types
+
+
+        # and use the session state variables for display
+    if 'p_types' not in st.session_state:
+        pass
+    else:
+        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Filter Results by Contents of Each Column")
+        filtered_p_types = filter_dataframe(st.session_state.p_types)
+        st.dataframe(filtered_p_types, use_container_width = True)
+        csv = convert_df(filtered_p_types)
+        st.download_button(
+            label="Download Filtered Data as CSV",
+            data=csv,
+            file_name = piece_name + '_p_types_results.csv',
+            mime='text/csv',
+            )
 
 
 
@@ -905,33 +1026,42 @@ if st.sidebar.checkbox("Explore ngrams"):
             key_list = ['ngrams', 'heatmap']
             if key in st.session_state.keys():
                 del st.session_state[key]
-            ngrams, heatmap = ngram_heatmap(piece, 
-                          combine_unisons_choice, 
-                          kind_choice, 
-                          directed, 
-                          compound, 
-                          length_choice)
-            if "ngrams" not in st.session_state:
-                st.session_state.ngrams = ngrams
-            if 'heatmap' not in st.session_state:
-                st.session_state.heatmap = heatmap
-    if 'heatmap' not in st.session_state:
-        pass
-    else:
-        st.altair_chart(st.session_state.heatmap, use_container_width = True)
-    
-    if 'ngrams' not in st.session_state:
-        pass
-    else:
-        filtered_ngrams = filter_dataframe(st.session_state.ngrams.applymap(convertTuple).fillna('-'))
-        st.dataframe((filtered_ngrams), use_container_width = True)
-        csv = convert_df(filtered_ngrams)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_ngram_results.csv',
-            mime='text/csv',
-            )           
+            if len(piece_names) == 1:
+                ngrams, heatmap = ngram_heatmap(piece, 
+                            combine_unisons_choice, 
+                            kind_choice, 
+                            directed, 
+                            compound, 
+                            length_choice)
+                if "ngrams" not in st.session_state:
+                    st.session_state.ngrams = ngrams
+                if 'heatmap' not in st.session_state:
+                    st.session_state.heatmap = heatmap
+    if len(piece_names) > 0:
+        if 'heatmap' not in st.session_state:
+            pass
+        else:
+            st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            st.altair_chart(st.session_state.heatmap, use_container_width = True)
+            
+        if 'ngrams' not in st.session_state:
+            pass
+        else:
+            st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            st.write("Filter Results by Contents of Each Column")
+            filtered_ngrams = filter_dataframe(st.session_state.ngrams.applymap(convertTuple).fillna('-'))
+            st.dataframe((filtered_ngrams), use_container_width = True)
+            csv = convert_df(filtered_ngrams)
+            st.download_button(
+                label="Download Filtered Data as CSV",
+                data=csv,
+                file_name = piece_name + '_ngram_results.csv',
+                mime='text/csv',
+                )
+
+            # elif len(piece_list) > 1:
+
+       
             
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
@@ -965,54 +1095,4 @@ if st.sidebar.checkbox("Explore Cadences"):
 
 
    
-
-if st.sidebar.checkbox("Explore Presentation Types"):
-    st.subheader("Explore Presentation Types")
-    with st.form("Presentation Type Settings"):
-        combine_unisons_choice = st.selectbox(
-            "Combine Unisons", [False, True])
-        length_choice = st.number_input('Select ngram Length', value=4, step=1) 
-        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
-        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
-        limit_entries_choice = st.selectbox(
-            "Limit to Melodic Entries", [False, True])
-        hidden_types_choice = st.selectbox(
-            "Include Hidden Presentation Types", [False, True])
-        # form submission button
-        submitted = st.form_submit_button("Update and Submit")
-        if submitted:
-            for key in st.session_state.keys():
-                del st.session_state[key]
-            p_types = presentation_types_streamlit(piece, 
-                                                   length_choice,
-                                                   limit_entries_choice,
-                                                   body_flex_choice,
-                                                   head_flex_choice,
-                                                   hidden_types_choice,
-                                                   combine_unisons_choice)
-            
-            p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-            # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-
-            # Set up session state for these returns
-            if "p_types" not in st.session_state:
-                st.session_state.p_types = p_types
-
-        # and use the session state variables for display
-    if 'p_types' not in st.session_state:
-        pass
-    else:
-        filtered_p_types = filter_dataframe(st.session_state.p_types)
-        st.dataframe(filtered_p_types, use_container_width = True)
-        csv = convert_df(filtered_p_types)
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=csv,
-            file_name = piece_name + '_p_types_results.csv',
-            mime='text/csv',
-            )
 
