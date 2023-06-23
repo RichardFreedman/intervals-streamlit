@@ -5,7 +5,7 @@ h11==0.12.0
 httpcore==0.13.2
 httpx==0.18.1
 idna==3.1
-intervals @ git+https://github.com/HCDigitalScholarship/intervals.git@rich_dev_22
+intervals @ git+https://github.com/HCDigitalScholarship/intervals.git@rich_dev_23
 ipython==8.4.0
 ipywidgets==7.6.3
 joblib==1.0.1
