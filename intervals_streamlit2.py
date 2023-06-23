@@ -484,7 +484,7 @@ if st.sidebar.checkbox("Explore Notes"):
             st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
             # filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
             filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
-            nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date"], axis=1)
+            nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
             # nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()  
             nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).reset_index().copy()  
 
@@ -649,10 +649,11 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
         
 # harmonic functions
 # @st.cache_data
-def piece_har(piece, kind_choice, directed, compound):
+def piece_har(piece, kind_choice, directed, compound, against_low):
     har = piece.harmonic(kind = kind_choice, 
                          directed = directed,
-                         compound = compound).fillna('')
+                         compound = compound,
+                         againstLow = against_low).fillna('')
 
     har = piece.detailIndex(har)
     # har = har.reset_index()
@@ -662,10 +663,10 @@ def piece_har(piece, kind_choice, directed, compound):
     return har
 
 # @st.cache_data
-def corpus_har(corpus, kind_choice, directed, compound):
+def corpus_har(corpus, kind_choice, directed, compound, against_low):
     func = ImportedPiece.harmonic
     list_of_dfs = corpus.batch(func = func,
-                               kwargs = {'kind' : kind_choice, 'directed' : directed, 'compound' : compound},
+                               kwargs = {'kind' : kind_choice, 'directed' : directed, 'compound' : compound, 'againstLow' : against_low},
                                metadata = False)
     func2 = ImportedPiece.detailIndex
     list_of_dfs = corpus.batch(func = func2, 
@@ -691,6 +692,8 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
             "Select Interval Kind", 
             ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
         kind_choice = interval_kinds[select_kind]
+        against_low = st.selectbox("Calculate Intervals Only Against Lowest Voice", 
+                                   [False, True])
         # form submission button
         submitted = st.form_submit_button("Update and Submit")
         if submitted:
@@ -702,12 +705,14 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                  har = piece_har(piece,
                             kind_choice,
                             directed,
-                            compound)
+                            compound,
+                            against_low)
             elif corpus_length > 1:
                  har = corpus_har(st.session_state.corpus,
                             kind_choice,
                             directed,
-                            compound)
+                            compound,
+                            against_low)
             
             if "har" not in st.session_state:
                 st.session_state.har = har
@@ -1110,32 +1115,80 @@ if st.sidebar.checkbox("Explore ngrams"):
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
     st.subheader("Explore Cadences")
+    if corpus_length == 0:
+        st.write("Please select one or more pieces")
+    elif corpus_length == 1:
     # the full table of cad
-    if st.checkbox("Show Full Cadence Table"):
-        cadences = piece.cadences()
-        st.subheader("Detailed View of Cadences")
-        filtered_cadences = filter_dataframe(cadences)
-        st.dataframe(filtered_cadences, use_container_width = True)
-        # possible Verovio Cadences use.  Needs to adapt renderer?
-        # if st.button("Print Filtered Cadences with Verovio"):
-        #     output = piece.verovioCadences(df = filtered_cadences)
-        #     components.html(output)
+        if st.checkbox("Show Full Cadence Table"):
+            cadences = piece.cadences()
+            st.subheader("Detailed View of Cadences")
+            filtered_cadences = filter_dataframe(cadences)
+            st.dataframe(filtered_cadences, use_container_width = True)
+            # possible Verovio Cadences use.  Needs to adapt renderer?
+            # if st.button("Print Filtered Cadences with Verovio"):
+            #     output = piece.verovioCadences(df = filtered_cadences)
+            #     components.html(output)
+        # summary of tone and type
+        if st.checkbox("Summary of Cadences by Tone and Type"):
+            cadences = piece.cadences()
+            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+            st.subheader("Summary of Cadences by Tone and Type")
+            grouped
+        # radar plots
+        if st.checkbox("Show Basic Radar Plot"):
+            st.subheader("Basic Radar Plot")    
+            radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Advanced Radar Plot"):
+            st.subheader("Advanced Radar Plot")    
+            radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        # if st.checkbox("Show Basic Progress Plot"):
+        #     st.subheader("Basic Radar Plot")    
+        #     progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
+        #     st.plotly_chart(progress, use_container_width=True)
+        # if st.checkbox("Show Advanced Progress Plot"):
+        #     st.subheader("Advanced Radar Plot")    
+        #     progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
+        #     st.plotly_chart(progress, use_container_width=True)
+    # corpus
+    elif corpus_length >= 2:
+        func = ImportedPiece.cadences
+        list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+        cadences = pd.concat(list_of_dfs, ignore_index=False)   
+        cols_to_move = ['Composer', 'Title', 'Date']
+        cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
+        if st.checkbox("Show Full Cadence Table"):
+            st.subheader("Detailed View of Cadences")
+            filtered_cadences = filter_dataframe(cadences)
+            st.dataframe(filtered_cadences, use_container_width = True)
+            # possible Verovio Cadences use.  Needs to adapt renderer?
+            # if st.button("Print Filtered Cadences with Verovio"):
+            #     output = piece.verovioCadences(df = filtered_cadences)
+            #     components.html(output)
+        # summary of tone and type
+        if st.checkbox("Summary of Cadences by Tone and Type"):
+            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+            st.subheader("Summary of Cadences by Tone and Type")
+            grouped
+        # radar plots
+        if st.checkbox("Show Basic Radar Plot"):
+            st.subheader("Basic Radar Plot")    
+            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Advanced Radar Plot"):
+            st.subheader("Advanced Radar Plot")    
+            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        # if st.checkbox("Show Basic Progress Plot"):
+        #     st.subheader("Basic Radar Plot")    
+        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
+        #     st.plotly_chart(progress, use_container_width=True)
+        # if st.checkbox("Show Advanced Progress Plot"):
+        #     st.subheader("Advanced Radar Plot")    
+        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
+        #     st.plotly_chart(progress, use_container_width=True)
 
-    # summary of tone and type
-    if st.checkbox("Summary of Cadences by Tone and Type"):
-        cadences = piece.cadences()
-        grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
-        st.subheader("Summary of Cadences by Tone and Type")
-        grouped
-    # radar plots
-    if st.button("Show Basic Radar Plot"):
-        st.subheader("Basic Radar Plot")    
-        radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
-        st.plotly_chart(radar, use_container_width=True)
-    if st.button("Show Advanced Radar Plot"):
-        st.subheader("Advanced Radar Plot")    
-        radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
-        st.plotly_chart(radar, use_container_width=True)
 
 
    
