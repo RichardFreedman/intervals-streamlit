@@ -1143,14 +1143,14 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.subheader("Advanced Radar Plot")    
             radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
             st.plotly_chart(radar, use_container_width=True)
-        # if st.checkbox("Show Basic Progress Plot"):
-        #     st.subheader("Basic Radar Plot")    
-        #     progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
-        #     st.plotly_chart(progress, use_container_width=True)
-        # if st.checkbox("Show Advanced Progress Plot"):
-        #     st.subheader("Advanced Radar Plot")    
-        #     progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
-        #     st.plotly_chart(progress, use_container_width=True)
+        if st.checkbox("Show Basic Progress Plot"):
+            st.subheader("Basic Radar Plot")    
+            progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
+        if st.checkbox("Show Advanced Progress Plot"):
+            st.subheader("Advanced Radar Plot")    
+            progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
     # corpus
     elif corpus_length >= 2:
         func = ImportedPiece.cadences
@@ -1180,14 +1180,14 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.subheader("Advanced Radar Plot")    
             radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
             st.plotly_chart(radar, use_container_width=True)
-        # if st.checkbox("Show Basic Progress Plot"):
-        #     st.subheader("Basic Radar Plot")    
-        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-        #     st.plotly_chart(progress, use_container_width=True)
-        # if st.checkbox("Show Advanced Progress Plot"):
-        #     st.subheader("Advanced Radar Plot")    
-        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-        #     st.plotly_chart(progress, use_container_width=True)
+        if st.checkbox("Show Basic Progress Plot"):
+            st.subheader("Basic Radar Plot")    
+            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
+        if st.checkbox("Show Advanced Progress Plot"):
+            st.subheader("Advanced Radar Plot")    
+            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
 
 
 
