@@ -128,7 +128,8 @@ def show_score(mei_git_url):
 # Title and Introduction
 st.title("CRIM Intervals")
 st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
-st.write("More about CRIM Intervals at:  https://github.com/HCDigitalScholarship/intervals/blob/rich_dev_22/README.md")
+st.markdown("[Learn more about CRIM Intervals](https://github.com/HCDigitalScholarship/intervals)", unsafe_allow_html=True)
+st.markdown("Follow detailed explanations of various CRIM Intervals methods via the [Tutorials](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/01_Introduction.md)", unsafe_allow_html=True)
 
 
 crim_url = 'https://crimproject.org/data/pieces/'
