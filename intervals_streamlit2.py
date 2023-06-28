@@ -1035,8 +1035,8 @@ if st.sidebar.checkbox("Explore Presentation Types"):
             )
 
 # ngram form
-if st.sidebar.checkbox("Explore ngrams"):
-    st.subheader("Explore nGrams")
+if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
+    st.subheader("Explore nGrams and Heatmaps")
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
