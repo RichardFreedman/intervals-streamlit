@@ -25,7 +25,7 @@ import streamlit.components.v1 as components
 from os import listdir 
 import os.path 
 import json
-import random
+import seaborn as sns
 from tempfile import NamedTemporaryFile
 
 from pandas.api.types import (
@@ -170,10 +170,8 @@ elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
         st.session_state.metadata = piece.metadata
     st.session_state.metadata['CRIM View'] = crim_view_url
 
-    if "piece" not in st.session_state or "metadata" not in st.session_state:
-        pass
-    else:
-        st.dataframe(st.session_state.metadata, use_container_width=True)  
+
+    st.dataframe(st.session_state.metadata, use_container_width=True)  
 
 # One upload
 elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
@@ -198,10 +196,6 @@ elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
         if "metadata" not in st.session_state:
             st.session_state.metadata = piece.metadata
         st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
-
-    if "piece" not in st.session_state or "metadata" not in st.session_state:
-        pass
-    else:
         st.dataframe(st.session_state.metadata, use_container_width=True)  
 
 
@@ -416,7 +410,7 @@ def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
 # notes form
 if st.sidebar.checkbox("Explore Notes"):
     st.subheader("Explore Notes")
-    st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
     with st.form("Note Settings"):
         combine_unisons_choice = st.selectbox(
@@ -449,7 +443,7 @@ if st.sidebar.checkbox("Explore Notes"):
         pass
     else:
         # filter the nr results
-        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         # filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
         # for one piece
@@ -481,7 +475,7 @@ if st.sidebar.checkbox("Explore Notes"):
         # for corpus:
         if corpus_length > 1:
             
-            st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             # filtered_nr = filter_dataframe(st.session_state.nr.fillna('-'))
             filtered_nr = filter_dataframe(st.session_state.nr).fillna('-')
             nr_no_mdata = filtered_nr.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
@@ -548,7 +542,7 @@ def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice
 # melodic form
 if st.sidebar.checkbox("Explore Melodic Intervals"):
     st.subheader("Explore Melodic Intervals")
-    st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
     with st.form("Melodic Interval Settings"):
         combine_unisons_choice = st.selectbox(
@@ -594,7 +588,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
         pass
     else:
         # show corpus data for mel with filter options
-        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         # st.dataframe(st.session_state.mel)
         filtered_mel = filter_dataframe(st.session_state.mel.fillna('-'))
@@ -721,7 +715,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
         pass
     else:
         # count up the values in each item column--sum for each pitch. make a copy 
-        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_har = filter_dataframe(st.session_state.har.fillna('-'))
         # for one piece
@@ -751,7 +745,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                 )
         elif corpus_length > 1: 
             if 'Composer' not in filtered_har.columns:
-                st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+                st.write("Did you **change the piece list**? If so, please **Update and Submit form**")
             else:
                 har_no_mdata = filtered_har.drop(['Composer', 'Title', "Date"], axis=1)
                 har_counts = har_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
@@ -781,7 +775,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
 
 # function for ngram heatmap
 # @st.cache_data
-def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice):
+def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice, include_count):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
     mel = piece.melodic(df = nr, 
@@ -807,10 +801,8 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         entry_ng_heatmap = viz.plot_ngrams_heatmap(entry_ngrams, 
                                          entry_ngrams_duration, 
                                          selected_patterns=[], 
-                                         voices=[], 
-                                         heatmap_width= 1000,
-                                         heatmap_height=300, 
-                                         includeCount=True)
+                                         voices=[],  
+                                         includeCount=include_count)
         # rename entry_ngrams df as mel_ngrams for display
         entry_ngrams_detail = piece.detailIndex(entry_ngrams, offset = False)
         
@@ -826,9 +818,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          mel_ngrams_duration, 
                                          selected_patterns=[], 
                                          voices=[], 
-                                         heatmap_width = 1000,
-                                         heatmap_height=300, 
-                                         includeCount=True)
+                                         includeCount=include_count)
         
         mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)  
 
@@ -897,7 +887,7 @@ if st.sidebar.checkbox("Explore Homorhythm"):
     if 'hr' not in st.session_state:
         pass
     else:
-        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe(st.session_state.hr.fillna('-'))
         st.dataframe(filtered_hr, use_container_width = True)
@@ -1028,7 +1018,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
     if 'p_types' not in st.session_state:
         pass
     else:
-        st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_p_types = filter_dataframe(st.session_state.p_types)
         st.dataframe(filtered_p_types, use_container_width = True)
@@ -1044,59 +1034,61 @@ if st.sidebar.checkbox("Explore Presentation Types"):
             mime='text/csv',
             )
 
- 
 # ngram form
 if st.sidebar.checkbox("Explore ngrams"):
     st.subheader("Explore nGrams")
-    with st.form("Ngram Settings"):
-        combine_unisons_choice = st.selectbox(
-            "Combine Unisons", [False, True])
-        directed = st.selectbox(
-            "Select Directed Interval Status",
-            [True, False])
-        compound = st.selectbox(
-            "Select Compound Interval Status",
-            [True, False])
-        select_kind = st.selectbox(
-            "Select Interval Kind", 
-            ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
-        kind_choice = interval_kinds[select_kind]
-        length_choice = st.number_input('Select ngram Length', value=3, step=1)
-        entries_only = st.selectbox(
-            "Melodic Entries Only?",
-            [True, False])
-        # submit ngram form
-        submitted = st.form_submit_button("Submit")
-    #here we need separate sections for the _combined_ ngs (as a corpus function)
-    # vs one heatmap for each piece in the corpus
-    # put the corpus ngs in session state, then pass to filter below
-    # display each heatmap on its own
-        if submitted:
-            key_list = ['ngrams', 'heatmap']
-            if key in st.session_state.keys():
-                del st.session_state[key]
-            if corpus_length == 1:
+    if corpus_length == 0:
+        st.write("Please select one or more pieces")
+    elif corpus_length == 1:
+        with st.form("Ngram Settings"):
+            combine_unisons_choice = st.selectbox(
+                "Combine Unisons", [False, True])
+            directed = st.selectbox(
+                "Select Directed Interval Status",
+                [True, False])
+            compound = st.selectbox(
+                "Select Compound Interval Status",
+                [True, False])
+            select_kind = st.selectbox(
+                "Select Interval Kind", 
+                ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+            kind_choice = interval_kinds[select_kind]
+            length_choice = st.number_input('Select ngram Length', value=3, step=1)
+            entries_only = st.selectbox(
+                "Melodic Entries Only?",
+                [True, False])
+            include_count = st.selectbox("Include Count of Ngrams", [True, False])
+            # submit ngram form
+            submitted = st.form_submit_button("Submit")
+        #here we need separate sections for the _combined_ ngs (as a corpus function)
+        # vs one heatmap for each piece in the corpus
+        # put the corpus ngs in session state, then pass to filter below
+        # display each heatmap on its own
+            if submitted:
+                key_list = ['ngrams', 'heatmap']
+                for key in key_list:
+                    if key in st.session_state.keys():
+                        del st.session_state[key]
                 ngrams, heatmap = ngram_heatmap(piece, 
                             combine_unisons_choice, 
                             kind_choice, 
                             directed, 
                             compound, 
-                            length_choice)
+                            length_choice,
+                            include_count)
                 if "ngrams" not in st.session_state:
                     st.session_state.ngrams = ngrams
                 if 'heatmap' not in st.session_state:
                     st.session_state.heatmap = heatmap
-    if corpus_length > 0:
         if 'heatmap' not in st.session_state:
             pass
-        else:
-            st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
-            st.altair_chart(st.session_state.heatmap, use_container_width = True)
-            
-        if 'ngrams' not in st.session_state:
+        if "ngrams" not in st.session_state:
             pass
         else:
-            st.write("Did you **change the piece list**?  If so, please select **Update and Submit from Form**")
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+            st.altair_chart(st.session_state.heatmap, use_container_width = True)
+
             st.write("Filter Results by Contents of Each Column")
             filtered_ngrams = filter_dataframe(st.session_state.ngrams.applymap(convertTuple).fillna('-'))
             st.dataframe((filtered_ngrams), use_container_width = True)
@@ -1107,10 +1099,65 @@ if st.sidebar.checkbox("Explore ngrams"):
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 )
+    # for corpus
+    elif corpus_length > 1:
+        with st.form("Ngram Settings"):
+            combine_unisons_choice = st.selectbox(
+                "Combine Unisons", [False, True])
+            directed = st.selectbox(
+                "Select Directed Interval Status",
+                [True, False])
+            compound = st.selectbox(
+                "Select Compound Interval Status",
+                [True, False])
+            select_kind = st.selectbox(
+                "Select Interval Kind", 
+                ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+            kind_choice = interval_kinds[select_kind]
+            length_choice = st.number_input('Select ngram Length', value=3, step=1)
+            entries_only = st.selectbox(
+                "Melodic Entries Only?",
+                [True, False])
+            include_count = st.selectbox("Include Count of Ngrams", [True, False])
+            # submit ngram form
+            submitted = st.form_submit_button("Submit")
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
-            # elif len(piece_list) > 1:
+            if submitted:
+                ngram_df_list = []
+                for work in corpus_list:
+                    piece = importScore(work)
+                    ngrams, heatmap = ngram_heatmap(piece, 
+                                combine_unisons_choice, 
+                                kind_choice, 
+                                directed, 
+                                compound, 
+                                length_choice,
+                                include_count)
+                    ngram_df_list.append(ngrams)
+                    st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+                    st.altair_chart(heatmap, use_container_width = True)
+                if 'combined_ngrams' in st.session_state.keys():
+                    del st.session_state.combined_ngrams
+                combined_ngrams = pd.concat(ngram_df_list)
+                if "combined_ngrams" not in st.session_state:
+                    st.session_state.combined_ngrams = combined_ngrams
 
-       
+        if "combined_ngrams" not in st.session_state:
+            pass
+        else:
+            st.write("Filter Results by Contents of Each Column")
+            st.write("Note that the Filters do NOT change the heatmaps shown above!")
+            filtered_combined_ngrams = filter_dataframe(st.session_state.combined_ngrams.applymap(convertTuple).fillna('-'))
+            st.dataframe((filtered_combined_ngrams), use_container_width = True)
+            csv = convert_df(filtered_combined_ngrams)
+            st.download_button(
+                label="Download Filtered Data as CSV",
+                data=csv,
+                file_name = 'corpus_ngram_results.csv',
+                mime='text/csv',
+                )
+
             
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
@@ -1189,7 +1236,23 @@ if st.sidebar.checkbox("Explore Cadences"):
             progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
             st.pyplot(progress, use_container_width=True)
 
+if st.sidebar.checkbox("Explore Model Finder"):
+    st.subheader("Model Finder")
+    if corpus_length <= 1:
+        st.write("Please select at least two pieces")
+    elif corpus_length > 1:
+        corpus = CorpusBase(corpus_list)
+        with st.form("Homorhythm Settings"):
+            length_choice = st.number_input('Select ngram Length', value=4, step=1)
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                soggetto_cross_plot = corpus.modelFinder(n=length_choice)
+                st.dataframe(soggetto_cross_plot, use_container_width=True)
+                fig, ax = plt.subplots()
+                sns.heatmap(soggetto_cross_plot, cmap="YlGnBu", annot=False, ax=ax)
+                st.write(fig)
 
-
+            else:
+                pass
    
 
