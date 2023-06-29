@@ -1192,11 +1192,11 @@ if st.sidebar.checkbox("Explore Cadences"):
             radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
             st.plotly_chart(radar, use_container_width=True)
         if st.checkbox("Show Basic Progress Plot"):
-            st.subheader("Basic Radar Plot")    
+            st.subheader("Basic Progress Plot")    
             progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
             st.pyplot(progress, use_container_width=True)
         if st.checkbox("Show Advanced Progress Plot"):
-            st.subheader("Advanced Radar Plot")    
+            st.subheader("Advanced Progress Plot")    
             progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
             st.pyplot(progress, use_container_width=True)
     # corpus
