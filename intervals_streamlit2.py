@@ -164,28 +164,28 @@ elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
     st.dataframe(st.session_state.metadata, use_container_width=True)  
 
 # One upload
-elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
-    f = ''
-    crim_view_url = "Direct Upload; Not from CRIM"
-    keys = ['piece', 'metadata']
-    for key in keys:
-        if key in st.session_state.keys():
-            del st.session_state[key]
-    for file in uploaded_files_list:
-        # KEEP THIS
-        # with NamedTemporaryFile(dir='.', suffix = '.mei') as f:
-        #     f.write(file.getbuffer())
-        #     # f.name is in fact the TEMP PATH!
-        #     piece = importScore(f.name)
-        byte_str = file.read()
-        text_obj = byte_str.decode('UTF-8')
-        piece = importScore(text_obj) 
-        if "piece" not in st.session_state:
-            st.session_state.piece = piece
-        if "metadata" not in st.session_state:
-            st.session_state.metadata = piece.metadata
-        st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
-        st.dataframe(st.session_state.metadata, use_container_width=True)  
+# elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
+#     f = ''
+#     crim_view_url = "Direct Upload; Not from CRIM"
+#     keys = ['piece', 'metadata']
+#     for key in keys:
+#         if key in st.session_state.keys():
+#             del st.session_state[key]
+#     for file in uploaded_files_list:
+#         # KEEP THIS
+#         # with NamedTemporaryFile(dir='.', suffix = '.mei') as f:
+#         #     f.write(file.getbuffer())
+#         #     # f.name is in fact the TEMP PATH!
+#         #     piece = importScore(f.name)
+#         byte_str = file.read()
+#         text_obj = byte_str.decode('UTF-8')
+#         piece = importScore(text_obj) 
+#         if "piece" not in st.session_state:
+#             st.session_state.piece = piece
+#         if "metadata" not in st.session_state:
+#             st.session_state.metadata = piece.metadata
+#         st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
+#         st.dataframe(st.session_state.metadata, use_container_width=True)  
 
 # now combine the CRIM and Uploaded Files
 elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(crim_piece_selections) > 1 or  len(uploaded_files_list) > 1:
