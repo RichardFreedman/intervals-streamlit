@@ -121,11 +121,12 @@ def show_score(mei_git_url):
     )
 
 # Title and Introduction
-st.title("CRIM Intervals")
+st.title("CRIM Intervals Search Tools")
 st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
 st.markdown("[Learn more about CRIM Intervals](https://github.com/HCDigitalScholarship/intervals)", unsafe_allow_html=True)
 st.markdown("Follow detailed explanations of various CRIM Intervals methods via the [Tutorials](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/01_Introduction.md)", unsafe_allow_html=True)
-
+st.markdown("Learn more about this web application (and how to contribute or adapt it via the [Github Repository for CRIM Intervals on Streamlit](https://github.com/RichardFreedman/intervals-streamlit/blob/main/README.md)")
+# importing files
 crim_url = 'https://crimproject.org/data/pieces/'
 all_pieces_json = requests.get(crim_url).json()
 json_str = json.dumps(all_pieces_json)
@@ -161,7 +162,7 @@ elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
     if "metadata" not in st.session_state:
         st.session_state.metadata = piece.metadata
     st.session_state.metadata['CRIM View'] = crim_view_url
-    st.dataframe(st.session_state.metadata, use_container_width=True)  
+    st.dataframe(st.session_state.metadata)  
 
 # One upload
 elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
@@ -185,7 +186,7 @@ elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
         if "metadata" not in st.session_state:
             st.session_state.metadata = piece.metadata
         st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
-        st.dataframe(st.session_state.metadata, use_container_width=True)  
+        st.dataframe(st.session_state.metadata)  
 
 # now combine the CRIM and Uploaded Files
 elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(crim_piece_selections) > 1 or  len(uploaded_files_list) > 1:
@@ -223,7 +224,7 @@ elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(cr
         metadata_list.append(corpus.scores[i].metadata)
     if 'corpus_metadata' not in st.session_state:
         st.session_state.corpus_metadata = metadata_list
-    st.dataframe(st.session_state.corpus_metadata, use_container_width=True)
+    st.dataframe(st.session_state.corpus_metadata)
 
 # get metadata for corpus
 if "corpus_metadata" not in st.session_state:
@@ -717,7 +718,7 @@ def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
 if st.sidebar.checkbox("Explore Notes"):
     # search_type = "ngram"
     st.subheader("Explore Notes")
-    st.write("[Known the code! Read more about CRIM Intervals notes and rests methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals notes and rests methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md)", unsafe_allow_html=True)
     st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
     with st.form("Note Settings"):
@@ -839,7 +840,7 @@ def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice
 if st.sidebar.checkbox("Explore Melodic Intervals"):
     search_type = "mel"
     st.subheader("Explore Melodic Intervals")
-    st.write("[Known the code! Read more about CRIM Intervals melodic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals melodic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md)", unsafe_allow_html=True)
     st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
     with st.form("Melodic Interval Settings"):
         combine_unisons_choice = st.selectbox(
@@ -972,7 +973,7 @@ def corpus_har(corpus, kind_choice, directed, compound, against_low):
 if st.sidebar.checkbox("Explore Harmonic Intervals"):
     search_type = "har"
     st.subheader("Explore Harmonic Intervals")
-    st.write("[Known the code! Read more about CRIM Intervals harmonic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals harmonic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals.md)", unsafe_allow_html=True)
     with st.form("Harmonic Interval Settings"):
         directed = st.selectbox(
             "Select Directed Interval Status",
@@ -1122,7 +1123,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
 if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
     search_type = "intervals_ngrams"
     st.subheader("Explore nGrams and Heatmaps")
-    st.write("[Known the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/05_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
@@ -1297,7 +1298,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
 if st.sidebar.checkbox("Explore Homorhythm"):
     search_type = "other"
     st.subheader("Explore Homorhythm")
-    st.write("[Known the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
 
     with st.form("Homorhythm Settings"):
         full_hr_choice = st.selectbox(
@@ -1391,7 +1392,7 @@ def presentation_types_corpus(corpus,
 if st.sidebar.checkbox("Explore Presentation Types"):
     search_type = "other"
     st.subheader("Explore Presentation Types")
-    st.write("[Known the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Presentation_Types.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)", unsafe_allow_html=True)
     with st.form("Presentation Type Settings"):
         combine_unisons_choice = st.selectbox(
             "Combine Unisons", [False, True])
@@ -1455,7 +1456,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
 if st.sidebar.checkbox("Explore Cadences"):
     search_type = "other"
     st.subheader("Explore Cadences")
-    st.write("[Known the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Cadences.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
@@ -1533,7 +1534,7 @@ if st.sidebar.checkbox("Explore Cadences"):
 if st.sidebar.checkbox("Explore Model Finder"):
     
     st.subheader("Model Finder")
-    st.write("[Known the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Model_Finder.md)", unsafe_allow_html=True)
+    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
     if corpus_length <= 1:
         st.write("Please select at least two pieces")
     elif corpus_length > 1:
