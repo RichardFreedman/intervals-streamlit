@@ -315,7 +315,8 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
     modification_container = st.container()
     with modification_container:     
         # random_id = random.randrange(1,1000)
-        to_filter_columns = st.multiselect("Limit by Composer, Title or Date", df.columns, key = random_id)
+        to_filter_columns = st.multiselect("Filter Notes by Various Fields", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
             for column in to_filter_columns:
@@ -373,7 +374,8 @@ def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
     modification_container = st.container()
     with modification_container:
         # random_id = random.randrange(1,1000)
-        to_filter_columns = st.multiselect("Limit by Composer, Title or Date", df.columns, key = random_id)
+        to_filter_columns = st.multiselect("Filter Melodic Intervals by Various Fields", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -431,7 +433,8 @@ def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
     modification_container = st.container()
     with modification_container:    
         # random_id = random.randrange(1,1000)
-        to_filter_columns = st.multiselect("Limit by Composer, Title or Date", df.columns, key = random_id)
+        to_filter_columns = st.multiselect("Filter Harmonic Intervals by Various Fields", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -489,7 +492,8 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
     modification_container = st.container()
     with modification_container:       
         # random_id = random.randrange(1,1000)
-        to_filter_columns = st.multiselect("Limit by Composer, Title or Date", df.columns, key = random_id)
+        to_filter_columns = st.multiselect("Filter Ngrams by Various Fields", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -546,7 +550,8 @@ def filter_dataframe_hr(df: pd.DataFrame) -> pd.DataFrame:
     random_id = random.randrange(1,1000)
     modification_container = st.container()
     with modification_container:      
-        to_filter_columns = st.multiselect("Filter the Results", df.columns)
+        to_filter_columns = st.multiselect("Filter the Homorhythm Results", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
         for column in to_filter_columns:
@@ -596,7 +601,8 @@ def filter_dataframe_ptypes(df: pd.DataFrame) -> pd.DataFrame:
     random_id = random.randrange(1,1000)
     modification_container = st.container()
     with modification_container:     
-        to_filter_columns = st.multiselect("Filter the Results", df.columns)
+        to_filter_columns = st.multiselect("Filter the Presentation Type Results", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
         for column in to_filter_columns:
@@ -645,7 +651,8 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
     random_id = random.randrange(1,1000)
     modification_container = st.container()
     with modification_container:     
-        to_filter_columns = st.multiselect("Filter the Results", df.columns)
+        to_filter_columns = st.multiselect("Filter the Cadence Results", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
         for column in to_filter_columns:
@@ -816,7 +823,7 @@ def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, 
     mel = piece.detailIndex(mel)
     # mel = mel.reset_index()
     mel = mel.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-    cols_to_move = ['Composer', 'Title', 'Measure', 'Beat', 'Date']
+    cols_to_move = ['Composer', 'Title', 'Date']
     mel = mel[cols_to_move + [col for col in mel.columns if col not in cols_to_move]]
     return mel
 
