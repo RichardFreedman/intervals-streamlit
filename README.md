@@ -1,6 +1,6 @@
 # intervals-streamlit
 
-# A Streamlit Web Applciation for CRIM Intervals
+# A Streamlit Web Application for CRIM Intervals
 
 Learn about CRIM Intervals here:  https://github.com/HCDigitalScholarship/intervals/tree/rich_dev_22
 
