@@ -289,7 +289,7 @@ interval_order_quality = ["-P8", "-M7", "-m7", "-M6", "-m6", "-P5", "-P4", "-M3"
 pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
                 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
                 'C4', 'C#4','D4', 'E-4', 'E4', 'F4', 'F#4','G4', 'A4', 'B-4', 'B4',
-                'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5']
+                'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5', 'Rest']
 
 # filter and download functions
 def convertTuple(tup):
@@ -331,7 +331,7 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
                         df[column].unique(),
                         default=list(df[column].unique()),
                     )
-                    df = df[df[column].isin(user_cat_input)]   
+                    df = df[df[column].isin(user_cat_input)]  
         # gets values for highlighted filters
         df_no_meta = df.loc[:, ~df.columns.isin(['Composer', "Title", 'Date', "Measure", "Beat"])]
         df_no_meta_col_names = df_no_meta.columns.tolist()
