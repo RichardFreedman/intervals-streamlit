@@ -1286,7 +1286,7 @@ def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
     hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
     hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-    hr = piece.emaAddresses(df=hr, mode='h')
+    # hr = piece.emaAddresses(df=hr, mode='h')
     hr = hr.reset_index()
     hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
     cols_to_move = ['Composer', 'Title', 'Date']
@@ -1298,13 +1298,13 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     func = ImportedPiece.homorhythm
     list_of_dfs = corpus.batch(func = func,
                                kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
-                               metadata = False)
-    func2 = ImportedPiece.emaAddresses
-    list_of_hr_with_ema = corpus.batch(func = func2,
-                                       kwargs = {'df': list_of_dfs, 'mode' : 'h'},
-                                       metadata = True)
+                               metadata = True)
+    # func2 = ImportedPiece.emaAddresses
+    # list_of_hr_with_ema = corpus.batch(func = func2,
+    #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
+    #                                    metadata = True)
 #
-    rev_list_of_dfs = [df.reset_index() for df in list_of_hr_with_ema]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
     # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
