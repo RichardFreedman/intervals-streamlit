@@ -8,7 +8,7 @@ import verovio
 import os
 import requests
 import re
-import crim-intervals as intervals
+import intervals
 from intervals import * 
 from intervals import main_objs
 import intervals.visualizations as viz
