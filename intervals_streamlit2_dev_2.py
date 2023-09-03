@@ -1565,42 +1565,50 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
-     if corpus_length <= 1:
-         st.write("Please select at least two pieces to compare")
-     elif corpus_length > 1:
+    def mf(corpus, length_choice, combine_unisons_choice):
+        notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, kwargs={'combineUnisons': combine_unisons_choice})
+        mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, kwargs={'df': notes, 'kind': 'd', 'end': False})
+        entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False, 
+                                                kwargs={'df': mel, 'length_choice': length_choice, 'thematic': True, 'anywhere': True})
+
+            # get entries from the masses
+        mass_notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, 
+                                                   kwargs={'combineUnisons': combine_unisons_choice})
+        mass_mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, 
+                                                 kwargs={'df': mass_notes, 'kind': 'd', 'end': False})
+        mass_entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False,
+                                                     kwargs={'df': mass_mel, 'length_choice': length_choice, 'thematic': True, 'anywhere': True})
+
+        res = pd.DataFrame(columns=(model.file_name for model in st.session_state.corpus.scores), index=(mass.file_name for mass in st.session_state.corpus.scores))
+        res.columns.name = 'Source'
+        res.index.name = 'Target'
+        for i, model in enumerate(st.session_state.corpus.scores):
+            mod_patterns = entries[i].stack().unique()
+            for j, mass in enumerate(st.session_state.corpus.scores):
+                stack = mass_entries[j].stack()
+                hits = stack[stack.isin(mod_patterns)]
+                if len(stack.index):
+                    percent = len(hits.index) / len(stack.index)
+                    
+                    res.at[mass.file_name, model.file_name] = percent
+                    
+        return st.session_state.res
+    if corpus_length <= 1:
+        st.write("Please select at least two pieces to compare")
+    elif corpus_length > 1:
         with st.form("Model Finder Settings"):
             length_choice = st.number_input('Select ngram Length', value=4, step=1)
             combine_unisons_choice = st.selectbox(
                 "Combine Unisons", [False, True])
             submitted = st.form_submit_button("Submit")
             if submitted:
-                notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, kwargs={'combineUnisons': combine_unisons_choice})
-                mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, kwargs={'df': notes, 'kind': 'd', 'end': False})
-                entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False,
-                                        kwargs={'df': mel, 'n': length_choice, 'thematic': True, 'anywhere': True})
-
-                # get entries from the masses
-                mass_notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, kwargs={'combineUnisons': combine_unisons_choice})
-                mass_mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, kwargs={'df': mass_notes, 'kind': 'd', 'end': False})
-                mass_entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False,
-                                            kwargs={'df': mass_mel, 'n': length_choice, 'thematic': True, 'anywhere': True})
-
-                res = pd.DataFrame(columns=(model.file_name for model in st.session_state.corpus.scores), index=(mass.file_name for mass in st.session_state.corpus.scores))
-                res.columns.name = 'Source'
-                res.index.name = 'Target'
-                for i, model in enumerate(st.session_state.corpus.scores):
-                    mod_patterns = entries[i].stack().unique()
-                    for j, mass in enumerate(st.session_state.corpus.scores):
-                        stack = mass_entries[j].stack()
-                        hits = stack[stack.isin(mod_patterns)]
-                        if len(stack.index):
-                            percent = len(hits.index) / len(stack.index)
-                            if 'res' in st.session_state:
-                                del st.session_state.res  
-                            res.at[mass.file_name, model.file_name] = percent
-                            if "res" not in st.session_state:
-                                st.session_state.res = res
-            st.dataframe(st.session_state.res, use_container_width=True)
+                if 'model_chart' in st.session_state:
+                        del st.session_state.model_chart  
+                model_chart = mf(st.session_state.corpus, length_choice, combine_unisons_choice)
+                if "model_chart" not in st.session_state:
+                        st.session_state.model_chart = model_chart
+                
+        st.dataframe(st.session_state.model_chart, use_container_width=True)
     
     # st.subheader("Model Finder")
     # st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
