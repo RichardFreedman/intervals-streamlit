@@ -1571,7 +1571,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
     if corpus_length <= 1:
         st.write("Please select at least two pieces to compare")
     elif corpus_length > 1:
-        # corpus = CorpusBase(corpus_list)
+        corpus = CorpusBase(corpus_list)
         with st.form("Model Finder Settings"):
             length_choice = st.number_input('Select ngram Length', value=4, step=1)
             submitted = st.form_submit_button("Submit")
@@ -1585,7 +1585,3 @@ if st.sidebar.checkbox("Explore Model Finder"):
             else:
                 pass
    
-# temporary modelFinder
-soggetto_cross_plot = corpus.modelFinder(n=4)
-# st.dataframe(soggetto_cross_plot, use_container_width=True)
-soggetto_cross_plot
