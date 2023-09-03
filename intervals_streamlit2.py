@@ -1196,6 +1196,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             pass
         else:
             st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            if piece.metadata["composer"] is not None:
+                st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+            else:
+                st.subheader("Ngram Heatmap: " + piece.metadata["title"])
             st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             st.altair_chart(st.session_state.heatmap, use_container_width = True)
 
@@ -1250,7 +1254,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                     cols_to_move = ['Composer', 'Title', 'Date']
                     ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
                     ngram_df_list.append(ngrams3)
-                    st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+                    if piece.metadata["composer"] is not None:
+                        st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+                    else:
+                        st.subheader("Ngram Heatmap: " + piece.metadata["title"])
                     st.altair_chart(heatmap, use_container_width = True)
                 if 'combined_ngrams' in st.session_state.keys():
                     del st.session_state.combined_ngrams
