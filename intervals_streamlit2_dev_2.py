@@ -1581,9 +1581,9 @@ def mf(corpus, length_choice, combine_unisons_choice):
     res = pd.DataFrame(columns=(model.file_name for model in st.session_state.corpus.scores), index=(mass.file_name for mass in st.session_state.corpus.scores))
     res.columns.name = 'Source'
     res.index.name = 'Target'
-    for i, model in enumerate(st.session_state.corpus.scores):
+    for i, model in enumerate(st.session_state.corpus):
         mod_patterns = entries[i].stack().unique()
-        for j, mass in enumerate(st.session_state.corpus.scores):
+        for j, mass in enumerate(st.session_state.corpus):
             stack = mass_entries[j].stack()
             hits = stack[stack.isin(mod_patterns)]
             if len(stack.index):
@@ -1615,8 +1615,8 @@ if st.sidebar.checkbox("Explore Model Finder"):
 
             else:
                 pass
-   
-cps = st.session_state.corpus.scores
+st.session_state.corpus.scores
+# cps = st.session_state.corpus.scores
 
-for piece in cps:
-    st.write(piece.notes())
+# for piece in cps:
+#     st.write(piece.notes())
