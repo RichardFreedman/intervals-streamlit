@@ -340,7 +340,7 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
         values_list = melted['value'].unique()
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
-        values_list.remove('-')
+        values_list = [x for x in values_list if x != "-"]
         user_text_input = st.multiselect("Filter on Notes", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
