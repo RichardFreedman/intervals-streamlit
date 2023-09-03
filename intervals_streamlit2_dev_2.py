@@ -1587,12 +1587,12 @@ if st.sidebar.checkbox("Explore Model Finder"):
             text_obj = byte_str.decode('UTF-8')
             mf_corpus_list.append(text_obj)
     # make corpus and session state version
-    if 'mf_corpus' in st.session_state:
-        del st.session_state.mf_corpus        
+    # if 'mf_corpus' in st.session_state:
+    #     # del st.session_state.mf_corpus        
     mf_corpus = CorpusBase(mf_corpus_list)
-    if 'mf_corpus' not in st.session_state:
-        st.session_state.mf_corpus = mf_corpus
-    st.write(st.session_state.mf_corpus)
+    # if 'mf_corpus' not in st.session_state:
+    #     st.session_state.mf_corpus = mf_corpus
+    st.write(mf_corpus)
     # final_mf_corpus = st.session_state.mf_corpus
     # st.subheader("Model Finder")
     # st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
