@@ -1604,7 +1604,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
             length_choice = st.number_input('Select ngram Length', value=4, step=1)
             submitted = st.form_submit_button("Submit")
             if submitted:
-                soggetto_cross_plot = final_mf_corpus.modelFinder(n=length_choice)
+                soggetto_cross_plot = mf_corpus.modelFinder(n=length_choice)
                 st.dataframe(soggetto_cross_plot, use_container_width=True)
                 fig, ax = plt.subplots()
                 sns.heatmap(soggetto_cross_plot, cmap="YlGnBu", annot=False, ax=ax)
