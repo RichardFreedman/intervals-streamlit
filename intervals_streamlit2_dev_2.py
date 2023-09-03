@@ -1592,7 +1592,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
                     
                     res.at[mass.file_name, model.file_name] = percent
                     
-        return st.session_state.res
+        return res
     if corpus_length <= 1:
         st.write("Please select at least two pieces to compare")
     elif corpus_length > 1:
