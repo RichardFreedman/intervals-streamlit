@@ -1566,7 +1566,9 @@ if st.sidebar.checkbox("Explore Cadences"):
 
 if st.sidebar.checkbox("Explore Model Finder"):
     # st.write(st.session_state.corpus)
-    st.write(uploaded_files_list)
+    for piece in uploaded_files_list:
+        st.write(piece.path)
+    # st.write(uploaded_files_list)
     st.subheader("Model Finder")
     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
     if corpus_length <= 1:
