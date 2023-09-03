@@ -1585,4 +1585,6 @@ if st.sidebar.checkbox("Explore Model Finder"):
             else:
                 pass
    
-
+# temporary modelFinder
+soggetto_cross_plot = corpus.modelFinder(n=4)
+st.dataframe(soggetto_cross_plot, use_container_width=True)
