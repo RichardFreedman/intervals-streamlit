@@ -1616,4 +1616,4 @@ if st.sidebar.checkbox("Explore Model Finder"):
             else:
                 pass
    
-st.session_state.corpus
+st.session_state.corpus.scores
