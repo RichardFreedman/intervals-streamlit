@@ -1565,8 +1565,35 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
-    st.write(st.session_state.corpus)
-    mf_corpus = st.session_state.corpus
+    mf_corpus_list = []
+    metadata_list= []
+    if len(crim_piece_selections) > 0:
+        for crim_piece in crim_piece_selections:
+            filepath = find_mei_link(crim_piece, json_objects)
+            mf_corpus_list.append(filepath)
+    if len(uploaded_files_list) > 0:
+        for file in uploaded_files_list:
+            # KEEP THIS FOR TEMP WRITE METHOD
+            # if file is not None:
+            #     file_details = {"FileName":file.name,"FileType":file.type}
+            #     local_dir = '/tempDir/'
+            #     # this one for use on computer:
+            #     # local_dir = '/Users/rfreedma/Documents/CRIM_Python/intervals-streamlit/'
+            #     file_path = os.path.join(local_dir, file.name)
+            #     with open(file_path,"wb") as f: 
+            #         f.write(file.getbuffer())         
+            #     corpus_list.append(file_path)
+            byte_str = file.read()
+            text_obj = byte_str.decode('UTF-8')
+            mf_corpus_list.append(text_obj)
+    # make corpus and session state version
+    if 'corpus' in st.session_state:
+        del st.session_state.corpus        
+    mf_corpus = CorpusBase(mf_corpus_list)
+    if 'corpus' not in st.session_state:
+        st.session_state.mf_corpus = mf_corpus
+    # st.write(st.session_state.corpus)
+    final_mf_corpus = st.session_state.mf_corpus
     st.subheader("Model Finder")
     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
     if corpus_length <= 1:
@@ -1577,7 +1604,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
             length_choice = st.number_input('Select ngram Length', value=4, step=1)
             submitted = st.form_submit_button("Submit")
             if submitted:
-                soggetto_cross_plot = mf_corpus.modelFinder(n=length_choice)
+                soggetto_cross_plot = final_mf_corpus.modelFinder(n=length_choice)
                 st.dataframe(soggetto_cross_plot, use_container_width=True)
                 fig, ax = plt.subplots()
                 sns.heatmap(soggetto_cross_plot, cmap="YlGnBu", annot=False, ax=ax)
