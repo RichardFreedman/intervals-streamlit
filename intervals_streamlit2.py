@@ -1200,7 +1200,6 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
                 st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-            st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             st.altair_chart(st.session_state.heatmap, use_container_width = True)
 
             st.write("Filter Results by Contents of Each Column") 
