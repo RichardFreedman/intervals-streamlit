@@ -1595,8 +1595,11 @@ if st.sidebar.checkbox("Explore Model Finder"):
                         hits = stack[stack.isin(mod_patterns)]
                         if len(stack.index):
                             percent = len(hits.index) / len(stack.index)
+                            if 'res' in st.session_state:
+                                del st.session_state.res  
                             res.at[mass.file_name, model.file_name] = percent
-                            st.session_state.res = res
+                            if "res" not in st.session_state:
+                                st.session_state.res = res
             st.dataframe(st.session_state.res, use_container_width=True)
     
     # st.subheader("Model Finder")
