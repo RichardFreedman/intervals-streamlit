@@ -1587,10 +1587,10 @@ if st.sidebar.checkbox("Explore Model Finder"):
             text_obj = byte_str.decode('UTF-8')
             mf_corpus_list.append(text_obj)
     # make corpus and session state version
-    if 'corpus' in st.session_state:
-        del st.session_state.corpus        
+    if 'mf_corpus' in st.session_state:
+        del st.session_state.mf_corpus        
     mf_corpus = CorpusBase(mf_corpus_list)
-    if 'corpus' not in st.session_state:
+    if 'mf_corpus' not in st.session_state:
         st.session_state.mf_corpus = mf_corpus
     # st.write(st.session_state.corpus)
     final_mf_corpus = st.session_state.mf_corpus
