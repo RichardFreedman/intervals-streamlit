@@ -1619,4 +1619,4 @@ if st.sidebar.checkbox("Explore Model Finder"):
 cps = st.session_state.corpus.scores
 
 for piece in cps:
-    piece.notes()
+    st.write(piece.notes())
