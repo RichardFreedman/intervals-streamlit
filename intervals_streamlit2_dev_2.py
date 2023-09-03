@@ -217,6 +217,7 @@ elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(cr
     if 'corpus' in st.session_state:
         del st.session_state.corpus        
     corpus = CorpusBase(corpus_list)
+    st.write(corpus)
     if 'corpus' not in st.session_state:
         st.session_state.corpus = corpus
     if 'corpus_metadata' in st.session_state:
