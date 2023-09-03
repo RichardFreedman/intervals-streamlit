@@ -1596,7 +1596,8 @@ if st.sidebar.checkbox("Explore Model Finder"):
                         if len(stack.index):
                             percent = len(hits.index) / len(stack.index)
                             res.at[mass.file_name, model.file_name] = percent
-                st.dataframe(res, use_container_width=True)
+                            st.session_state.res = res
+            st.dataframe(st.session_state.res, use_container_width=True)
     
     # st.subheader("Model Finder")
     # st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
