@@ -1565,6 +1565,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
+    st.write(st.session_state.corpus)
     
     st.subheader("Model Finder")
     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
