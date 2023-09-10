@@ -1608,14 +1608,6 @@ if st.sidebar.checkbox("Explore Model Finder"):
                
                 
                 st.dataframe(model_chart, use_container_width=True)
-
-                fig, ax = plt.subplots()
-                sns.heatmap(model_chart, cmap="YlGnBu", annot=False, ax=ax)
-                st.write(fig)
-
-            else:
-                pass
-   
     
     # st.subheader("Model Finder")
     # st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
