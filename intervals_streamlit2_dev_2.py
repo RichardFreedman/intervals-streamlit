@@ -1569,7 +1569,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
         notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, kwargs={'combineUnisons': combine_unisons_choice})
         mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, kwargs={'df': notes, 'kind': 'd', 'end': False})
         entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False, 
-                                                kwargs={'df': mel, 'n': length_choice, 'thematic': True, 'anywhere': True})
+                                                kwargs={'df': mel, 'length_choice': length_choice, 'thematic': True, 'anywhere': True})
 
             # get entries from the masses
         mass_notes = st.session_state.corpus.batch(ImportedPiece.notes, number_parts=False, metadata=False, 
@@ -1577,7 +1577,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
         mass_mel = st.session_state.corpus.batch(ImportedPiece.melodic, number_parts=False, metadata=False, 
                                                  kwargs={'df': mass_notes, 'kind': 'd', 'end': False})
         mass_entries = st.session_state.corpus.batch(ImportedPiece.entries, number_parts=False, metadata=False,
-                                                     kwargs={'df': mass_mel, 'n': length_choice, 'thematic': True, 'anywhere': True})
+                                                     kwargs={'df': mass_mel, 'length_choice': length_choice, 'thematic': True, 'anywhere': True})
 
         res = pd.DataFrame(columns=(model.file_name for model in st.session_state.corpus.scores), index=(mass.file_name for mass in st.session_state.corpus.scores))
         res.columns.name = 'Source'
