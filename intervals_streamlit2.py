@@ -686,7 +686,7 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
                     df = df[df[column].str.contains(user_text_input)]
     return df
 # download function for filtered results
-# @st.cache_data
+@st.cache_data
 def convert_df(_filtered):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return _filtered.to_csv().encode('utf-8')
