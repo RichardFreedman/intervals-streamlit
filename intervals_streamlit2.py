@@ -921,11 +921,11 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     # and show results
                     st.plotly_chart(mel_chart, use_container_width = True)
                     st.dataframe(filtered_mel, use_container_width = True)
-                    csv = convert_df(filtered_mel.data)
+                    #csv = convert_df(filtered_mel.data)
                     
                     st.download_button(
                         label="Download Filtered Data as CSV",
-                        data=csv,
+                        data=convert_df(filtered_mel.data),
                         file_name = piece.metadata['title'] + '_melodic_results.csv',
                         mime='text/csv',
                         )
@@ -946,10 +946,10 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                 # and show results
                 st.plotly_chart(mel_chart, use_container_width = True)
                 st.dataframe(filtered_mel, use_container_width = True)
-                csv = convert_df(filtered_mel.data)
+                #csv = convert_df(filtered_mel.data)
                 st.download_button(
                     label="Download Filtered Data as CSV",
-                    data=csv,
+                    data=convert_df(filtered_mel.data),
                     file_name = 'corpus_melodic_results.csv',
                     mime='text/csv',
                     )
@@ -1054,10 +1054,10 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                 # show results
                 st.plotly_chart(har_chart, use_container_width = True)
                 st.dataframe(filtered_har, use_container_width = True)
-                csv = convert_df(filtered_har.data)
+                #csv = convert_df(filtered_har.data)
                 st.download_button(
                     label="Download Filtered Data as CSV",
-                    data=csv,
+                    data=convert_df(filtered_har.data),
                     file_name = piece.metadata['title'] + '_harmonic_results.csv',
                     mime='text/csv',
                     )
@@ -1084,10 +1084,10 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     # show results
                     st.plotly_chart(har_chart, use_container_width = True)
                     st.dataframe(filtered_har, use_container_width = True)
-                    csv = convert_df(filtered_har.data)
+                    #csv = convert_df(filtered_har.data)
                     st.download_button(
                         label="Download Filtered Data as CSV",
-                        data=csv,
+                        data=convert_df(filtered_har.data),
                         file_name = 'corpus_harmonic_results.csv',
                         mime='text/csv',
                         )           
@@ -1206,10 +1206,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             filtered_ngrams = filter_dataframe_ng(st.session_state.ngrams3)
             # update
             st.table(filtered_ngrams)
-            csv = convert_df(filtered_ngrams.data)
+            # csv = convert_df(filtered_ngrams.data)
             st.download_button(
                 label="Download Filtered Data as CSV",
-                data=csv,
+                data=convert_df(filtered_ngrams.data),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 )
@@ -1272,10 +1272,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             filtered_combined_ngrams = filter_dataframe_ng(st.session_state.combined_ngrams)
             # update
             st.table((filtered_combined_ngrams))
-            csv = convert_df(filtered_combined_ngrams.data)
+            # csv = convert_df(filtered_combined_ngrams.data)
             st.download_button(
                 label="Download Filtered Data as CSV",
-                data=csv,
+                data=convert_df(filtered_ngrams.data),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 )            
@@ -1354,14 +1354,14 @@ if st.sidebar.checkbox("Explore Homorhythm"):
         st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
         st.dataframe(filtered_hr, use_container_width = True)
-        csv = convert_df(filtered_hr)
+        # csv = convert_df(filtered_hr)
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
         elif corpus_length > 1:
             download_name = "corpus_homorhythm_results.csv"
         st.download_button(
             label="Download Filtered Data as CSV",
-            data=csv,
+            data=convert_df(filtered_hr),
             file_name = download_name,
             mime='text/csv',
             ) 
@@ -1473,14 +1473,14 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         st.write("Filter Results by Contents of Each Column")
         filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
         st.dataframe(filtered_p_types, use_container_width = True)
-        csv = convert_df(filtered_p_types)
+        # csv = convert_df(filtered_p_types)
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_p_type_results.csv'
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
         st.download_button(
             label="Download Filtered Data as CSV",
-            data=csv,
+            data=convert_df(filtered_p_types),
             file_name = download_name,
             mime='text/csv',
             )
