@@ -780,10 +780,10 @@ if st.sidebar.checkbox("Explore Notes"):
                 st.plotly_chart(nr_chart, use_container_width = True)
                 st.dataframe(filtered_nr, use_container_width = True)
                 # download option
-                csv = convert_df(filtered_nr.data)
+                # csv = convert_df(filtered_nr.data)
                 st.download_button(
                     label="Download Filtered Data as CSV",
-                    data=csv,
+                    data=convert_df(filtered_nr.data),
                     file_name = piece.metadata['title'] + '_notes_results.csv',
                     mime='text/csv',
                     )
@@ -804,10 +804,10 @@ if st.sidebar.checkbox("Explore Notes"):
                 
                 st.dataframe(filtered_nr, use_container_width = True)
         # download option       
-                csv = convert_df(filtered_nr.data)
+                # csv = convert_df(filtered_nr.data)
                 st.download_button(
                     label="Download Filtered Data as CSV",
-                    data=csv,
+                    data=convert_df(filtered_nr.data),
                     file_name = 'corpus_notes_results.csv',
                     mime='text/csv',
                     )
