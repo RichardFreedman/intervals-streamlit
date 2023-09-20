@@ -686,11 +686,11 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
                     df = df[df[column].str.contains(user_text_input)]
     return df
 # download function for filtered results
-@st.cache_data
-def convert_df(_filtered):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    if _filtered is not None:
-        return _filtered.to_csv().encode('utf-8')
+# @st.cache_data
+# def convert_df(_filtered):
+#     # IMPORTANT: Cache the conversion to prevent computation on every rerun
+#     if _filtered is not None:
+#         return _filtered.to_csv().encode('utf-8')
 
 # intervals functions and forms
 
@@ -785,7 +785,7 @@ if st.sidebar.checkbox("Explore Notes"):
                 # filtered_nr = filtered_nr.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Notes Data as CSV",
-                    data=convert_df(filtered_nr.data),
+                    data=filtered_nr.data.to_csv(),
                     file_name = piece.metadata['title'] + '_notes_results.csv',
                     mime='text/csv',
                     key=1,
@@ -811,7 +811,7 @@ if st.sidebar.checkbox("Explore Notes"):
                 # filtered_nr_for_csv = filtered_nr.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Corpus Notes Data as CSV",
-                    data=convert_df(filtered_nr.data),
+                    data=filtered_nr.data.to_csv(),
                     file_name = 'corpus_notes_results.csv',
                     mime='text/csv',
                     key=2,
@@ -930,7 +930,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     # filtered_mel = filtered_mel.to_csv().encode('utf-8')
                     st.download_button(
                         label="Download Filtered Melodic Data as CSV",
-                        data=convert_df(filtered_mel.data),
+                        data=filtered_mel.data.to_csv(),
                         file_name = piece.metadata['title'] + '_melodic_results.csv',
                         mime='text/csv',
                         key=3,
@@ -956,7 +956,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                 # filtered_mel = filtered_mel.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Corpus Melodic Data as CSV",
-                    data=convert_df(filtered_mel.data),
+                    data=filtered_mel.data.to_csv(),
                     file_name = 'corpus_melodic_results.csv',
                     mime='text/csv',
                     key=4,
@@ -1066,7 +1066,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                 # filtered_har = filtered_har.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Harmonic Data as CSV",
-                    data=convert_df(filtered_har.data),
+                    data=filtered_har.data.to_csv(),
                     file_name = piece.metadata['title'] + '_harmonic_results.csv',
                     mime='text/csv',
                     key=5,
@@ -1098,7 +1098,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     # filtered_har = filtered_har.to_csv().encode('utf-8')
                     st.download_button(
                         label="Download Filtered Corpus Harmonic Data as CSV",
-                        data=convert_df(filtered_har.data),
+                        data=filtered_har.data.to_csv(),
                         file_name = 'corpus_harmonic_results.csv',
                         mime='text/csv',
                         key=6,
@@ -1222,7 +1222,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # filtered_ngrams = filtered_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Ngram Data as CSV",
-                data=convert_df(filtered_ngrams.data),
+                data=filtered_ngrams.data.to_csv(),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 key=6,
@@ -1290,7 +1290,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # filtered_combined_ngrams = filtered_combined_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Corpus Ngram Data as CSV",
-                data=convert_df(filtered_combined_ngrams.data),
+                data=filtered_combined_ngrams.data.to_csv(),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 key=7,
@@ -1375,10 +1375,10 @@ if st.sidebar.checkbox("Explore Homorhythm"):
             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
         elif corpus_length > 1:
             download_name = "corpus_homorhythm_results.csv"
-        filtered_hr = filtered_hr.to_csv().encode('utf-8')
+        # filtered_hr = filtered_hr.to_csv().encode('utf-8')
         st.download_button(
             label="Download Filtered Homorhythm Data as CSV",
-            data=filtered_hr,
+            data=filtered_hr.data.to_csv(),
             file_name = download_name,
             mime='text/csv',
             key=8,
@@ -1497,10 +1497,10 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_p_type_results.csv'
             if filtered_p_types is not None:
-                filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
+                # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Presentation Type Data as CSV",
-                    data=filtered_p_types,
+                    data=filtered_p_types.to_csv(),
                     file_name = download_name,
                     mime='text/csv',
                     key=8,
@@ -1508,10 +1508,10 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
             if filtered_p_types is not None:
-                filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
+                # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Corpus Presentation Type Data as CSV",
-                    data=filtered_p_types,
+                    data=filtered_p_types.to_csv(),
                     file_name = download_name,
                     mime='text/csv',
                     key=9,
@@ -1539,7 +1539,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             download_name = piece.metadata['title'] + '_cadence_results.csv'
             st.download_button(
                 label="Download Filtered Cadence Data as CSV",
-                data=convert_df(filtered_cadences),
+                data=filtered_cadences.to_csv(),
                 file_name = download_name,
                 key=10,
                 mime='text/csv')
@@ -1582,10 +1582,10 @@ if st.sidebar.checkbox("Explore Cadences"):
             filtered_cadences = filter_dataframe_cads(cadences)
             st.dataframe(filtered_cadences, use_container_width = True)
             download_name = "corpus_cadence_results.csv"
-            filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
+            # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Corpus Cadence Data as CSV",
-                data=filtered_cadences,
+                data=filtered_cadences.to_csv(),
                 file_name = download_name,
                 mime='text/csv',
                 key=11,
