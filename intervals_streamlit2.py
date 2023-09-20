@@ -788,6 +788,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     data=convert_df(filtered_nr.data),
                     file_name = piece.metadata['title'] + '_notes_results.csv',
                     mime='text/csv',
+                    key=1,
                     )
             # for corpus:
             if corpus_length > 1:  
@@ -813,6 +814,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     data=convert_df(filtered_nr.data),
                     file_name = 'corpus_notes_results.csv',
                     mime='text/csv',
+                    key=2,
                     )
         
 # melodic functions
@@ -931,6 +933,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         data=convert_df(filtered_mel.data),
                         file_name = piece.metadata['title'] + '_melodic_results.csv',
                         mime='text/csv',
+                        key=3,
                         )
             # # for corpus
             elif corpus_length > 1:
@@ -956,6 +959,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     data=convert_df(filtered_mel.data),
                     file_name = 'corpus_melodic_results.csv',
                     mime='text/csv',
+                    key=4,
                     )
         
 # harmonic functions
@@ -1065,6 +1069,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     data=convert_df(filtered_har.data),
                     file_name = piece.metadata['title'] + '_harmonic_results.csv',
                     mime='text/csv',
+                    key=5,
                     )
             elif corpus_length > 1: 
                 if 'Composer' not in filtered_har.columns:
@@ -1096,6 +1101,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         data=convert_df(filtered_har.data),
                         file_name = 'corpus_harmonic_results.csv',
                         mime='text/csv',
+                        key=6,
                         )           
 
 # function for ngram heatmap
@@ -1219,6 +1225,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=convert_df(filtered_ngrams.data),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
+                key=6,
                 )
     # for corpus
     elif corpus_length > 1:
@@ -1286,6 +1293,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=convert_df(filtered_combined_ngrams.data),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
+                key=7,
                 )            
 # hr functions
 # one piece
@@ -1373,6 +1381,7 @@ if st.sidebar.checkbox("Explore Homorhythm"):
             data=filtered_hr,
             file_name = download_name,
             mime='text/csv',
+            key=8,
             ) 
         
 # p type function
@@ -1494,6 +1503,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     data=filtered_p_types,
                     file_name = download_name,
                     mime='text/csv',
+                    key=8,
                     )
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
@@ -1504,6 +1514,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     data=filtered_p_types,
                     file_name = download_name,
                     mime='text/csv',
+                    key=9,
                     )
         
 
@@ -1530,6 +1541,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                 label="Download Filtered Cadence Data as CSV",
                 data=convert_df(filtered_cadences),
                 file_name = download_name,
+                key=10,
                 mime='text/csv')
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
@@ -1575,7 +1587,9 @@ if st.sidebar.checkbox("Explore Cadences"):
                 label="Download Filtered Corpus Cadence Data as CSV",
                 data=filtered_cadences,
                 file_name = download_name,
-                mime='text/csv')
+                mime='text/csv',
+                key=11,
+                )
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
             #     output = piece.verovioCadences(df = filtered_cadences)
