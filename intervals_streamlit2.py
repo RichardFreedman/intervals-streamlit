@@ -597,44 +597,44 @@ def filter_dataframe_ptypes(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
- 
-    df = df.copy()
-    random_id = random.randrange(1,1000)
-    modification_container = st.container()
-    with modification_container:     
-        to_filter_columns = st.multiselect("Filter the Presentation Type Results", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
-        # here we are filtering by column
-        # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
-        for column in to_filter_columns:
-            left, right = st.columns((1, 20))
-            left.write("↳")
-            # Treat columns with < 10 unique values as categorical
-            # here 
-            if is_categorical_dtype(df[column]) or df[column].nunique() < 50:
-                user_cat_input = right.multiselect(
-                    f"Values for {column}",
-                    df[column].unique(),
-                    default=list(df[column].unique()),
-                )
-                df = df[df[column].isin(user_cat_input)]
-            elif is_numeric_dtype(df[column]):
-                _min = int(df[column].min())
-                _max = int(df[column].max())
-                user_num_input = right.slider(
-                    f"Values for {column}",
-                    _min,
-                    _max,
-                    (_min, _max)
-                )
-                df = df[df[column].between(*user_num_input)]
-            else:
-                user_text_input = right.text_input(
-                    f"Substring or regex in {column}",
-                )
-                if user_text_input:
-                    df = df[df[column].str.contains(user_text_input)]
-    return df
+    if df is not None:
+        df = df.copy()
+        random_id = random.randrange(1,1000)
+        modification_container = st.container()
+        with modification_container:     
+            to_filter_columns = st.multiselect("Filter the Presentation Type Results", df.columns)
+            st.write("Remember that initial choices will constrain subsequent filters!")
+            # here we are filtering by column
+            # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
+            for column in to_filter_columns:
+                left, right = st.columns((1, 20))
+                left.write("↳")
+                # Treat columns with < 10 unique values as categorical
+                # here 
+                if is_categorical_dtype(df[column]) or df[column].nunique() < 50:
+                    user_cat_input = right.multiselect(
+                        f"Values for {column}",
+                        df[column].unique(),
+                        default=list(df[column].unique()),
+                    )
+                    df = df[df[column].isin(user_cat_input)]
+                elif is_numeric_dtype(df[column]):
+                    _min = int(df[column].min())
+                    _max = int(df[column].max())
+                    user_num_input = right.slider(
+                        f"Values for {column}",
+                        _min,
+                        _max,
+                        (_min, _max)
+                    )
+                    df = df[df[column].between(*user_num_input)]
+                else:
+                    user_text_input = right.text_input(
+                        f"Substring or regex in {column}",
+                    )
+                    if user_text_input:
+                        df = df[df[column].str.contains(user_text_input)]
+        return df
 #for cads
 st.cache_data(experimental_allow_widgets=True)
 def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
@@ -689,7 +689,8 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
 # @st.cache_data
 def convert_df(_filtered):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return _filtered.to_csv().encode('utf-8')
+    if _filtered is not None:
+        return _filtered.to_csv().encode('utf-8')
 
 # intervals functions and forms
 
@@ -1383,13 +1384,14 @@ def piece_presentation_types(piece,
                                       include_hidden_types = hidden_types_choice,
                                       combine_unisons = combine_unisons_choice)   
     # clean up for streamlit facets
-    p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
-    p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-    p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
-    p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-    # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-    p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()  
-    return p_types
+    if p_types is not None:
+        p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+        # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()  
+        return p_types
 #corpus
 # @st.cache_data
 def presentation_types_corpus(corpus,
@@ -1478,12 +1480,14 @@ if st.sidebar.checkbox("Explore Presentation Types"):
             download_name = piece.metadata['title'] + '_p_type_results.csv'
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
-        st.download_button(
-            label="Download Filtered Presentation Type Data as CSV",
-            data=convert_df(filtered_p_types),
-            file_name = download_name,
-            mime='text/csv',
-            )
+        if filtered_p_types is not None:
+            st.download_button(
+                label="Download Filtered Presentation Type Data as CSV",
+                data=convert_df(filtered_p_types),
+                file_name = download_name,
+                mime='text/csv',
+                )
+        
 
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
