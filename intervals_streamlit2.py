@@ -1378,7 +1378,7 @@ if st.sidebar.checkbox("Explore Homorhythm"):
         # filtered_hr = filtered_hr.to_csv().encode('utf-8')
         st.download_button(
             label="Download Filtered Homorhythm Data as CSV",
-            data=filtered_hr.data.to_csv(),
+            data=filtered_hr.to_csv(),
             file_name = download_name,
             mime='text/csv',
             key=8,
