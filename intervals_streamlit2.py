@@ -1478,15 +1478,22 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         # csv = convert_df(filtered_p_types)
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_p_type_results.csv'
+            if filtered_p_types is not None:
+                st.download_button(
+                    label="Download Filtered Presentation Type Data as CSV",
+                    data=convert_df(filtered_p_types),
+                    file_name = download_name,
+                    mime='text/csv',
+                    )
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
-        if filtered_p_types is not None:
-            st.download_button(
-                label="Download Filtered Presentation Type Data as CSV",
-                data=convert_df(filtered_p_types),
-                file_name = download_name,
-                mime='text/csv',
-                )
+            if filtered_p_types is not None:
+                st.download_button(
+                    label="Download Filtered Corpus Presentation Type Data as CSV",
+                    data=convert_df(filtered_p_types),
+                    file_name = download_name,
+                    mime='text/csv',
+                    )
         
 
 # cadence form
