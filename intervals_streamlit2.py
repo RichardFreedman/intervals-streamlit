@@ -1213,10 +1213,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # update
             st.table(filtered_ngrams)
             # csv = convert_df(filtered_ngrams.data)
-            filtered_ngrams_csv = filtered_ngrams.to_csv().encode('utf-8')
+            # filtered_ngrams = filtered_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Ngram Data as CSV",
-                data=filtered_ngrams_csv,
+                data=convert_df(filtered_ngrams.data),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 )
@@ -1280,10 +1280,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # update
             st.table((filtered_combined_ngrams))
             # csv = convert_df(filtered_combined_ngrams.data)
-            filtered_combined_ngrams_csv = filtered_combined_ngrams.to_csv().encode('utf-8')
+            # filtered_combined_ngrams = filtered_combined_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Corpus Ngram Data as CSV",
-                data=filtered_combined_ngrams_csv,
+                data=convert_df(filtered_combined_ngrams.data),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 )            
