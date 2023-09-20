@@ -1275,7 +1275,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # csv = convert_df(filtered_combined_ngrams.data)
             st.download_button(
                 label="Download Filtered Data as CSV",
-                data=convert_df(filtered_ngrams.data),
+                data=convert_df(filtered_combined_ngrams.data),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 )            
@@ -1490,6 +1490,9 @@ if st.sidebar.checkbox("Explore Cadences"):
     search_type = "other"
     st.subheader("Explore Cadences")
     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
+    
+    # st.write("Did you **change the piece list**?  If so, please **Click Update Cadence Results**")
+    # if st.button("Update Cadence Results"):
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
@@ -1499,6 +1502,13 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
             st.dataframe(filtered_cadences, use_container_width = True)
+            # to download csv
+            download_name = piece.metadata['title'] + '_cadence_results.csv'
+            st.download_button(
+                label="Download Filtered Data as CSV",
+                data=convert_df(filtered_cadences),
+                file_name = download_name,
+                mime='text/csv')
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
             #     output = piece.verovioCadences(df = filtered_cadences)
@@ -1537,6 +1547,12 @@ if st.sidebar.checkbox("Explore Cadences"):
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
             st.dataframe(filtered_cadences, use_container_width = True)
+            download_name = "corpus_cadence_results.csv"
+            st.download_button(
+                label="Download Filtered Data as CSV",
+                data=convert_df(filtered_cadences),
+                file_name = download_name,
+                mime='text/csv')
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
             #     output = piece.verovioCadences(df = filtered_cadences)
