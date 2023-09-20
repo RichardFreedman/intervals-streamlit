@@ -782,10 +782,10 @@ if st.sidebar.checkbox("Explore Notes"):
                 st.dataframe(filtered_nr, use_container_width = True)
                 # download option
                 # csv = convert_df(filtered_nr.data)
-                filtered_nr = filtered_nr.to_csv().encode('utf-8')
+                # filtered_nr = filtered_nr.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Notes Data as CSV",
-                    data=filtered_nr,
+                    data=convert_df(filtered_nr.data),
                     file_name = piece.metadata['title'] + '_notes_results.csv',
                     mime='text/csv',
                     )
@@ -807,10 +807,10 @@ if st.sidebar.checkbox("Explore Notes"):
                 st.dataframe(filtered_nr, use_container_width = True)
         # download option       
                 # csv = convert_df(filtered_nr.data)
-                filtered_nr = filtered_nr.to_csv().encode('utf-8')
+                # filtered_nr_for_csv = filtered_nr.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Corpus Notes Data as CSV",
-                    data=filtered_nr,
+                    data=convert_df(filtered_nr.data),
                     file_name = 'corpus_notes_results.csv',
                     mime='text/csv',
                     )
@@ -925,10 +925,10 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     st.plotly_chart(mel_chart, use_container_width = True)
                     st.dataframe(filtered_mel, use_container_width = True)
                     #csv = convert_df(filtered_mel.data)
-                    filtered_mel = filtered_mel.to_csv().encode('utf-8')
+                    # filtered_mel = filtered_mel.to_csv().encode('utf-8')
                     st.download_button(
                         label="Download Filtered Melodic Data as CSV",
-                        data=filtered_mel,
+                        data=convert_df(filtered_mel.data),
                         file_name = piece.metadata['title'] + '_melodic_results.csv',
                         mime='text/csv',
                         )
@@ -950,10 +950,10 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                 st.plotly_chart(mel_chart, use_container_width = True)
                 st.dataframe(filtered_mel, use_container_width = True)
                 #csv = convert_df(filtered_mel.data)
-                filtered_mel = filtered_mel.to_csv().encode('utf-8')
+                # filtered_mel = filtered_mel.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Corpus Melodic Data as CSV",
-                    data=filtered_mel,
+                    data=convert_df(filtered_mel.data),
                     file_name = 'corpus_melodic_results.csv',
                     mime='text/csv',
                     )
@@ -1059,10 +1059,10 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                 st.plotly_chart(har_chart, use_container_width = True)
                 st.dataframe(filtered_har, use_container_width = True)
                 #csv = convert_df(filtered_har.data)
-                filtered_har = filtered_har.to_csv().encode('utf-8')
+                # filtered_har = filtered_har.to_csv().encode('utf-8')
                 st.download_button(
                     label="Download Filtered Harmonic Data as CSV",
-                    data=filtered_har,
+                    data=convert_df(filtered_har.data),
                     file_name = piece.metadata['title'] + '_harmonic_results.csv',
                     mime='text/csv',
                     )
@@ -1090,10 +1090,10 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     st.plotly_chart(har_chart, use_container_width = True)
                     st.dataframe(filtered_har, use_container_width = True)
                     #csv = convert_df(filtered_har.data)
-                    filtered_har = filtered_har.to_csv().encode('utf-8')
+                    # filtered_har = filtered_har.to_csv().encode('utf-8')
                     st.download_button(
                         label="Download Filtered Corpus Harmonic Data as CSV",
-                        data=filtered_har,
+                        data=convert_df(filtered_har.data),
                         file_name = 'corpus_harmonic_results.csv',
                         mime='text/csv',
                         )           
@@ -1213,10 +1213,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # update
             st.table(filtered_ngrams)
             # csv = convert_df(filtered_ngrams.data)
-            filtered_ngrams = filtered_ngrams.to_csv().encode('utf-8')
+            # filtered_ngrams = filtered_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Ngram Data as CSV",
-                data=filtered_ngrams,
+                data=convert_df(filtered_ngrams.data),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 )
@@ -1280,10 +1280,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
             # update
             st.table((filtered_combined_ngrams))
             # csv = convert_df(filtered_combined_ngrams.data)
-            filtered_combined_ngrams = filtered_combined_ngrams.to_csv().encode('utf-8')
+            # filtered_combined_ngrams = filtered_combined_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Corpus Ngram Data as CSV",
-                data=filtered_combined_ngrams,
+                data=convert_df(filtered_combined_ngrams.data),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 )            
