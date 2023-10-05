@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "intervals-streamlit"
+version = "0.1.0"
+description = "streamlit app for crim-intervals"
+authors = ["Richard Freedman <rfreedma@haverford.edu>"]
+license = "creative commons NC-SA"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
