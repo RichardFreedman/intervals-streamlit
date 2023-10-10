@@ -41,6 +41,7 @@ streamlit = "1.23.1"
 textdistance = "4.2.1"
 webcolors = "1.11.1"
 xlsxwriter = "3.0.2"
+verovio = "3.10.0"
 
 
 [build-system]
