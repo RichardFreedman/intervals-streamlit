@@ -1,7 +1,7 @@
 altair==4.2.0
 certifi==2020.12.5
 chardet==4.0.0
-crim_intervals==2.0.12
+git+https://github.com/HCDigitalScholarship/intervals.git@testing_update_Oleh#egg=crim_intervals
 h11==0.12.0
 httpcore==0.13.2
 httpx==0.18.1
