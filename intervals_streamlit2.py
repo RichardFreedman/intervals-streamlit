@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 from requests.sessions import DEFAULT_REDIRECT_LIMIT
 import base64
-import verovio
+# import verovio
 import os
 import requests
 import re
