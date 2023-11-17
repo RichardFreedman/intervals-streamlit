@@ -9,7 +9,7 @@ import os
 import requests
 import re
 import crim_intervals
-from crim_intervals import * 
+from intervals import * 
 from crim_intervals import main_objs
 import crim_intervals.visualizations as viz
 import pandas as pd
