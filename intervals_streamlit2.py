@@ -1430,6 +1430,8 @@ def presentation_types_corpus(corpus,
                                       'include_hidden_types' : hidden_types_choice,
                                       'combine_unisons' : combine_unisons_choice},
                                         metadata = True)
+    # drop empty dfs:
+    list_of_dfs = [df for df in list_of_dfs if not df.empty]
     for p_types in list_of_dfs:
         # clean up for streamlit facets
         p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
