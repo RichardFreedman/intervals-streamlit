@@ -1301,6 +1301,8 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
 def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
+    # fix update error for type
+    hr.fillna(0, inplace=True)
     # voices_list = list(piece.notes().columns)
     # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
     columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
