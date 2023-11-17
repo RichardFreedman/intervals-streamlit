@@ -10,8 +10,8 @@ import requests
 import re
 import crim_intervals
 from intervals import * 
-from crim_intervals import main_objs
-import crim_intervals.visualizations as viz
+from intervals import main_objs
+import intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
 from ipywidgets import interact
