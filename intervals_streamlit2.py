@@ -4,7 +4,6 @@ from pathlib import Path
 import requests
 from requests.sessions import DEFAULT_REDIRECT_LIMIT
 import base64
-# import verovio
 import os
 import requests
 import re
@@ -14,7 +13,6 @@ from crim_intervals import main_objs
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
-from ipywidgets import interact
 from pyvis.network import Network
 import glob as glob
 from IPython.display import SVG
