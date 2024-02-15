@@ -42,7 +42,7 @@ streamlit = "1.31.1"
 
 [tool.poetry.dependencies.crim-intervals]
 git = "https://github.com/HCDigitalScholarship/intervals.git"
-branch = "main"
+branch = "rich_dev_24"
 
 
 [build-system]
