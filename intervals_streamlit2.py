@@ -767,15 +767,16 @@ if st.sidebar.checkbox("Explore Notes"):
             # for one piece
             if corpus_length == 1:
                 nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
-                nr_counts.rename(columns = {'level_0':'pitch'}, inplace = True)
-                nr_counts.drop(columns = ['index'], inplace = True) 
-                nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order) 
-                nr_counts = nr_counts.dropna(subset=['pitch']) 
-                nr_counts = nr_counts.sort_values(by="pitch")
-                voices = nr_counts.columns.to_list()   
+                nr_no_mdata = nr_no_mdata.map(str)
+                nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
+                nr_counts = nr_counts.sort_index()
+                nr_counts = nr_counts.drop(index='Rest')
+                nr_counts = nr_counts[nr_counts.index.notnull()]  
                 # Show results
-                nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + piece.metadata['title'])
+                nr_chart = px.bar(nr_counts, x=nr_counts.index, y=list(nr_counts.columns),
+                                  labels={col: col for col in nr_counts.columns}, 
+                                  title="Distribution of Pitches in " + piece.metadata['title'])
                 st.plotly_chart(nr_chart, use_container_width = True)
                 st.dataframe(filtered_nr, use_container_width = True)
                 # download option
@@ -792,15 +793,16 @@ if st.sidebar.checkbox("Explore Notes"):
             if corpus_length > 1:  
                 st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
                 nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                nr_counts = nr_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
-                nr_counts.rename(columns = {'level_0':'pitch'}, inplace = True)
-                nr_counts.drop(columns = ['index'], inplace = True) 
-                nr_counts['pitch'] = pd.Categorical(nr_counts["pitch"], categories=pitch_order) 
-                nr_counts = nr_counts.dropna(subset=['pitch']) 
-                nr_counts = nr_counts.sort_values(by="pitch")
-                voices = nr_counts.columns.to_list()          
+                nr_no_mdata = nr_no_mdata.map(str)
+                nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
+                nr_counts = nr_counts.sort_index()
+                nr_counts = nr_counts.drop(index='Rest')
+                nr_counts = nr_counts[nr_counts.index.notnull()]         
                 # Show results
-                nr_chart = px.bar(nr_counts, x="pitch", y=voices, title="Distribution of Pitches in " + ', '.join(titles))
+                nr_chart = px.bar(nr_counts, x=nr_counts.index, y=list(nr_counts.columns),
+                                  labels={col: col for col in nr_counts.columns}, 
+                                  title="Distribution of Pitches in " + ', '.join(titles))
                 st.plotly_chart(nr_chart, use_container_width = True)
                 
                 st.dataframe(filtered_nr, use_container_width = True)
@@ -909,7 +911,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
     # for one piece
             if corpus_length  == 1: 
                 mel_no_mdata = filtered_mel.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                mel_no_mdata = mel_no_mdata.applymap(str)
+                mel_no_mdata = mel_no_mdata.map(str)
                 mel_counts = mel_no_mdata.apply(pd.Series.value_counts).fillna(0).astype(int).reset_index().copy()
                 # mel_counts = mel_no_mdata.apply(pd.Series.value_counts).fillna(0).reset_index().copy()
                 mel_counts.rename(columns = {'index':'interval'}, inplace = True)
