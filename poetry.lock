@@ -260,7 +260,7 @@ name = "crim-intervals"
 version = "2.0.12"
 description = "CRIM intervals package"
 optional = false
-python-versions = "3.10.13"
+python-versions = ">=3.10.0,<3.11.0"
 files = []
 develop = false
 
@@ -302,7 +302,7 @@ xlsxwriter = "3.0.2"
 type = "git"
 url = "https://github.com/HCDigitalScholarship/intervals.git"
 reference = "rich_dev_24"
-resolved_reference = "9836a7e4f55908b4e0ae5cddc83852b906505747"
+resolved_reference = "fc83ca8d106766bcdc89816e8e097ace22622a9e"
 
 [[package]]
 name = "cycler"
@@ -2165,4 +2165,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.13"
-content-hash = "5ed6fe78920b54661f7fd3940d17efab0f7810668256a7dbae68b1ca0352805d"
+content-hash = "e55aa2bbfa4c201aec4f00dbae16478c7fd33231b3b51c784e5a5e45e6aafd98"
