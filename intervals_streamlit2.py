@@ -7,7 +7,7 @@ import base64
 import os
 import requests
 import re
-# import crim_intervals
+import crim_intervals
 from crim_intervals import * 
 from crim_intervals import main_objs
 import crim_intervals.visualizations as viz
