@@ -260,7 +260,7 @@ name = "crim-intervals"
 version = "2.0.12"
 description = "CRIM intervals package"
 optional = false
-python-versions = "*"
+python-versions = "3.10.13"
 files = []
 develop = false
 
@@ -302,7 +302,7 @@ xlsxwriter = "3.0.2"
 type = "git"
 url = "https://github.com/HCDigitalScholarship/intervals.git"
 reference = "rich_dev_24"
-resolved_reference = "62bcf0c2c4bfb929a8fd35e5b97d14d5e4ff6871"
+resolved_reference = "9836a7e4f55908b4e0ae5cddc83852b906505747"
 
 [[package]]
 name = "cycler"
