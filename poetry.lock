@@ -26,13 +26,13 @@ doc = ["docutils", "jinja2", "myst-parser", "numpydoc", "pillow (>=9,<10)", "pyd
 
 [[package]]
 name = "anyio"
-version = "4.2.0"
+version = "4.3.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "anyio-4.2.0-py3-none-any.whl", hash = "sha256:745843b39e829e108e518c489b31dc757de7d2131d53fac32bd8df268227bfee"},
-    {file = "anyio-4.2.0.tar.gz", hash = "sha256:e1875bb4b4e2de1669f4bc7869b6d3f54231cdced71605e6e64c9be77e3be50f"},
+    {file = "anyio-4.3.0-py3-none-any.whl", hash = "sha256:048e05d0f6caeed70d731f3db756d35dcc1f35747c8c403364a8332c630441b8"},
+    {file = "anyio-4.3.0.tar.gz", hash = "sha256:f75253795a87df48568485fd18cdd2a3fa5c4f7c5be8e5e36637733fce06fed6"},
 ]
 
 [package.dependencies]
@@ -260,7 +260,7 @@ name = "crim-intervals"
 version = "2.0.12"
 description = "CRIM intervals package"
 optional = false
-python-versions = ">=3.10.0,<3.11.0"
+python-versions = "*"
 files = []
 develop = false
 
@@ -277,7 +277,7 @@ joblib = "1.0.1"
 jsonschema = "3.2"
 lxml = "5.1.0"
 more-itertools = "8.7.0"
-music21 = "7.1.0"
+music21 = "8.3.0"
 numpy = ">=1.20.2,<2.0.0"
 pandas = ">=2.2.0"
 plotly = "5.18.0"
@@ -302,7 +302,7 @@ xlsxwriter = "3.0.2"
 type = "git"
 url = "https://github.com/HCDigitalScholarship/intervals.git"
 reference = "rich_dev_24"
-resolved_reference = "fc83ca8d106766bcdc89816e8e097ace22622a9e"
+resolved_reference = "bf7746632bbcb5fda85de520cc92d05ea03be7bb"
 
 [[package]]
 name = "cycler"
@@ -1037,12 +1037,13 @@ files = [
 
 [[package]]
 name = "music21"
-version = "7.1.0"
-description = "A Toolkit for Computer-Aided Musical Analysis."
+version = "8.3.0"
+description = "A Toolkit for Computer-Aided Musical Analysis and Computational Musicology."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "music21-7.1.0.tar.gz", hash = "sha256:06315c8f2a34b52011842a81c089826d55374ec09f358dabc73da58a518b629f"},
+    {file = "music21-8.3.0-py3-none-any.whl", hash = "sha256:02e602e99fdac7528d42c41aac635a4de070cd41478dea30c7c2c08d79960be4"},
+    {file = "music21-8.3.0.tar.gz", hash = "sha256:28627bf5e47707ac5e6ae5161c3a2160f154b796cf4aca992e5d46847caa7ca6"},
 ]
 
 [package.dependencies]
@@ -1050,8 +1051,9 @@ chardet = "*"
 joblib = "*"
 jsonpickle = "*"
 matplotlib = "*"
-more_itertools = "*"
+more-itertools = "*"
 numpy = "*"
+requests = "*"
 webcolors = ">=1.5"
 
 [[package]]
@@ -2165,4 +2167,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.13"
-content-hash = "4bb33060ad2762d26b5bb02874bd85163cc2702b273df19caa7db96dee3ed69c"
+content-hash = "e55aa2bbfa4c201aec4f00dbae16478c7fd33231b3b51c784e5a5e45e6aafd98"
