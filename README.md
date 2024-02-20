@@ -2,9 +2,9 @@
 
 # A Streamlit Web Application for CRIM Intervals
 
-Learn about CRIM Intervals here:  https://github.com/HCDigitalScholarship/intervals/tree/rich_dev_22
+[Learn about CRIM Intervals]( https://github.com/HCDigitalScholarship/intervals/blob/main/README.md)
 
-Learn about Streamlit functions here:  https://docs.streamlit.io/library/api-reference
+[Learn about Streamlit](https://docs.streamlit.io/library/api-reference)
 
 ## Use it Online at Streamlit.IO
 
