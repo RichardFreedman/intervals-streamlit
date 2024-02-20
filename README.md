@@ -77,7 +77,7 @@ conda install git
 
 ### 6. Change the Terminal to Point to your New Project Folder
 
-- Now find the **new project folde**r** (which we will call a 'directory') you created in Step 3 above.  We will enter the 'path' to that directory in the terminal, preceeded by "cd", like this:
+- Now find the **new project folder** (which we will call a 'directory') you created in Step 3 above.  We will enter the 'path' to that directory in the terminal, preceeded by "cd", like this:
 
 ```
 cd Documents/Projects/MyProject
