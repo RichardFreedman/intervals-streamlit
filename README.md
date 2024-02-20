@@ -52,7 +52,7 @@ Now you will need to create a dedicated folder on your computer where you will k
 ![alt text](<images/conda term env.png>)
 
 - This will create an interactive 'Terminal' session, through which you can write commands to your computer that will download the code you need.
-- You should see something like this, with the **name of your environment**, followed by the **name of your computer**, all follwed by a **symbol and space for your cursor**:
+- You should see something like this, with the **name of your environment**, followed by the **name of your computer**, all followed by a **symbol and space for your cursor**:
 
 ```
 (CRIM_Streamlit_Code) rfreedma@rfreedma-22 ~ % 
