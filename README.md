@@ -163,11 +163,11 @@ streamlit run intervals_streamlit2.py
 
 - If you want to restart another time you will need to:
 
-1.  Open Navigator
+1.  Open Anaconda Navigator
 2.  Click on your Virtual Environment to activate it
-3.  Open Terminal (as shown above)
-4.  'Change Directory' to your project folder (see above) using 'cd' and the rest of the path to your folder
-5.  Start the Streamlit App as shown in step 9
-
+3.  Open Terminal (as shown above at the start of Step 4)
+4.  'Change Directory' to your project folder (see above) using 'cd' and the rest of the path to your folder as you did in Step 6
+5.  Remember to 'cd intervals-streamlit' so you are inside the correct sub-folder!
+6.  Start the Streamlit App as shown in step 9
 
 
