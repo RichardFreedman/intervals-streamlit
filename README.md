@@ -120,7 +120,15 @@ git clone https://github.com/RichardFreedman/intervals-streamlit.git
 
 ### 8. Install the Requirements for CRIM Intervals Streamlit
 
-- Now you need to install the various dependencies that make Streamlit and CRIM Intervals work together.  Copy and paste the following into your terminal:
+- Now you need to install the various dependencies that make Streamlit and CRIM Intervals work together.  
+- First we need to 'change directory' into the folder you just installed.  Copy and paste this into your terminal, then Enter/Return:
+
+```
+cd intervals-streamlit
+```
+
+- And now install the various `requirements`. Copy and paste the following into your terminal, and then Enter/Return:
+
 
 ```
 pip install -r requirements.txt
