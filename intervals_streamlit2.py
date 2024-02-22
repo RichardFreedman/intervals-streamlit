@@ -3,10 +3,10 @@ st. set_page_config(layout="wide")
 from pathlib import Path
 import requests
 from requests.sessions import DEFAULT_REDIRECT_LIMIT
-import base64
-import os
+# import base64
+# import os
 import requests
-import re
+# import re
 import crim_intervals
 from crim_intervals import * 
 from crim_intervals import main_objs
@@ -15,15 +15,15 @@ import pandas as pd
 import altair as alt 
 from pyvis.network import Network
 import glob as glob
-from IPython.display import SVG
+# from IPython.display import SVG
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.figure_factory as ff
 import streamlit.components.v1 as components
 from os import listdir 
-import os.path 
+# import os.path 
 import json
-import seaborn as sns
+# import seaborn as sns
 from tempfile import NamedTemporaryFile
 import random
 
