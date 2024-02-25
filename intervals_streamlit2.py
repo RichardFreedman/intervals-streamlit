@@ -1398,7 +1398,7 @@ if st.sidebar.checkbox("Explore Homorhythm"):
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
-        if len(st.session_state.hr.fillna('-')) ==  0:
+        if len(st.session_state.hr) ==  0:
             st.write("There are no HR patterns in the selected piece(s).")
         else:
             filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
