@@ -1355,7 +1355,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     #                                    metadata = True)
 #
     # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None or len(df) >  0]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None]
 
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
