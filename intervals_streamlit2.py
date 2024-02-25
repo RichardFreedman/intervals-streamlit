@@ -1327,20 +1327,21 @@ def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
     # fix update error for type
-    hr.fillna(0, inplace=True)
-    # voices_list = list(piece.notes().columns)
-    # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
-    columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-    hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-    # hr = piece.emaAddresses(df=hr, mode='h')
-    hr = hr.reset_index()
-    hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-    cols_to_move = ['Composer', 'Title', 'Date']
-    hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]   
-    return hr
+    if hr is not None and not hr.empty:
+        hr.fillna(0, inplace=True)
+        # voices_list = list(piece.notes().columns)
+        # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
+        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+        hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+        hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+        hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+        # hr = piece.emaAddresses(df=hr, mode='h')
+        hr = hr.reset_index()
+        hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+        cols_to_move = ['Composer', 'Title', 'Date']
+        hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]   
+        return hr
 # orpus
 # @st.cache_data
 def corpus_homorhythm(corpus, length_choice, full_hr_choice):
@@ -1354,7 +1355,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     #                                    metadata = True)
 #
     # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None and len(df) >  0]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None or len(df) >  0]
 
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
