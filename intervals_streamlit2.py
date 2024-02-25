@@ -771,7 +771,7 @@ if st.sidebar.checkbox("Explore Notes"):
                 nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
                 nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
                 nr_counts = nr_counts.sort_index()
-                nr_counts = nr_counts.drop(index='Rest')
+                nr_counts = nr_counts.drop(index='Rest', errors='ignore')
                 nr_counts = nr_counts[nr_counts.index.notnull()]
                 nr_counts.drop('index', axis=1, inplace=True)
                 # Show results
@@ -800,7 +800,7 @@ if st.sidebar.checkbox("Explore Notes"):
                 nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
                 nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
                 nr_counts = nr_counts.sort_index()
-                nr_counts = nr_counts.drop(index='Rest')
+                nr_counts = nr_counts.drop(index='Rest', errors='ignore')
                 nr_counts = nr_counts[nr_counts.index.notnull()]
                 nr_counts.drop('index', axis=1, inplace=True)         
                 # Show results
@@ -1353,7 +1353,9 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
     #                                    metadata = True)
 #
-    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+    # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None and len(df) >  0]
+
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
     # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
