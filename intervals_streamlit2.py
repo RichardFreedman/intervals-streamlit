@@ -349,7 +349,7 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
                 return ''
             df = df.reset_index().fillna('')
             df = df[df[df_no_meta_col_names].apply(lambda x: x.isin(user_text_input)).any(axis=1)]
-            df = df.style.applymap(highlight_matching_strings)
+            df = df.style.map(highlight_matching_strings)
         else:
             df = df.reset_index().fillna('')
             df = df.style
@@ -409,7 +409,7 @@ def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
                 return ''
             df = df.reset_index().fillna('')
             df = df[df[df_no_meta_col_names].apply(lambda x: x.isin(user_text_input)).any(axis=1)]
-            df = df.style.applymap(highlight_matching_strings)
+            df = df.style.map(highlight_matching_strings)
         else:
             df = df.reset_index().fillna('')
             df = df.style   
@@ -467,7 +467,7 @@ def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
                 return ''
             df = df.reset_index().fillna('')
             df = df[df[df_no_meta_col_names].apply(lambda x: x.isin(user_text_input)).any(axis=1)]
-            df = df.style.applymap(highlight_matching_strings)
+            df = df.style.map(highlight_matching_strings)
         else:
             df = df.reset_index().fillna('')
             df = df.style
@@ -526,7 +526,7 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
                 return ''
             df = df.reset_index().fillna('')
             df = df[df[df_no_meta_col_names].apply(lambda x: x.isin(user_text_input)).any(axis=1)]
-            df = df.style.applymap(highlight_matching_strings)
+            df = df.style.map(highlight_matching_strings)
         else:
             df = df.reset_index().fillna('')
             df = df.style
@@ -1218,7 +1218,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                             compound, 
                             length_choice,
                             include_count)
-                ngrams = ngrams.applymap(convertTuple).dropna()
+                ngrams = ngrams.map(convertTuple).dropna()
                 ngrams2 = ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
                 cols_to_move = ['Composer', 'Title', 'Date']
                 ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
@@ -1287,7 +1287,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                                 compound, 
                                 length_choice,
                                 include_count)
-                    ngrams = ngrams.applymap(convertTuple).dropna()
+                    ngrams = ngrams.map(convertTuple).dropna()
                     ngrams2 = ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
                     cols_to_move = ['Composer', 'Title', 'Date']
                     ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
@@ -1330,7 +1330,7 @@ def piece_homorhythm(piece, length_choice, full_hr_choice):
     if hr is not None and not hr.empty:
         hr.fillna(0, inplace=True)
         # voices_list = list(piece.notes().columns)
-        # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
+        # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
         columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
             'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
         hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
@@ -1359,7 +1359,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
 
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
-    # hr[voices_list] = hr[voices_list].applymap(convertTuple).fillna('-')
+    # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
     columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
            'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
     hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
