@@ -1398,21 +1398,24 @@ if st.sidebar.checkbox("Explore Homorhythm"):
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
-        filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-        st.dataframe(filtered_hr, use_container_width = True)
-        # csv = convert_df(filtered_hr)
-        if corpus_length == 1:
-            download_name = piece.metadata['title'] + '_homorhythm_results.csv'
-        elif corpus_length > 1:
-            download_name = "corpus_homorhythm_results.csv"
-        # filtered_hr = filtered_hr.to_csv().encode('utf-8')
-        st.download_button(
-            label="Download Filtered Homorhythm Data as CSV",
-            data=filtered_hr.to_csv(),
-            file_name = download_name,
-            mime='text/csv',
-            key=8,
-            ) 
+        if len(st.session_state.hr.fillna('-')) ==  0:
+            st.write("There are no HR patterns in the selected piece(s).")
+        else:
+            filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
+            st.dataframe(filtered_hr, use_container_width = True)
+            # csv = convert_df(filtered_hr)
+            if corpus_length == 1:
+                download_name = piece.metadata['title'] + '_homorhythm_results.csv'
+            elif corpus_length > 1:
+                download_name = "corpus_homorhythm_results.csv"
+            # filtered_hr = filtered_hr.to_csv().encode('utf-8')
+            st.download_button(
+                label="Download Filtered Homorhythm Data as CSV",
+                data=filtered_hr.to_csv(),
+                file_name = download_name,
+                mime='text/csv',
+                key=8,
+                ) 
         
 # p type function
 # piece
