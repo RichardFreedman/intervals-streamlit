@@ -297,7 +297,8 @@ def convertTuple(tup):
     return out  
 
 # for NR
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -356,7 +357,8 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # for MEL
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -415,7 +417,8 @@ def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
             df = df.style   
     return df
 #for har
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -474,7 +477,8 @@ def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # for NG
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -533,7 +537,8 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 #for hr
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_hr(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -584,7 +589,8 @@ def filter_dataframe_hr(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 #for ptypes
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_ptypes(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
@@ -634,7 +640,8 @@ def filter_dataframe_ptypes(df: pd.DataFrame) -> pd.DataFrame:
                         df = df[df[column].str.contains(user_text_input)]
         return df
 #for cads
-st.cache_data(experimental_allow_widgets=True)
+# st.cache_data(experimental_allow_widgets=True)
+@st.fragment()
 def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a UI on top of a dataframe to let viewers filter columns
