@@ -16,7 +16,7 @@ more-itertools==8.7.0
 numpy>=1.20.2, <2.0.0
 pandas>=2.2.0
 statsmodels==0.14.1
-plotly==5.18.0
+plotly==5.19.0
 plotly-express==0.4.1
 pyarrow>=15.0.0
 pyvis==0.1.9
