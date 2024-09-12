@@ -1315,9 +1315,10 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                     st.altair_chart(heatmap, use_container_width = True)
                 if 'combined_ngrams' in st.session_state.keys():
                     del st.session_state.combined_ngrams
-                combined_ngrams = pd.concat(ngram_df_list)
-                if "combined_ngrams" not in st.session_state:
-                    st.session_state.combined_ngrams = combined_ngrams
+                if len(ngram_df_list) > 0:
+                    combined_ngrams = pd.concat(ngram_df_list)
+                    if "combined_ngrams" not in st.session_state:
+                        st.session_state.combined_ngrams = combined_ngrams
 
         if "combined_ngrams" not in st.session_state:
             pass
@@ -1380,17 +1381,18 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     # Filter out DataFrames with zero length
     list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
     rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    hr = pd.concat(rev_list_of_dfs)
-    # voices_list = list(piece.notes().columns)
-    # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-    columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-           'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
-    hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-    cols_to_move = ['Composer', 'Title', 'Date']
-    hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
-    return hr
+    if len(rev_list_of_dfs) > 0:
+        hr = pd.concat(rev_list_of_dfs)
+        # voices_list = list(piece.notes().columns)
+        # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+            'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
+        hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+        hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+        hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+        cols_to_move = ['Composer', 'Title', 'Date']
+        hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+        return hr
 
 # HR form
 if st.sidebar.checkbox("Explore Homorhythm"):
@@ -1483,15 +1485,16 @@ def presentation_types_corpus(corpus,
                                         metadata = True)
     # drop empty dfs:
     list_of_dfs = [df for df in list_of_dfs if df is not None and not df.empty]
-    for p_types in list_of_dfs:
-        # clean up for streamlit facets
-        p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-    p_types = pd.concat(list_of_dfs)
-    return p_types
+    if len(list_of_dfs) > 0: 
+        for p_types in list_of_dfs:
+            # clean up for streamlit facets
+            p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+            p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+        p_types = pd.concat(list_of_dfs)
+        return p_types
 
 # p types form
 if st.sidebar.checkbox("Explore Presentation Types"):
