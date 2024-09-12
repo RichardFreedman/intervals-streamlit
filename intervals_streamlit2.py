@@ -1681,9 +1681,9 @@ if st.sidebar.checkbox("Explore Model Finder"):
             submitted = st.form_submit_button("Submit")
             if submitted:
                 soggetto_cross_plot = corpus.modelFinder(n=length_choice)
-                st.dataframe(soggetto_cross_plot, use_container_width=True)
+                st.dataframe(soggetto_cross_plot)
                 fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
-                st.write(fig)
+                st.plotly_chart(fig)
             else:
                 pass
    
