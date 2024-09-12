@@ -763,65 +763,68 @@ if st.sidebar.checkbox("Explore Notes"):
             # filter the nr results
             st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
-            filtered_nr = filter_dataframe_nr(st.session_state.nr.fillna(''))
-            # for one piece
-            if corpus_length == 1:
-                nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                nr_no_mdata = nr_no_mdata.map(str)
-                nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
-                nr_counts = nr_counts.sort_index()
-                nr_counts = nr_counts.drop(index='Rest', errors='ignore')
-                nr_counts = nr_counts[nr_counts.index.notnull()]
-                nr_counts.drop('index', axis=1, inplace=True)
-                # Show results
-                nr_chart = px.bar(nr_counts, x=nr_counts.index.astype(str).tolist(), y=list(nr_counts.columns),
-                                  title="Distribution of Pitches in " + piece.metadata['title'])
-                nr_chart.update_layout(xaxis_title="Pitch", 
-                                       yaxis_title="Count",
-                                       legend_title='Voices')
-                st.plotly_chart(nr_chart, use_container_width = True)
-                st.dataframe(filtered_nr, use_container_width = True)
-                # download option
-                # csv = convert_df(filtered_nr.data)
-                # filtered_nr = filtered_nr.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Notes Data as CSV",
-                    data=filtered_nr.data.to_csv(),
-                    file_name = piece.metadata['title'] + '_notes_results.csv',
-                    mime='text/csv',
-                    key=1,
-                    )
-            # for corpus:
-            if corpus_length > 1:  
-                st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
-                nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                nr_no_mdata = nr_no_mdata.map(str)
-                nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
-                nr_counts = nr_counts.sort_index()
-                nr_counts = nr_counts.drop(index='Rest', errors='ignore')
-                nr_counts = nr_counts[nr_counts.index.notnull()]
-                nr_counts.drop('index', axis=1, inplace=True)         
-                # Show results
-                nr_chart = px.bar(nr_counts, x=nr_counts.index.astype(str).tolist(), y=list(nr_counts.columns), 
-                                  title="Distribution of Pitches in " + ', '.join(titles))
-                nr_chart.update_layout(xaxis_title="Pitch", 
-                                       yaxis_title="Count",
-                                       legend_title='Voices')
-                st.plotly_chart(nr_chart, use_container_width = True)
-                
-                st.dataframe(filtered_nr, use_container_width = True)
-        # download option       
-                # csv = convert_df(filtered_nr.data)
-                # filtered_nr_for_csv = filtered_nr.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Corpus Notes Data as CSV",
-                    data=filtered_nr.data.to_csv(),
-                    file_name = 'corpus_notes_results.csv',
-                    mime='text/csv',
-                    key=2,
-                    )
+            if len(st.session_state.nr.fillna('')) > 100000:
+                print("Results are too large to display; please filter again")
+            else:
+                filtered_nr = filter_dataframe_nr(st.session_state.nr.fillna(''))
+                # for one piece
+                if corpus_length == 1:
+                    nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    nr_no_mdata = nr_no_mdata.map(str)
+                    nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
+                    nr_counts = nr_counts.sort_index()
+                    nr_counts = nr_counts.drop(index='Rest', errors='ignore')
+                    nr_counts = nr_counts[nr_counts.index.notnull()]
+                    nr_counts.drop('index', axis=1, inplace=True)
+                    # Show results
+                    nr_chart = px.bar(nr_counts, x=nr_counts.index.astype(str).tolist(), y=list(nr_counts.columns),
+                                    title="Distribution of Pitches in " + piece.metadata['title'])
+                    nr_chart.update_layout(xaxis_title="Pitch", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    st.plotly_chart(nr_chart, use_container_width = True)
+                    st.dataframe(filtered_nr, use_container_width = True)
+                    # download option
+                    # csv = convert_df(filtered_nr.data)
+                    # filtered_nr = filtered_nr.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Notes Data as CSV",
+                        data=filtered_nr.data.to_csv(),
+                        file_name = piece.metadata['title'] + '_notes_results.csv',
+                        mime='text/csv',
+                        key=1,
+                        )
+                # for corpus:
+                if corpus_length > 1:  
+                    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+                    nr_no_mdata = filtered_nr.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    nr_no_mdata = nr_no_mdata.map(str)
+                    nr_counts = nr_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    nr_counts.index = pd.CategoricalIndex(nr_counts.index, categories=pitch_order, ordered=True)
+                    nr_counts = nr_counts.sort_index()
+                    nr_counts = nr_counts.drop(index='Rest', errors='ignore')
+                    nr_counts = nr_counts[nr_counts.index.notnull()]
+                    nr_counts.drop('index', axis=1, inplace=True)         
+                    # Show results
+                    nr_chart = px.bar(nr_counts, x=nr_counts.index.astype(str).tolist(), y=list(nr_counts.columns), 
+                                    title="Distribution of Pitches in " + ', '.join(titles))
+                    nr_chart.update_layout(xaxis_title="Pitch", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    st.plotly_chart(nr_chart, use_container_width = True)
+                    
+                    st.dataframe(filtered_nr, use_container_width = True)
+            # download option       
+                    # csv = convert_df(filtered_nr.data)
+                    # filtered_nr_for_csv = filtered_nr.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Corpus Notes Data as CSV",
+                        data=filtered_nr.data.to_csv(),
+                        file_name = 'corpus_notes_results.csv',
+                        mime='text/csv',
+                        key=2,
+                        )
         
 # melodic functions
 # @st.cache_data
@@ -913,71 +916,74 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
             st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
             # st.dataframe(st.session_state.mel)
-            filtered_mel = filter_dataframe_mel(st.session_state.mel.fillna(''))       
-    # for one piece
-            if corpus_length  == 1: 
-                mel_no_mdata = filtered_mel.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                mel_no_mdata = mel_no_mdata.map(str)
-                mel_counts = mel_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                # apply the categorical list and sort.  
-                if interval_kinds[select_kind] == 'q':
-                    mel_counts = mel_counts.drop(index='')
-                    mel_counts.index = pd.CategoricalIndex(mel_counts.index, categories=interval_order_quality, ordered=True)
-                    mel_counts.sort_index(inplace=True)
-                else:
-                    mel_counts = mel_counts.sort_index()
-                    mel_counts = mel_counts.drop(index='')
-                mel_counts.index.rename('interval', inplace=True)
-                voices = mel_counts.columns.to_list() 
-                mel_chart = px.bar(mel_counts, x=mel_counts.index, y=list(mel_counts.columns), 
-                                    title="Distribution of Melodic Intervals in " + piece.metadata['title'])
-                mel_chart.update_layout(xaxis_title="Interval", 
-                                    yaxis_title="Count",
-                                    legend_title='Voices')
-                # and show results
-                st.plotly_chart(mel_chart, use_container_width = True)
-                st.dataframe(filtered_mel, use_container_width = True)
-                #csv = convert_df(filtered_mel.data)
-                # filtered_mel = filtered_mel.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Melodic Data as CSV",
-                    data=filtered_mel.data.to_csv(),
-                    file_name = piece.metadata['title'] + '_melodic_results.csv',
-                    mime='text/csv',
-                    key=3,
-                    )
-            # # for corpus
-            elif corpus_length > 1:
-                mel_no_mdata = filtered_mel.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                mel_no_mdata = mel_no_mdata.map(str)
-                mel_counts = mel_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                # apply the categorical list and sort.  
-                if interval_kinds[select_kind] == 'q':
-                    mel_counts = mel_counts.drop(index='')
-                    mel_counts.index = pd.CategoricalIndex(mel_counts.index, categories=interval_order_quality, ordered=True)
-                    mel_counts.sort_index(inplace=True)
-                else:
-                    mel_counts = mel_counts.sort_index()
-                    mel_counts = mel_counts.drop(index='')
-                mel_counts.index.rename('interval', inplace=True)
-                voices = mel_counts.columns.to_list() 
-                mel_chart = px.bar(mel_counts, x=mel_counts.index, y=list(mel_counts.columns),
-                                    title="Distribution of Melodic Intervals in " + ', '.join(titles))
-                mel_chart.update_layout(xaxis_title="Interval", 
-                                    yaxis_title="Count",
-                                    legend_title='Voices')
-                # and show results
-                st.plotly_chart(mel_chart, use_container_width = True)
-                st.dataframe(filtered_mel, use_container_width = True)
-                #csv = convert_df(filtered_mel.data)
-                # filtered_mel = filtered_mel.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Corpus Melodic Data as CSV",
-                    data=filtered_mel.data.to_csv(),
-                    file_name = 'corpus_melodic_results.csv',
-                    mime='text/csv',
-                    key=4,
-                    )
+            if len(st.session_state.mel.fillna('')) > 100000:
+                print("Results are too large to display; please filter again")
+            else:
+                filtered_mel = filter_dataframe_mel(st.session_state.mel.fillna(''))       
+                # for one piece
+                if corpus_length  == 1: 
+                    mel_no_mdata = filtered_mel.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    mel_no_mdata = mel_no_mdata.map(str)
+                    mel_counts = mel_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    # apply the categorical list and sort.  
+                    if interval_kinds[select_kind] == 'q':
+                        mel_counts = mel_counts.drop(index='')
+                        mel_counts.index = pd.CategoricalIndex(mel_counts.index, categories=interval_order_quality, ordered=True)
+                        mel_counts.sort_index(inplace=True)
+                    else:
+                        mel_counts = mel_counts.sort_index()
+                        mel_counts = mel_counts.drop(index='')
+                    mel_counts.index.rename('interval', inplace=True)
+                    voices = mel_counts.columns.to_list() 
+                    mel_chart = px.bar(mel_counts, x=mel_counts.index, y=list(mel_counts.columns), 
+                                        title="Distribution of Melodic Intervals in " + piece.metadata['title'])
+                    mel_chart.update_layout(xaxis_title="Interval", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    # and show results
+                    st.plotly_chart(mel_chart, use_container_width = True)
+                    st.dataframe(filtered_mel, use_container_width = True)
+                    #csv = convert_df(filtered_mel.data)
+                    # filtered_mel = filtered_mel.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Melodic Data as CSV",
+                        data=filtered_mel.data.to_csv(),
+                        file_name = piece.metadata['title'] + '_melodic_results.csv',
+                        mime='text/csv',
+                        key=3,
+                        )
+                # # for corpus
+                elif corpus_length > 1:
+                    mel_no_mdata = filtered_mel.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    mel_no_mdata = mel_no_mdata.map(str)
+                    mel_counts = mel_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    # apply the categorical list and sort.  
+                    if interval_kinds[select_kind] == 'q':
+                        mel_counts = mel_counts.drop(index='')
+                        mel_counts.index = pd.CategoricalIndex(mel_counts.index, categories=interval_order_quality, ordered=True)
+                        mel_counts.sort_index(inplace=True)
+                    else:
+                        mel_counts = mel_counts.sort_index()
+                        mel_counts = mel_counts.drop(index='')
+                    mel_counts.index.rename('interval', inplace=True)
+                    voices = mel_counts.columns.to_list() 
+                    mel_chart = px.bar(mel_counts, x=mel_counts.index, y=list(mel_counts.columns),
+                                        title="Distribution of Melodic Intervals in " + ', '.join(titles))
+                    mel_chart.update_layout(xaxis_title="Interval", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    # and show results
+                    st.plotly_chart(mel_chart, use_container_width = True)
+                    st.dataframe(filtered_mel, use_container_width = True)
+                    #csv = convert_df(filtered_mel.data)
+                    # filtered_mel = filtered_mel.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Corpus Melodic Data as CSV",
+                        data=filtered_mel.data.to_csv(),
+                        file_name = 'corpus_melodic_results.csv',
+                        mime='text/csv',
+                        key=4,
+                        )
         
 # harmonic functions
 # @st.cache_data
@@ -1059,75 +1065,78 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
             # count up the values in each item column--sum for each pitch. make a copy 
             st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
-            filtered_har = filter_dataframe_har(st.session_state.har.fillna(''))
-            # for one piece
-            if corpus_length == 1: 
-                har_no_mdata = filtered_har.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                har_no_mdata = har_no_mdata.map(str)
-                har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                # apply the categorical list and sort.  
-                if interval_kinds[select_kind] == 'q':
-                    har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
-                    har_counts = har_counts[har_counts.index.notna()]
-                    har_counts.sort_index(inplace=True)
-                else:
-                    har_counts = har_counts.sort_index()
-                    har_counts = har_counts.drop(index=['', 'Rest'])
-                har_counts.index.rename('interval', inplace=True)
-                voices = har_counts.columns.to_list()
-                # set the figure size, type and colors
-                har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns), 
-                                   title="Distribution of Harmonic Intervals in " + piece.metadata['title'])
-                har_chart.update_layout(xaxis_title="Interval", 
-                                    yaxis_title="Count",
-                                    legend_title='Voices')
-                # show results
-                st.plotly_chart(har_chart, use_container_width = True)
-                st.dataframe(har_counts, use_container_width = True)
-                #csv = convert_df(filtered_har.data)
-                # filtered_har = filtered_har.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Harmonic Data as CSV",
-                    data=filtered_har.data.to_csv(),
-                    file_name = piece.metadata['title'] + '_harmonic_results.csv',
-                    mime='text/csv',
-                    key=5,
-                    )
-            elif corpus_length > 1: 
-                if 'Composer' not in filtered_har.columns:
-                    st.write("Did you **change the piece list**? If so, please **Update and Submit form**")
-                else:
+            if len(st.session_state.har.fillna('')) > 100000:
+                print("Results are too large to display; please filter again")
+            else:
+                filtered_har = filter_dataframe_har(st.session_state.har.fillna(''))
+                # for one piece
+                if corpus_length == 1: 
                     har_no_mdata = filtered_har.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                har_no_mdata = har_no_mdata.map(str)
-                har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                # apply the categorical list and sort.  
-                if interval_kinds[select_kind] == 'q':
-                    har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
-                    har_counts = har_counts[har_counts.index.notna()]
-                    har_counts.sort_index(inplace=True)
-                else:
-                    har_counts = har_counts.sort_index()
-                    har_counts = har_counts.drop(index=['', 'Rest'])
-                har_counts.index.rename('interval', inplace=True)
-                voices = har_counts.columns.to_list()
+                    har_no_mdata = har_no_mdata.map(str)
+                    har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    # apply the categorical list and sort.  
+                    if interval_kinds[select_kind] == 'q':
+                        har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
+                        har_counts = har_counts[har_counts.index.notna()]
+                        har_counts.sort_index(inplace=True)
+                    else:
+                        har_counts = har_counts.sort_index()
+                        har_counts = har_counts.drop(index=['', 'Rest'])
+                    har_counts.index.rename('interval', inplace=True)
+                    voices = har_counts.columns.to_list()
                     # set the figure size, type and colors
-                har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns),
-                                   title="Distribution of Harmonic Intervals in " + ', '.join(titles))
-                har_chart.update_layout(xaxis_title="Interval", 
-                                    yaxis_title="Count",
-                                    legend_title='Voices')
-                # show results
-                st.plotly_chart(har_chart, use_container_width = True)
-                st.dataframe(filtered_har, use_container_width = True)
-                #csv = convert_df(filtered_har.data)
-                # filtered_har = filtered_har.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Corpus Harmonic Data as CSV",
-                    data=filtered_har.data.to_csv(),
-                    file_name = 'corpus_harmonic_results.csv',
-                    mime='text/csv',
-                    key=6,
-                    )           
+                    har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns), 
+                                    title="Distribution of Harmonic Intervals in " + piece.metadata['title'])
+                    har_chart.update_layout(xaxis_title="Interval", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    # show results
+                    st.plotly_chart(har_chart, use_container_width = True)
+                    st.dataframe(har_counts, use_container_width = True)
+                    #csv = convert_df(filtered_har.data)
+                    # filtered_har = filtered_har.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Harmonic Data as CSV",
+                        data=filtered_har.data.to_csv(),
+                        file_name = piece.metadata['title'] + '_harmonic_results.csv',
+                        mime='text/csv',
+                        key=5,
+                        )
+                elif corpus_length > 1: 
+                    if 'Composer' not in filtered_har.columns:
+                        st.write("Did you **change the piece list**? If so, please **Update and Submit form**")
+                    else:
+                        har_no_mdata = filtered_har.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    har_no_mdata = har_no_mdata.map(str)
+                    har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
+                    # apply the categorical list and sort.  
+                    if interval_kinds[select_kind] == 'q':
+                        har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
+                        har_counts = har_counts[har_counts.index.notna()]
+                        har_counts.sort_index(inplace=True)
+                    else:
+                        har_counts = har_counts.sort_index()
+                        har_counts = har_counts.drop(index=['', 'Rest'])
+                    har_counts.index.rename('interval', inplace=True)
+                    voices = har_counts.columns.to_list()
+                        # set the figure size, type and colors
+                    har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns),
+                                    title="Distribution of Harmonic Intervals in " + ', '.join(titles))
+                    har_chart.update_layout(xaxis_title="Interval", 
+                                        yaxis_title="Count",
+                                        legend_title='Voices')
+                    # show results
+                    st.plotly_chart(har_chart, use_container_width = True)
+                    st.dataframe(filtered_har, use_container_width = True)
+                    #csv = convert_df(filtered_har.data)
+                    # filtered_har = filtered_har.to_csv().encode('utf-8')
+                    st.download_button(
+                        label="Download Filtered Corpus Harmonic Data as CSV",
+                        data=filtered_har.data.to_csv(),
+                        file_name = 'corpus_harmonic_results.csv',
+                        mime='text/csv',
+                        key=6,
+                        )           
 
 # function for ngram heatmap
 # @st.cache_data
@@ -1326,22 +1335,29 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
 def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
+    # Check if hr is None or empty
+    if hr is None or hr.empty:
+        # Define the required columns
+        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set',  
+           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+        # Return an empty DataFrame with the required columns
+        return pd.DataFrame(columns=columns_to_keep)
     # fix update error for type
-    if hr is not None and not hr.empty:
-        hr.fillna(0, inplace=True)
-        # voices_list = list(piece.notes().columns)
-        # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-        hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-        hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-        hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-        # hr = piece.emaAddresses(df=hr, mode='h')
-        hr = hr.reset_index()
-        hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-        cols_to_move = ['Composer', 'Title', 'Date']
-        hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]   
-        return hr
+    hr.fillna(0, inplace=True)
+    # voices_list = list(piece.notes().columns)
+    # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+    columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+    hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+    # hr = piece.emaAddresses(df=hr, mode='h')
+    hr = hr.reset_index()
+    hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+    cols_to_move = ['Composer', 'Title', 'Date']
+    hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+
+    return hr
 # orpus
 # @st.cache_data
 def corpus_homorhythm(corpus, length_choice, full_hr_choice):
@@ -1354,9 +1370,9 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
     #                                    metadata = True)
 #
-    # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs if df is not None]
-
+    # Filter out DataFrames with zero length
+    list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
     hr = pd.concat(rev_list_of_dfs)
     # voices_list = list(piece.notes().columns)
     # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
@@ -1398,24 +1414,21 @@ if st.sidebar.checkbox("Explore Homorhythm"):
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
-        if st.session_state.hr is None:
-            st.write("There are no HR patterns in the selected piece(s).")
-        else:
-            filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-            st.dataframe(filtered_hr, use_container_width = True)
-            # csv = convert_df(filtered_hr)
-            if corpus_length == 1:
-                download_name = piece.metadata['title'] + '_homorhythm_results.csv'
-            elif corpus_length > 1:
-                download_name = "corpus_homorhythm_results.csv"
-            # filtered_hr = filtered_hr.to_csv().encode('utf-8')
-            st.download_button(
-                label="Download Filtered Homorhythm Data as CSV",
-                data=filtered_hr.to_csv(),
-                file_name = download_name,
-                mime='text/csv',
-                key=8,
-                ) 
+        filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
+        st.dataframe(filtered_hr, use_container_width = True)
+        # csv = convert_df(filtered_hr)
+        if corpus_length == 1:
+            download_name = piece.metadata['title'] + '_homorhythm_results.csv'
+        elif corpus_length > 1:
+            download_name = "corpus_homorhythm_results.csv"
+        # filtered_hr = filtered_hr.to_csv().encode('utf-8')
+        st.download_button(
+            label="Download Filtered Homorhythm Data as CSV",
+            data=filtered_hr.to_csv(),
+            file_name = download_name,
+            mime='text/csv',
+            key=8,
+            ) 
         
 # p type function
 # piece
