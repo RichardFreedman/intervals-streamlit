@@ -13,7 +13,7 @@ from crim_intervals import main_objs
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
-from pyvis.network import Network
+# from pyvis.network import Network
 import glob as glob
 # from IPython.display import SVG
 import matplotlib.pyplot as plt
