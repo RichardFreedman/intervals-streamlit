@@ -1,3 +1,12 @@
+[tool.poetry]
+name = "intervals-streamlit"
+version = "0.1.0"
+description = "streamlit app for crim intervals"
+authors = ["Richard Freedman <rfreedma@haverford.edu>"]
+license = "Creative Commons NC-SA"
+readme = "README.md"
+
+
 [tool.poetry.dependencies]
 python = ">=3.10"
 streamlit = ">=1.38.0,<1.39.0 || >1.39.0"
@@ -12,11 +21,12 @@ joblib = "1.0.1"
 jsonschema = "3.2"
 lxml = "5.1.0"
 more-itertools = "8.7.0"
-numpy = ">=1.20.2,<2.0.0"
+numpy = ">=1.20.2, <2.0.0"
 pandas = ">=2.2.0"
 statsmodels = "0.14.1"
 plotly-express = "0.4.1"
 pyarrow = "17.0.0"
+pyvis = "0.1.9"
 python-dateutil = "2.8.2"
 python-louvain = "0.16"
 pytz = "2021.1"
@@ -24,17 +34,11 @@ rfc3986 = "1.4.0"
 six = "1.16.0"
 sniffio = "1.2.0"
 textdistance = "4.2.1"
+crim_intervals = { git = "https://github.com/HCDigitalScholarship/intervals.git", branch = "intervals_4_streamlit", extras = ["no-verovio"] }
 
-[tool.poetry.dev-dependencies]
-crim_intervals = {
-    git = "https://github.com/HCDigitalScholarship/intervals.git",
-    branch = "intervals_4_streamlit_dev",
-    extras = ["no-verovio"]
-}
 
-[tool.poetry.extras]
-no-verovio = ["crim_intervals"]
 
 [build-system]
+
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
