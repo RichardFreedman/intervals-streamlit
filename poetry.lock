@@ -1641,20 +1641,6 @@ files = [
 six = ">=1.5"
 
 [[package]]
-name = "python-louvain"
-version = "0.16"
-description = "Louvain algorithm for community detection"
-optional = false
-python-versions = "*"
-files = [
-    {file = "python-louvain-0.16.tar.gz", hash = "sha256:b7ba2df5002fd28d3ee789a49532baad11fe648e4f2117cf0798e7520a1da56b"},
-]
-
-[package.dependencies]
-networkx = "*"
-numpy = "*"
-
-[[package]]
 name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
@@ -2169,4 +2155,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10"
-content-hash = "88ceafd2827f491970263d0eb90c7e2394a631cc0add4e4e16d9c92759e79493"
+content-hash = "24ddcf0f4aa41645f1e7fd35267acbe704479d01ccb34e1dfe496805fd436164"
