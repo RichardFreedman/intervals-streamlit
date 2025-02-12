@@ -88,35 +88,35 @@ def find_mei_link(piece_id, json_objects):
 
 
 
-def show_score(mei_git_url):
-    # insert html within Streamlit, using components()  
-    components.html(
+# def show_score(mei_git_url):
+#     # insert html within Streamlit, using components()  
+#     components.html(
         
-        """
-        <div class="panel-body">
-        <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-    </div>
+#         """
+#         <div class="panel-body">
+#         <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
+#     </div>
 
-    <script type="module">
-        import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+#     <script type="module">
+#         import 'https://editor.verovio.org/javascript/app/verovio-app.js';
 
-        // Create the app - here with an empty option object
-        const app = new Verovio.App(document.getElementById("app"), {});
+#         // Create the app - here with an empty option object
+#         const app = new Verovio.App(document.getElementById("app"), {});
 
-        // Load a file (MEI or MusicXML)
+#         // Load a file (MEI or MusicXML)
 
-        fetch('"""+mei_git_url+"""')
-            .then(function(response) {
-                return response.text();
-            })
-            .then(function(text) {
-                app.loadData(text);
-            });
-    </script>
-        """,
-        height=800,
-        # width=850,
-    )
+#         fetch('"""+mei_git_url+"""')
+#             .then(function(response) {
+#                 return response.text();
+#             })
+#             .then(function(text) {
+#                 app.loadData(text);
+#             });
+#     </script>
+#         """,
+#         height=800,
+#         # width=850,
+#     )
 
 # Title and Introduction
 st.title("CRIM Intervals Search Tools")
@@ -146,7 +146,7 @@ if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
 elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
     piece_name = crim_piece_selections[0]
     crim_view_url = 'https://crimproject.org/pieces/' + piece_name
-    url_for_verovio = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
+    # url_for_verovio = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
 
     # based on selected piece, get the mei file link and import it
     filepath = find_mei_link(piece_name, json_objects)
