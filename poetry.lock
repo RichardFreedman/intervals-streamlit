@@ -332,10 +332,10 @@ test-no-images = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"
 
 [[package]]
 name = "crim-intervals"
-version = "2.0.44"
+version = "2.0.47"
 description = "CRIM intervals package"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.9"
 files = []
 develop = false
 
@@ -360,7 +360,6 @@ plotly = "5.19.0"
 plotly-express = "0.4.1"
 pyarrow = ">=15.0.0"
 python-dateutil = "2.8.2"
-python-louvain = "0.16"
 pytz = "2021.1"
 pyvis = "0.1.9"
 requests = "2.31.0"
@@ -370,15 +369,14 @@ six = "1.16.0"
 sniffio = "1.2.0"
 statsmodels = "0.14.1"
 textdistance = "4.2.1"
-verovio = "4.1.0"
 webcolors = "1.11.1"
 xlsxwriter = "3.0.2"
 
 [package.source]
 type = "git"
 url = "https://github.com/HCDigitalScholarship/intervals.git"
-reference = "intervals_4_streamlit"
-resolved_reference = "b8aa06ee3838950a59a76a8f54639cdeb52583e9"
+reference = "intervals_4_streamlit_dev"
+resolved_reference = "95f2ca845e3f071e1a279ddd91fbbcdf0ac7eb8f"
 
 [[package]]
 name = "cycler"
@@ -2097,41 +2095,6 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
-name = "verovio"
-version = "4.1.0"
-description = "A library and toolkit for engraving MEI music notation into SVG"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "verovio-4.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ba3be27d2fd75d9e23f967ac0a74d6506c039dfa527f6ec66730cc937bdf62ed"},
-    {file = "verovio-4.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:88447b9991ae4e9815d5ce2cf9dbf985b5904a17f2feb38d59eebddff4787222"},
-    {file = "verovio-4.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:de5ecbc2ac382c68de92bb7f0ad2fca4a42bced86f35963214c01c88692b81bb"},
-    {file = "verovio-4.1.0-cp310-cp310-win32.whl", hash = "sha256:fc036971d22709a8e84d9f188a8b49ba321c6964f81660e70fc76a4b6dc00460"},
-    {file = "verovio-4.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:bef3df418164d7a662bdf007e1d102f68336426e6d851f5d9fd1c2d5c67bc3a3"},
-    {file = "verovio-4.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:54eaa5b97f0b7211cd13893abbc6b1bd93ba0a5cfb4d514614ed23bdb64d6749"},
-    {file = "verovio-4.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3f17e5bad53e937ed0fbaa877e01e2439fd9b2df004ae2311099144771a0533d"},
-    {file = "verovio-4.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9516cf622f940123448a7d0cbc3a6cf806bbe651d1725455d3c8f15bfd6b4020"},
-    {file = "verovio-4.1.0-cp311-cp311-win32.whl", hash = "sha256:0d8714357d8ac97c7ae2d4befc5702f0a12c8fe0b7d0018756c367c6f7481d86"},
-    {file = "verovio-4.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:a04900337b0f4fa0fcd559211415e697f3119ac7a1de6355508a7342b25b735d"},
-    {file = "verovio-4.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:165197367ec9447a887fde3723329c6602302830d43eb90e463e9e67ba95d08d"},
-    {file = "verovio-4.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:83a29b52d50970f22883ccc262f534b4109968efcb5ed5bfc459641599a38734"},
-    {file = "verovio-4.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:215ba05f6706a72ac8588f2b749304c76e5ca8163ba975944a989729b48e51c1"},
-    {file = "verovio-4.1.0-cp312-cp312-win32.whl", hash = "sha256:95e432374bb693a76331c5dcc78c7d1b29215c93fdce3aa8ce7cfbdddce7c5e1"},
-    {file = "verovio-4.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:8dd0763d5ef89b807d3abc7db7007b7a762fe832968f6af95d8fba78f73295f0"},
-    {file = "verovio-4.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:91a78bfa0e1f2da39440ba1f3dc5f4918a5317c1493a9f5ae331a4762b45435e"},
-    {file = "verovio-4.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:afea67e8dc6a5d2b3fee327ce5897b10d0165114056075847b054c38c65bf4af"},
-    {file = "verovio-4.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:342b69a8d3b29e1fbb559ce7389f7897b13a63029748d0acbeb78868068d29a6"},
-    {file = "verovio-4.1.0-cp38-cp38-win32.whl", hash = "sha256:447ebd7aac528e971b03c525103d890bfc372de02ff603b2af22dca4482626eb"},
-    {file = "verovio-4.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:e0ee5953911f4621afab4f17642fef8b8e314c2f1296d046798727da8d2ca951"},
-    {file = "verovio-4.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f6a3905799aa1d46548760e1a7b96f6c5f6466bb660a86aecb275d85ae6e7530"},
-    {file = "verovio-4.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2c0ec7f38e3170bdce63d5d14c4aba9c95a878430d6c2b9120fec8b137bde169"},
-    {file = "verovio-4.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ffc8012e3739bac50def77bd0eb14b1c335860133f4ac902ab222875268c1a6"},
-    {file = "verovio-4.1.0-cp39-cp39-win32.whl", hash = "sha256:8e33dd9ee7c09675da029ce82ab9cfb8eac1af8598d3a16902e59eb9d62dc6cc"},
-    {file = "verovio-4.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:71f6fee2effa252e85af14d2caca11a184f796b4d1c6df450d2ef183230d2c67"},
-    {file = "verovio-4.1.0.tar.gz", hash = "sha256:4a583ef1f5a6cd040bb12fde294aa230041aa7b3d329dad10e8e92dca8b22e11"},
-]
-
-[[package]]
 name = "watchdog"
 version = "6.0.0"
 description = "Filesystem events monitoring"
@@ -2209,4 +2172,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10"
-content-hash = "246b12777d77e8ecc947768d7b08be6ce0e3b3c4c2361f9a3e78a189c3d1d44a"
+content-hash = "703bdd5dde73648f099056d61dcf6fa72e21cd40dc63e03fc782ec156f23806b"
