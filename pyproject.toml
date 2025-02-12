@@ -1,6 +1,4 @@
-[
-tool.poetry.dependencies
-]
+[tool.poetry.dependencies]
 python = ">=3.10"
 streamlit = ">=1.38.0,<1.39.0 || >1.39.0"
 altair = "5.2.0"
@@ -27,19 +25,16 @@ six = "1.16.0"
 sniffio = "1.2.0"
 textdistance = "4.2.1"
 
+[tool.poetry.dev-dependencies]
 crim_intervals = {
     git = "https://github.com/HCDigitalScholarship/intervals.git",
     branch = "intervals_4_streamlit_dev",
     extras = ["no-verovio"]
 }
 
-[
-tool.poetry.extras
-]
+[tool.poetry.extras]
 no-verovio = ["crim_intervals"]
 
-[
-build-system
-]
+[build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
