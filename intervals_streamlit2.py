@@ -3,27 +3,20 @@ st. set_page_config(layout="wide")
 from pathlib import Path
 import requests
 from requests.sessions import DEFAULT_REDIRECT_LIMIT
-# import base64
-# import os
 import requests
-# import re
 import crim_intervals
 from crim_intervals import * 
 from crim_intervals import main_objs
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
-# from pyvis.network import Network
 import glob as glob
-# from IPython.display import SVG
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.figure_factory as ff
 import streamlit.components.v1 as components
 from os import listdir 
-# import os.path 
 import json
-# import seaborn as sns
 from tempfile import NamedTemporaryFile
 import random
 
@@ -34,33 +27,6 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-# local pieces for dev
-# raw_prefix = '/Users/rfreedma/Documents/CRIM_Python/crim-local/CRIM-online/crim/static/mei/MEI_4.0'
-# file_list = os.listdir(raw_prefix) 
-# piece_list = [ ] 
-# for file in file_list: 
-#     name = raw_prefix + "/" + file 
-#     piece_list.append(file)
-#     piece_list = sorted(piece_list)
-
-# all pieces on git:
-# piece_list = []
-# raw_prefix = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/"
-# URL = "https://api.github.com/repos/CRIM-Project/CRIM-online/git/trees/990f5eb3ff1e9623711514d6609da4076257816c"
-# piece_json = requests.get(URL).json()
-# # pattern to filter out empty header Mass files
-# pattern = 'CRIM_Mass_([0-9]{4}).mei'
-
-# # and now the request for all the files
-# for p in piece_json["tree"]:
-#     p_name = p["path"]
-#     if re.search(pattern, p_name):
-#         pass
-#     else:
-#         piece_list.append(p_name)
-#         piece_list = sorted(piece_list)
-
-# all pieces from CRIM Django
 
 # list of piece ids from json
 def make_piece_list(json_objects):
@@ -87,36 +53,6 @@ def find_mei_link(piece_id, json_objects):
     return None
 
 
-
-# def show_score(mei_git_url):
-#     # insert html within Streamlit, using components()  
-#     components.html(
-        
-#         """
-#         <div class="panel-body">
-#         <div id="app" class="panel" style="border: 1px solid lightgray; min-height: 800px;"></div>
-#     </div>
-
-#     <script type="module">
-#         import 'https://editor.verovio.org/javascript/app/verovio-app.js';
-
-#         // Create the app - here with an empty option object
-#         const app = new Verovio.App(document.getElementById("app"), {});
-
-#         // Load a file (MEI or MusicXML)
-
-#         fetch('"""+mei_git_url+"""')
-#             .then(function(response) {
-#                 return response.text();
-#             })
-#             .then(function(text) {
-#                 app.loadData(text);
-#             });
-#     </script>
-#         """,
-#         height=800,
-#         # width=850,
-#     )
 
 # Title and Introduction
 st.title("CRIM Intervals Search Tools")
