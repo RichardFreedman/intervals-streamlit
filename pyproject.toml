@@ -1,7 +1,9 @@
 [tool.poetry]
 name = "intervals-streamlit"
 version = "1.0.0"
-description = ""
+description = "Streamlit application for interval analysis"
+authors = ["Your Name <youremail@example.com>"]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
