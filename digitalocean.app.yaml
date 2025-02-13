@@ -1,4 +1,0 @@
-run_command:
-  - streamlit
-  - run
-  - app.py
