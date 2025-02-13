@@ -1,10 +1,9 @@
-FROM python:3.11.5-slim as builder
+FROM python:3.11.5-slim AS builder
 
-FROM python:3.11.5-slim as builder
-
-# Install Poetry and dependencies
+# Install Poetry and git
 RUN apt-get update && apt-get install -y \
     curl \
+    git \
     && curl -sSL https://install.python-poetry.org | python3 - \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -24,14 +23,11 @@ RUN git ls-remote https://github.com/HCDigitalScholarship/intervals.git
 RUN poetry add git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit \
     --source git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit
 
-# Verify installation
-RUN poetry show crim-intervals
-
 # Install remaining dependencies
 RUN poetry install --no-interaction --no-ansi
 
 # Final stage
-FROM python:3.11.5-slim
+FROM python:3.11.5-slim AS final
 
 WORKDIR /app
 COPY --from=builder /root/.local /root/.local
