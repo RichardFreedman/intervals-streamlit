@@ -2,14 +2,15 @@ FROM python:3.11.5-slim AS builder
 
 # Install Poetry and git
 RUN apt-get update && apt-get install -y \
-    python3-poetry \
+    curl \
     git \
+    && curl -sSL https://install.python-poetry.org | python3 - \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/usr/local/bin:${PATH}"
+ENV PATH="/root/.local/bin:${PATH}"
 ENV POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_HOME="/usr/local" \
+    POETRY_HOME="/root/.local" \
     POETRY_CACHE_DIR="/var/cache/pypoetry"
 
 WORKDIR /app
@@ -26,7 +27,7 @@ RUN poetry install --no-interaction --no-ansi
 FROM python:3.11.5-slim AS final
 
 WORKDIR /app
-COPY --from=builder /usr/local /usr/local
+COPY --from=builder /root/.local /root/.local
 COPY . .
 
 EXPOSE 8501
