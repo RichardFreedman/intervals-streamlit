@@ -6,7 +6,6 @@ authors = ["Richard Freedman <rfreedma@haverford.edu>"]
 license = "Creative Commons NC-SA"
 readme = "README.md"
 
-package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10"
