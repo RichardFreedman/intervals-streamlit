@@ -79,7 +79,7 @@ wcwidth = "==0.2.13"
 webcolors = "==1.11.1"
 xlsxwriter = "==3.0.2"
 zipp = "==3.20.1"
-plotly = "==5.13.1"
+plotly = "==5.19.1"
 plotly-express = "==0.4.1"
 
 [build-system]
