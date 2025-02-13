@@ -16,10 +16,7 @@ ENV POETRY_VIRTUALENVS_CREATE=false \
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
-# Verify git repository access
-RUN git ls-remote https://github.com/HCDigitalScholarship/intervals.git
-
-# Install git-based dependency with verification
+# Install git-based dependency first
 RUN poetry add git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit \
     --source git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit
 
@@ -35,6 +32,5 @@ COPY . .
 
 EXPOSE 8501
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
-
 # Entry point configuration
 ENTRYPOINT ["streamlit", "run", "--server.port=8501", "intervals_streamlit2.py"]
