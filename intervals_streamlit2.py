@@ -1330,50 +1330,50 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
         hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
         return hr
 
-# HR form
-if st.sidebar.checkbox("Explore Homorhythm"):
-    search_type = "other"
-    st.subheader("Explore Homorhythm")
-    st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
+# HR form--now commented out for Ditigal Ocean
+# if st.sidebar.checkbox("Explore Homorhythm"):
+#     search_type = "other"
+#     st.subheader("Explore Homorhythm")
+#     st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
 
-    with st.form("Homorhythm Settings"):
-        full_hr_choice = st.selectbox(
-            "Select HR Full Status",
-            [True, False])
-        length_choice = st.number_input('Select ngram Length', value=4, step=1)
-        submitted = st.form_submit_button("Update and Submit")
-        if submitted:
-            if 'hr' in st.session_state:
-                del st.session_state.hr
-            if corpus_length == 0:
-                st.write("Please select one or more pieces")
-            elif corpus_length == 1:
-                 hr = piece_homorhythm(st.session_state.piece, length_choice, full_hr_choice)
-            elif corpus_length > 1:
-                 hr = corpus_homorhythm(st.session_state.corpus, length_choice, full_hr_choice)
-            if "hr" not in st.session_state:
-                st.session_state.hr = hr
-# and use the session state variables for display
-    if 'hr' not in st.session_state:
-        pass
-    else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
-        st.write("Filter Results by Contents of Each Column")
-        filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-        st.dataframe(filtered_hr, use_container_width = True)
-        # csv = convert_df(filtered_hr)
-        if corpus_length == 1:
-            download_name = piece.metadata['title'] + '_homorhythm_results.csv'
-        elif corpus_length > 1:
-            download_name = "corpus_homorhythm_results.csv"
-        # filtered_hr = filtered_hr.to_csv().encode('utf-8')
-        st.download_button(
-            label="Download Filtered Homorhythm Data as CSV",
-            data=filtered_hr.to_csv(),
-            file_name = download_name,
-            mime='text/csv',
-            key=8,
-            ) 
+#     with st.form("Homorhythm Settings"):
+#         full_hr_choice = st.selectbox(
+#             "Select HR Full Status",
+#             [True, False])
+#         length_choice = st.number_input('Select ngram Length', value=4, step=1)
+#         submitted = st.form_submit_button("Update and Submit")
+#         if submitted:
+#             if 'hr' in st.session_state:
+#                 del st.session_state.hr
+#             if corpus_length == 0:
+#                 st.write("Please select one or more pieces")
+#             elif corpus_length == 1:
+#                  hr = piece_homorhythm(st.session_state.piece, length_choice, full_hr_choice)
+#             elif corpus_length > 1:
+#                  hr = corpus_homorhythm(st.session_state.corpus, length_choice, full_hr_choice)
+#             if "hr" not in st.session_state:
+#                 st.session_state.hr = hr
+# # and use the session state variables for display
+#     if 'hr' not in st.session_state:
+#         pass
+#     else:
+#         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+#         st.write("Filter Results by Contents of Each Column")
+#         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
+#         st.dataframe(filtered_hr, use_container_width = True)
+#         # csv = convert_df(filtered_hr)
+#         if corpus_length == 1:
+#             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
+#         elif corpus_length > 1:
+#             download_name = "corpus_homorhythm_results.csv"
+#         # filtered_hr = filtered_hr.to_csv().encode('utf-8')
+#         st.download_button(
+#             label="Download Filtered Homorhythm Data as CSV",
+#             data=filtered_hr.to_csv(),
+#             file_name = download_name,
+#             mime='text/csv',
+#             key=8,
+#             ) 
         
 # p type function
 # piece
