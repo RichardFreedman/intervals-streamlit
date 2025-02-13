@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+ROM python:3.10-slim
 
 # Install Poetry
 RUN pip install poetry==1.4.2
