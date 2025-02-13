@@ -82,8 +82,6 @@ zipp = "==3.20.1"
 plotly = "==5.19.0"
 plotly-express = "==0.4.1"
 
-[
-build-system
-]
+[build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
