@@ -340,6 +340,56 @@ test = ["Pillow", "contourpy[test-no-images]", "matplotlib"]
 test-no-images = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist", "wurlitzer"]
 
 [[package]]
+name = "crim-intervals"
+version = "2.0.44"
+description = "CRIM intervals package"
+optional = false
+python-versions = ">=3.10"
+files = []
+develop = false
+
+[package.dependencies]
+altair = "5.2.0"
+certifi = "2020.12.5"
+chardet = "4.0.0"
+h11 = "0.14.0"
+httpcore = "1.0.2"
+httpx = "0.26.0"
+idna = "3.1"
+ipython = ">=7.23.1,<8.0"
+joblib = "1.0.1"
+jsonschema = ">=3.1"
+lxml = "5.1.0"
+matplotlib = "^3.9.2"
+more-itertools = "8.7.0"
+music21 = "8.3.0"
+numpy = ">=1.20.2,<2.0.0"
+pandas = ">=2.2.0"
+plotly = "5.19.0"
+plotly-express = "0.4.1"
+pyarrow = ">=15.0.0"
+python-dateutil = "2.8.2"
+python-louvain = "0.16"
+pytz = "2021.1"
+pyvis = "0.1.9"
+requests = "2.31.0"
+rfc3986 = "1.4.0"
+seaborn = "0.13"
+six = "1.16.0"
+sniffio = "1.2.0"
+statsmodels = "0.14.1"
+textdistance = "4.2.1"
+verovio = "4.1.0"
+webcolors = "1.11.1"
+xlsxwriter = "3.0.2"
+
+[package.source]
+type = "git"
+url = "https://github.com/HCDigitalScholarship/intervals.git"
+reference = "intervals_4_streamlit"
+resolved_reference = "b8aa06ee3838950a59a76a8f54639cdeb52583e9"
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 description = "Composable style cycles"
@@ -1419,16 +1469,17 @@ xmp = ["defusedxml"]
 
 [[package]]
 name = "plotly"
-version = "5.13.1"
+version = "5.19.0"
 description = "An open-source, interactive data visualization library for Python"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "plotly-5.13.1-py2.py3-none-any.whl", hash = "sha256:f776a5c664908450c6c1727f61e8e2e22798d9c6c69d37a9057735365084a2fa"},
-    {file = "plotly-5.13.1.tar.gz", hash = "sha256:90ee9a1fee0dda30e2830e129855081ea17bd1b06a553a62b62de15caff1a219"},
+    {file = "plotly-5.19.0-py3-none-any.whl", hash = "sha256:906abcc5f15945765328c5d47edaa884bc99f5985fbc61e8cd4dc361f4ff8f5a"},
+    {file = "plotly-5.19.0.tar.gz", hash = "sha256:5ea91a56571292ade3e3bc9bf712eba0b95a1fb0a941375d978cc79432e055f4"},
 ]
 
 [package.dependencies]
+packaging = "*"
 tenacity = ">=6.2.0"
 
 [[package]]
@@ -1608,6 +1659,20 @@ files = [
 six = ">=1.5"
 
 [[package]]
+name = "python-louvain"
+version = "0.16"
+description = "Louvain algorithm for community detection"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-louvain-0.16.tar.gz", hash = "sha256:b7ba2df5002fd28d3ee789a49532baad11fe648e4f2117cf0798e7520a1da56b"},
+]
+
+[package.dependencies]
+networkx = "*"
+numpy = "*"
+
+[[package]]
 name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
@@ -1617,6 +1682,23 @@ files = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
     {file = "pytz-2021.1.tar.gz", hash = "sha256:83a4a90894bf38e243cf052c8b58f381bfe9a7a483f6a9cab140bc7f702ac4da"},
 ]
+
+[[package]]
+name = "pyvis"
+version = "0.1.9"
+description = "A Python network visualization library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyvis-0.1.9-py3-none-any.whl", hash = "sha256:4d7cab58f120db544e668ac53194fbb3f312e5ba691d7843e2048a43981b1356"},
+    {file = "pyvis-0.1.9.tar.gz", hash = "sha256:f9ea603025f31f02155760be638e6c443d992050a2e6942496fbba0586170cbf"},
+]
+
+[package.dependencies]
+ipython = ">=5.3.0"
+jinja2 = ">=2.9.6"
+jsonpickle = ">=1.4.1"
+networkx = ">=1.11"
 
 [[package]]
 name = "referencing"
@@ -2140,6 +2222,41 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "verovio"
+version = "4.1.0"
+description = "A library and toolkit for engraving MEI music notation into SVG"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "verovio-4.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ba3be27d2fd75d9e23f967ac0a74d6506c039dfa527f6ec66730cc937bdf62ed"},
+    {file = "verovio-4.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:88447b9991ae4e9815d5ce2cf9dbf985b5904a17f2feb38d59eebddff4787222"},
+    {file = "verovio-4.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:de5ecbc2ac382c68de92bb7f0ad2fca4a42bced86f35963214c01c88692b81bb"},
+    {file = "verovio-4.1.0-cp310-cp310-win32.whl", hash = "sha256:fc036971d22709a8e84d9f188a8b49ba321c6964f81660e70fc76a4b6dc00460"},
+    {file = "verovio-4.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:bef3df418164d7a662bdf007e1d102f68336426e6d851f5d9fd1c2d5c67bc3a3"},
+    {file = "verovio-4.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:54eaa5b97f0b7211cd13893abbc6b1bd93ba0a5cfb4d514614ed23bdb64d6749"},
+    {file = "verovio-4.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3f17e5bad53e937ed0fbaa877e01e2439fd9b2df004ae2311099144771a0533d"},
+    {file = "verovio-4.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9516cf622f940123448a7d0cbc3a6cf806bbe651d1725455d3c8f15bfd6b4020"},
+    {file = "verovio-4.1.0-cp311-cp311-win32.whl", hash = "sha256:0d8714357d8ac97c7ae2d4befc5702f0a12c8fe0b7d0018756c367c6f7481d86"},
+    {file = "verovio-4.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:a04900337b0f4fa0fcd559211415e697f3119ac7a1de6355508a7342b25b735d"},
+    {file = "verovio-4.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:165197367ec9447a887fde3723329c6602302830d43eb90e463e9e67ba95d08d"},
+    {file = "verovio-4.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:83a29b52d50970f22883ccc262f534b4109968efcb5ed5bfc459641599a38734"},
+    {file = "verovio-4.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:215ba05f6706a72ac8588f2b749304c76e5ca8163ba975944a989729b48e51c1"},
+    {file = "verovio-4.1.0-cp312-cp312-win32.whl", hash = "sha256:95e432374bb693a76331c5dcc78c7d1b29215c93fdce3aa8ce7cfbdddce7c5e1"},
+    {file = "verovio-4.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:8dd0763d5ef89b807d3abc7db7007b7a762fe832968f6af95d8fba78f73295f0"},
+    {file = "verovio-4.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:91a78bfa0e1f2da39440ba1f3dc5f4918a5317c1493a9f5ae331a4762b45435e"},
+    {file = "verovio-4.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:afea67e8dc6a5d2b3fee327ce5897b10d0165114056075847b054c38c65bf4af"},
+    {file = "verovio-4.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:342b69a8d3b29e1fbb559ce7389f7897b13a63029748d0acbeb78868068d29a6"},
+    {file = "verovio-4.1.0-cp38-cp38-win32.whl", hash = "sha256:447ebd7aac528e971b03c525103d890bfc372de02ff603b2af22dca4482626eb"},
+    {file = "verovio-4.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:e0ee5953911f4621afab4f17642fef8b8e314c2f1296d046798727da8d2ca951"},
+    {file = "verovio-4.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f6a3905799aa1d46548760e1a7b96f6c5f6466bb660a86aecb275d85ae6e7530"},
+    {file = "verovio-4.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2c0ec7f38e3170bdce63d5d14c4aba9c95a878430d6c2b9120fec8b137bde169"},
+    {file = "verovio-4.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ffc8012e3739bac50def77bd0eb14b1c335860133f4ac902ab222875268c1a6"},
+    {file = "verovio-4.1.0-cp39-cp39-win32.whl", hash = "sha256:8e33dd9ee7c09675da029ce82ab9cfb8eac1af8598d3a16902e59eb9d62dc6cc"},
+    {file = "verovio-4.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:71f6fee2effa252e85af14d2caca11a184f796b4d1c6df450d2ef183230d2c67"},
+    {file = "verovio-4.1.0.tar.gz", hash = "sha256:4a583ef1f5a6cd040bb12fde294aa230041aa7b3d329dad10e8e92dca8b22e11"},
+]
+
+[[package]]
 name = "watchdog"
 version = "6.0.0"
 description = "Filesystem events monitoring"
@@ -2236,4 +2353,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "004220d4c3d230a03151c89aaf79fba041ad715571a1cdfba81cb466693c231e"
+content-hash = "cfdd58f587a4f89a9efbaa797034db4eed322e500c559ade5e347dc3193ef4e4"
