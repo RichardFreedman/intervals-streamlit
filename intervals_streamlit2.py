@@ -17,8 +17,11 @@ import plotly.figure_factory as ff
 import streamlit.components.v1 as components
 from os import listdir 
 import json
+import psutil
 from tempfile import NamedTemporaryFile
 import random
+from datetime import datetime
+import time
 
 from pandas.api.types import (
     is_categorical_dtype,
@@ -27,7 +30,66 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
+# Create a session state to store memory metrics
+if 'memory_history' not in st.session_state:
+    st.session_state.memory_history = []
 
+def get_memory_usage():
+    """Collect current memory usage metrics"""
+    process = psutil.Process(os.getpid())
+    mem_percent = process.memory_percent()
+    return {
+        'timestamp': datetime.now(),
+        'usage_percent': mem_percent,
+        'total_memory_mb': process.memory_info().rss / (1024 * 1024),
+        'cpu_percent': process.cpu_percent(interval=0.1)
+    }
+
+def update_memory_monitor():
+    """Update memory monitoring display"""
+    metrics = get_memory_usage()
+    
+    # Store history (last 60 seconds worth)
+    st.session_state.memory_history.append(metrics)
+    if len(st.session_state.memory_history) > 60:
+        st.session_state.memory_history.pop(0)
+    
+    # Convert to DataFrame for plotly.express
+    df = pd.DataFrame(st.session_state.memory_history)
+    
+    # Create visualization with plotly.express
+    fig = px.line(df, x='timestamp', y='usage_percent',
+                 title='Memory Usage Over Time',
+                 labels={'usage_percent': 'Memory Usage (%)'})
+    
+    # Add CPU usage line
+    fig.add_scatter(x=df['timestamp'], y=df['cpu_percent'],
+                   name='CPU Usage (%)')
+    
+    # Display current metrics
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.metric(label='Current Memory', 
+                 value=f"{metrics['total_memory_mb']:.2f} MB",
+                 delta=f"{metrics['cpu_percent']}% CPU")
+
+def monitor_memory():
+    """Main monitoring function"""
+    st.header("Memory Monitoring")
+    update_memory_monitor()
+    
+    # Update every second
+    time.sleep(1)
+    monitor_memory()
+
+# Add monitoring to your app
+st.sidebar.button("Toggle Memory Monitor", 
+                 on_click=lambda: st.session_state.show_monitor = True)
+
+if st.session_state.get('show_monitor', False):
+    monitor_memory()
 # list of piece ids from json
 def make_piece_list(json_objects):
     piece_list = []
