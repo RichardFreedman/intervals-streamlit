@@ -86,7 +86,7 @@ def monitor_memory():
 
 # Add monitoring to your app
 st.sidebar.button("Toggle Memory Monitor", 
-                 on_click=lambda: st.session_state.show_monitor = True)
+                 on_click=lambda: st.session_state.show_monitor == True)
 
 if st.session_state.get('show_monitor', False):
     monitor_memory()
