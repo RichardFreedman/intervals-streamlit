@@ -1700,8 +1700,8 @@ if st.sidebar.checkbox("Explore Cadences"):
     # corpus
     elif corpus_length >= 2:
         func = ImportedPiece.cadences
-        if func:
-            list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+        list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+        if list_of_dfs:
             cadences = pd.concat(list_of_dfs, ignore_index=False)   
             cols_to_move = ['Composer', 'Title', 'Date']
             cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
