@@ -32,70 +32,10 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-def initialize_session_state():
-    # Initialize all required states
-    if 'show_monitor' not in st.session_state:
-        st.session_state.show_monitor = False
-        
-    if 'memory_history' not in st.session_state:
-        st.session_state.memory_history = deque(maxlen=60)  # Store 60 seconds of history
-        
-    if 'last_update_time' not in st.session_state:
-        st.session_state.last_update_time = time.time()
-
-def monitor_memory():
-    # Create container for the monitor
-    container = st.empty()
-    
-    while True:
-        # Get current memory usage
-        mem_usage = get_memory_usage()
-        
-        # Store history data
-        current_time = time.time()
-        st.session_state.memory_history.append({
-            'time': current_time,
-            'memory_mb': mem_usage
-        })
-        
-        # Update display every second
-        if time.time() - st.session_state.last_update_time >= 1:
-            with container.container():
-                # Create metric display
-                col1, col2 = st.columns([2, 1])
-                
-                # Current memory usage
-                with col1:
-                    st.metric(
-                        label="Memory Usage",
-                        value=f"{mem_usage:.2f} MB",
-                        delta=f"+{(mem_usage - get_previous_memory()):.2f} MB"
-                    )
-                
-                # Memory chart
-                with col2:
-                    fig = create_memory_chart()
-                    st.plotly_chart(fig, use_container_width=True)
-            
-            # Update last update time
-            st.session_state.last_update_time = time.time()
-        
-        # Small delay to avoid high CPU usage
-        time.sleep(0.1)
-
-def get_memory_usage():
-    process = psutil.Process(os.getpid())
-    return process.memory_info().rss / (1024 * 1024)
-
-def get_previous_memory():
-    if len(st.session_state.memory_history) < 2:
-        return 0
-    return st.session_state.memory_history[-2]['memory_mb']
-
+@st.cache_data
 def create_memory_chart():
     times = [t['time'] for t in st.session_state.memory_history]
     memories = [t['memory_mb'] for t in st.session_state.memory_history]
-    
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=times,
@@ -103,7 +43,6 @@ def create_memory_chart():
         mode='lines',
         name='Memory Usage'
     ))
-    
     fig.update_layout(
         title='Memory Usage Over Time',
         xaxis_title='Time (seconds)',
@@ -111,24 +50,47 @@ def create_memory_chart():
         showlegend=True,
         height=200
     )
-    
     return fig
+
+def monitor_memory():
+    container = st.empty()
+    while True:
+        mem_usage = get_memory_usage()
+        current_time = time.time()
+        st.session_state.memory_history.append({
+            'time': current_time,
+            'memory_mb': mem_usage
+        })
+        
+        if time.time() - st.session_state.last_update_time >= 1:
+            with container.container():
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.metric(
+                        label="Memory Usage",
+                        value=f"{mem_usage:.2f} MB",
+                        delta=f"+{(mem_usage - get_previous_memory()):.2f} MB"
+                    )
+                with col2:
+                    fig = create_memory_chart()
+                    st.plotly_chart(fig, use_container_width=True)
+            st.session_state.last_update_time = time.time()
+        time.sleep(0.1)
 
 # Main app
 initialize_session_state()
 
-# Create control panel
 st.title("Memory Monitor Control Panel")
 col1, col2 = st.columns([1, 1])
 with col1:
-    st.button(
-        "Start Monitoring",
-        on_click=lambda: st.session_state.show_monitor == True
-    )
+    if st.button("Start Monitoring"):
+        st.session_state.show_monitor = True
 
-# Display monitor if enabled
 if st.session_state.show_monitor:
     monitor_memory()
+
+
+    
 # list of piece ids from json
 def make_piece_list(json_objects):
     piece_list = []
