@@ -144,7 +144,6 @@ def find_mei_link(piece_id, json_objects):
     return None
 
 
-
 # Title and Introduction
 st.title("CRIM Intervals Search Tools")
 st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
@@ -306,15 +305,26 @@ unison_status = {'Separate Unisons' : False,
                  'Combine Unisons' : True}
 rest_status = {'Combine Rests' : True,
                  ' Separate Rests' : False}
-interval_order_quality = ["-P8", "-M7", "-m7", "-M6", "-m6", "-P5", "-P4", "-M3", 
-                          "-m3", "-M2", "-m2", "P1", "m2", "M2", "m3", "M3",
-                          "P4", "P5", "m6", "M6", "m7", "M7", "P8"]
+interval_order_quality = ["-P15", "-M14", "-m14", "-P13", "-A12", "-d13", "-P12", "-M11", "-m11", "-P10", "-A9", 
+                          "-d10", "-P9", "-M8", "-m8", "-P7", "-A6", "-d7", "-P6", "-M5", "-m5", "-P4", "-A3", 
+                          "-d4", "-P3", "-M2", "-m2", "-P1", "P1", "m2", "M2", "m3", "M3", "P4", "A4", 
+                          "d5", "P5", "m6", "M6", "m7", "M7", "P8", "m9", "M9", "m10", "M10", "P11", 
+                          "A11", "d12", "P12", "M13", "m13", "P13", "A14", "d14", "P14", "M15", "m15", "P15"]
 # interval_order_quality = ["-P8", "m2", "-m2", "M2", "-M2", "m3", "-m3", "M3", "-M3", "P4", "-P4", "P5", "-P5", 
 #             "m6", "-m6", "M6", "-M6", "m7", "-m7", "M7", "-M7", "P8", "-P8"]
-pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
-                'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
-                'C4', 'C#4','D4', 'E-4', 'E4', 'F4', 'F#4','G4', 'A4', 'B-4', 'B4',
-                'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5', 'Rest']
+
+pitch_order = ['A#1', 'B1', 
+               'C2', 'C#2', 'D2', 'D#2','E-2', 'E2', 'E#2', 'F2', 'F#2', 'G-2', 'G2', 'G#2', 'A-2', 'A2', 'A#2','B-2', 'B2', 'B#2',
+               'C3', 'C#3', 'D-3','D3', 'D#3', 'E-3','E3', 'E#3', 'F3', 'F#3', 'G-3', 'F##3', 'G3', 'G#3', 'A-3', 'A3', 'A#3', 'B-3','B3', 'B#3',
+               'C4', 'C#4', 'D-4','D4', 'D#4','E-4', 'E4', 'F-4', 'E#4', 'F4', 'F#4', 'G-4', 'F##4', 'G4', 'G#4', 'A-4','A4', 'A#4', 'B-4', 'B4', 'B#4',
+               'C5', 'C#5','C##5', 'D-5','D5', 'D#5', 'E-5','E5', 'F-5','E#5','F5', 'F#5', 'G-5', 'F##5','G5', 'G#5', 'A-5', 'A5', 'A#5', 'B-5', 'B5',
+              'C6']
+
+#old pitch order
+# pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
+                # 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
+                # 'C4', 'C#4','D4', 'E-4', 'E4', 'F4', 'F#4','G4', 'A4', 'B-4', 'B4',
+                # 'C5', 'C#5','D5', 'E-5','E5', 'F5', 'F#5', 'G5', 'A5', 'B-5', 'B5', 'Rest']
 
 # filter and download functions
 def convertTuple(tup):
@@ -1367,59 +1377,59 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
 # hr functions
 # one piece
 # @st.cache_data
-def piece_homorhythm(piece, length_choice, full_hr_choice):
-    hr = piece.homorhythm(ngram_length=length_choice, 
-                    full_hr=full_hr_choice)
-    # Check if hr is None or empty
-    if hr is None or hr.empty:
-        # Define the required columns
-        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set',  
-           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-        # Return an empty DataFrame with the required columns
-        return pd.DataFrame(columns=columns_to_keep)
-    # fix update error for type
-    hr.fillna(0, inplace=True)
-    # voices_list = list(piece.notes().columns)
-    # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-    columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-    hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-    # hr = piece.emaAddresses(df=hr, mode='h')
-    hr = hr.reset_index()
-    hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-    cols_to_move = ['Composer', 'Title', 'Date']
-    hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+# def piece_homorhythm(piece, length_choice, full_hr_choice):
+#     hr = piece.homorhythm(ngram_length=length_choice, 
+#                     full_hr=full_hr_choice)
+#     # Check if hr is None or empty
+#     if hr is None or hr.empty:
+#         # Define the required columns
+#         columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set',  
+#            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+#         # Return an empty DataFrame with the required columns
+#         return pd.DataFrame(columns=columns_to_keep)
+#     # fix update error for type
+#     hr.fillna(0, inplace=True)
+#     # voices_list = list(piece.notes().columns)
+#     # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+#     columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+#            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+#     hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+#     hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+#     hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+#     # hr = piece.emaAddresses(df=hr, mode='h')
+#     hr = hr.reset_index()
+#     hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+#     cols_to_move = ['Composer', 'Title', 'Date']
+#     hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
 
-    return hr
-# orpus
-# @st.cache_data
-def corpus_homorhythm(corpus, length_choice, full_hr_choice):
-    func = ImportedPiece.homorhythm
-    list_of_dfs = corpus.batch(func = func,
-                               kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
-                               metadata = True)
-    # func2 = ImportedPiece.emaAddresses
-    # list_of_hr_with_ema = corpus.batch(func = func2,
-    #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
-    #                                    metadata = True)
-#
-    # Filter out DataFrames with zero length
-    list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
-    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    if len(rev_list_of_dfs) > 0:
-        hr = pd.concat(rev_list_of_dfs)
-        # voices_list = list(piece.notes().columns)
-        # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-            'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
-        hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-        hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-        hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-        cols_to_move = ['Composer', 'Title', 'Date']
-        hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
-        return hr
+#     return hr
+# # orpus
+# # @st.cache_data
+# def corpus_homorhythm(corpus, length_choice, full_hr_choice):
+#     func = ImportedPiece.homorhythm
+#     list_of_dfs = corpus.batch(func = func,
+#                                kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
+#                                metadata = True)
+#     # func2 = ImportedPiece.emaAddresses
+#     # list_of_hr_with_ema = corpus.batch(func = func2,
+#     #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
+#     #                                    metadata = True)
+# #
+#     # Filter out DataFrames with zero length
+#     list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
+#     rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+#     if len(rev_list_of_dfs) > 0:
+#         hr = pd.concat(rev_list_of_dfs)
+#         # voices_list = list(piece.notes().columns)
+#         # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+#         columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+#             'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
+#         hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+#         hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+#         hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+#         cols_to_move = ['Composer', 'Title', 'Date']
+#         hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+#         return hr
 
 # HR form--now commented out for Ditigal Ocean
 # if st.sidebar.checkbox("Explore Homorhythm"):
