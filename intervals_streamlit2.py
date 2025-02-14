@@ -54,23 +54,30 @@ def get_previous_memory():
 
 @st.cache_data
 def create_memory_chart():
-    """Create a line chart showing memory usage over time"""
-    times = [t['time'] for t in st.session_state.memory_history]
-    memories = [t['memory_mb'] for t in st.session_state.memory_history]
-    fig = px.Figure()
-    fig.add_trace(px.Scatter(
-        x=times,
-        y=memories,
-        mode='lines',
-        name='Memory Usage'
-    ))
-    fig.update_layout(
+    # Create a DataFrame from the session state
+    df = pd.DataFrame({
+        'time': [t['time'] for t in st.session_state.memory_history],
+        'memory_mb': [t['memory_mb'] for t in st.session_state.memory_history]
+    })
+    
+    # Create the figure using px.line
+    fig = px.line(
+        data_frame=df,
+        x='time',
+        y='memory_mb',
         title='Memory Usage Over Time',
-        xaxis_title='Time (seconds)',
-        yaxis_title='Memory (MB)',
+        labels={
+            'time': 'Time (seconds)',
+            'memory_mb': 'Memory (MB)'
+        }
+    )
+    
+    # Update layout
+    fig.update_layout(
         showlegend=True,
         height=200
     )
+    
     return fig
 
 def monitor_memory():
