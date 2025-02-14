@@ -32,91 +32,91 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-def initialize_session_state():
-    """Initialize all required session states"""
-    if 'show_monitor' not in st.session_state:
-        st.session_state.show_monitor = False
-    if 'memory_history' not in st.session_state:
-        st.session_state.memory_history = deque(maxlen=60)  # Store 60 seconds of history
-    if 'last_update_time' not in st.session_state:
-        st.session_state.last_update_time = time.time()
+# def initialize_session_state():
+#     """Initialize all required session states"""
+#     if 'show_monitor' not in st.session_state:
+#         st.session_state.show_monitor = False
+#     if 'memory_history' not in st.session_state:
+#         st.session_state.memory_history = deque(maxlen=60)  # Store 60 seconds of history
+#     if 'last_update_time' not in st.session_state:
+#         st.session_state.last_update_time = time.time()
 
-def get_memory_usage():
-    """Get current memory usage of the process"""
-    process = psutil.Process(os.getpid())
-    return process.memory_info().rss / (1024 * 1024)
+# def get_memory_usage():
+#     """Get current memory usage of the process"""
+#     process = psutil.Process(os.getpid())
+#     return process.memory_info().rss / (1024 * 1024)
 
-def get_previous_memory():
-    """Get previous memory reading for delta calculation"""
-    if len(st.session_state.memory_history) < 2:
-        return 0
-    return st.session_state.memory_history[-2]['memory_mb']
+# def get_previous_memory():
+#     """Get previous memory reading for delta calculation"""
+#     if len(st.session_state.memory_history) < 2:
+#         return 0
+#     return st.session_state.memory_history[-2]['memory_mb']
 
-@st.cache_data
-def create_memory_chart():
-    # Create a DataFrame from the session state
-    df = pd.DataFrame({
-        'time': [t['time'] for t in st.session_state.memory_history],
-        'memory_mb': [t['memory_mb'] for t in st.session_state.memory_history]
-    })
+# @st.cache_data
+# def create_memory_chart():
+#     # Create a DataFrame from the session state
+#     df = pd.DataFrame({
+#         'time': [t['time'] for t in st.session_state.memory_history],
+#         'memory_mb': [t['memory_mb'] for t in st.session_state.memory_history]
+#     })
     
-    # Create the figure using px.line
-    fig = px.line(
-        data_frame=df,
-        x='time',
-        y='memory_mb',
-        title='Memory Usage Over Time',
-        labels={
-            'time': 'Time (seconds)',
-            'memory_mb': 'Memory (MB)'
-        }
-    )
+#     # Create the figure using px.line
+#     fig = px.line(
+#         data_frame=df,
+#         x='time',
+#         y='memory_mb',
+#         title='Memory Usage Over Time',
+#         labels={
+#             'time': 'Time (seconds)',
+#             'memory_mb': 'Memory (MB)'
+#         }
+#     )
     
-    # Update layout
-    fig.update_layout(
-        showlegend=True,
-        height=200
-    )
+#     # Update layout
+#     fig.update_layout(
+#         showlegend=True,
+#         height=200
+#     )
     
-    return fig
+#     return fig
 
-def monitor_memory():
-    """Main monitoring function that updates the display"""
-    container = st.empty()
-    while True:
-        mem_usage = get_memory_usage()
-        current_time = time.time()
-        st.session_state.memory_history.append({
-            'time': current_time,
-            'memory_mb': mem_usage
-        })
+# def monitor_memory():
+#     """Main monitoring function that updates the display"""
+#     container = st.empty()
+#     while True:
+#         mem_usage = get_memory_usage()
+#         current_time = time.time()
+#         st.session_state.memory_history.append({
+#             'time': current_time,
+#             'memory_mb': mem_usage
+#         })
         
-        if time.time() - st.session_state.last_update_time >= 1:
-            with container.container():
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    st.metric(
-                        label="Memory Usage",
-                        value=f"{mem_usage:.2f} MB",
-                        delta=f"+{(mem_usage - get_previous_memory()):.2f} MB"
-                    )
-                with col2:
-                    fig = create_memory_chart()
-                    st.plotly_chart(fig, use_container_width=True)
-            st.session_state.last_update_time = time.time()
-        time.sleep(0.1)
+#         if time.time() - st.session_state.last_update_time >= 1:
+#             with container.container():
+#                 col1, col2 = st.columns([2, 1])
+#                 with col1:
+#                     st.metric(
+#                         label="Memory Usage",
+#                         value=f"{mem_usage:.2f} MB",
+#                         delta=f"+{(mem_usage - get_previous_memory()):.2f} MB"
+#                     )
+#                 with col2:
+#                     fig = create_memory_chart()
+#                     st.plotly_chart(fig, use_container_width=True)
+#             st.session_state.last_update_time = time.time()
+#         time.sleep(0.1)
 
-# Main app
-initialize_session_state()
+# # Main app
+# initialize_session_state()
 
-st.title("Memory Monitor Control Panel")
-col1, col2 = st.columns([1, 1])
-with col1:
-    if st.button("Start Monitoring"):
-        st.session_state.show_monitor = True
+# st.title("Memory Monitor Control Panel")
+# col1, col2 = st.columns([1, 1])
+# with col1:
+#     if st.button("Start Monitoring"):
+#         st.session_state.show_monitor = True
 
-if st.session_state.show_monitor:
-    monitor_memory()
+# if st.session_state.show_monitor:
+#     monitor_memory()
 
 
 # list of piece ids from json
