@@ -881,7 +881,7 @@ def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, 
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
     
-    nr = nr.numberParts(nr)
+    nr = piece.numberParts(nr)
     mel = piece.melodic(df = nr, 
                         kind = kind_choice,
                         directed = directed,
