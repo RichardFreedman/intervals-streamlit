@@ -32,7 +32,7 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-ef initialize_session_state():
+def initialize_session_state():
     """Initialize all required session states"""
     if 'show_monitor' not in st.session_state:
         st.session_state.show_monitor = False
