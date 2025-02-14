@@ -57,8 +57,8 @@ def create_memory_chart():
     """Create a line chart showing memory usage over time"""
     times = [t['time'] for t in st.session_state.memory_history]
     memories = [t['memory_mb'] for t in st.session_state.memory_history]
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
+    fig = px.Figure()
+    fig.add_trace(px.Scatter(
         x=times,
         y=memories,
         mode='lines',
