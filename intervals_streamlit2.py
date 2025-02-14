@@ -32,8 +32,29 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
+ef initialize_session_state():
+    """Initialize all required session states"""
+    if 'show_monitor' not in st.session_state:
+        st.session_state.show_monitor = False
+    if 'memory_history' not in st.session_state:
+        st.session_state.memory_history = deque(maxlen=60)  # Store 60 seconds of history
+    if 'last_update_time' not in st.session_state:
+        st.session_state.last_update_time = time.time()
+
+def get_memory_usage():
+    """Get current memory usage of the process"""
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / (1024 * 1024)
+
+def get_previous_memory():
+    """Get previous memory reading for delta calculation"""
+    if len(st.session_state.memory_history) < 2:
+        return 0
+    return st.session_state.memory_history[-2]['memory_mb']
+
 @st.cache_data
 def create_memory_chart():
+    """Create a line chart showing memory usage over time"""
     times = [t['time'] for t in st.session_state.memory_history]
     memories = [t['memory_mb'] for t in st.session_state.memory_history]
     fig = go.Figure()
@@ -53,6 +74,7 @@ def create_memory_chart():
     return fig
 
 def monitor_memory():
+    """Main monitoring function that updates the display"""
     container = st.empty()
     while True:
         mem_usage = get_memory_usage()
@@ -90,7 +112,6 @@ if st.session_state.show_monitor:
     monitor_memory()
 
 
-    
 # list of piece ids from json
 def make_piece_list(json_objects):
     piece_list = []
