@@ -85,10 +85,13 @@ def monitor_memory():
     monitor_memory()
 
 # Add monitoring to your app
+
+st.session_state.show_monitor = False
+
 st.sidebar.button("Toggle Memory Monitor", 
                  on_click=lambda: st.session_state.show_monitor == True)
 
-if st.session_state.get('show_monitor', False):
+if st.session_state.show_monitor:
     monitor_memory()
 # list of piece ids from json
 def make_piece_list(json_objects):
