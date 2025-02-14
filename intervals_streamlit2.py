@@ -741,6 +741,7 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
 def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                             combineRests = combine_rests_choice)
+    nr = piece.numberParts(nr)
     nr = piece.detailIndex(nr)
     nr = nr.reset_index()
     # nr = nr.reset_index()
@@ -755,6 +756,10 @@ def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
     list_of_dfs = corpus.batch(func = func, 
                                 kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
                                 metadata=False)
+    func1 = ImportedPiece.numberParts
+    list_of_dfs = corpus.batch(func = func1,
+                               kwargs = {'df': list_of_dfs},
+                               metadata=False)
     func2 = ImportedPiece.detailIndex
     list_of_dfs = corpus.batch(func = func2, 
                             kwargs = {'df': list_of_dfs}, 
@@ -875,6 +880,8 @@ if st.sidebar.checkbox("Explore Notes"):
 def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
+    
+    nr = nr.numberParts()
     mel = piece.melodic(df = nr, 
                         kind = kind_choice,
                         directed = directed,
@@ -892,6 +899,12 @@ def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice
     list_of_dfs = corpus.batch(func = func, 
                                 kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
                                 metadata=False)
+    
+    func1 = ImportedPiece.numberParts
+    list_of_dfs = corpus.batch(func = func1,
+                               kwargs = {'df': list_of_dfs},
+                               metadata=False)
+    
     func2 = ImportedPiece.melodic
     list_of_dfs = corpus.batch(func = func2,
                                kwargs = {'df' : list_of_dfs, 'kind' : kind_choice, 'directed' : directed, 'compound' : compound},
@@ -1032,7 +1045,10 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
 # harmonic functions
 # @st.cache_data
 def piece_har(piece, kind_choice, directed, compound, against_low):
-    har = piece.harmonic(kind = kind_choice, 
+    nr = piece.notes()
+    nr = piece.numberParts(nr)
+    har = piece.harmonic(df=nr,
+                         kind = kind_choice, 
                          directed = directed,
                          compound = compound,
                          againstLow = against_low).fillna('')
@@ -1045,12 +1061,28 @@ def piece_har(piece, kind_choice, directed, compound, against_low):
 
 # @st.cache_data
 def corpus_har(corpus, kind_choice, directed, compound, against_low):
-    func = ImportedPiece.harmonic
-    list_of_dfs = corpus.batch(func = func,
-                               kwargs = {'kind' : kind_choice, 'directed' : directed, 'compound' : compound, 'againstLow' : against_low},
+    
+    func = ImportedPiece.notes  # <- NB there are no parentheses here
+    list_of_dfs = corpus.batch(func = func, 
+                                kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
+                                metadata=False)
+    
+    func1 = ImportedPiece.numberParts
+    list_of_dfs = corpus.batch(func = func1,
+                               kwargs = {'df': list_of_dfs},
+                               metadata=False)
+    
+    
+    func2 = ImportedPiece.harmonic
+    list_of_dfs = corpus.batch(func = func2,
+                               kwargs = {'df': list_of_dfs,
+                                         'kind' : kind_choice, 
+                                         'directed' : directed, 
+                                         'compound' : compound, 
+                                         'againstLow' : against_low},
                                metadata = False)
-    func2 = ImportedPiece.detailIndex
-    list_of_dfs = corpus.batch(func = func2, 
+    func3 = ImportedPiece.detailIndex
+    list_of_dfs = corpus.batch(func = func3, 
                             kwargs = {'df': list_of_dfs}, 
                             metadata = True)
     har = pd.concat(list_of_dfs)
@@ -1187,6 +1219,9 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
 def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice, include_count):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
+
+    nr = piece.numberParts(nr)
+    
     mel = piece.melodic(df = nr, 
                         kind = kind_choice,
                         directed = directed,
