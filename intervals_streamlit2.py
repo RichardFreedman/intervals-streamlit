@@ -1701,49 +1701,49 @@ if st.sidebar.checkbox("Explore Cadences"):
     elif corpus_length >= 2:
         func = ImportedPiece.cadences
         list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
-        if list_of_dfs:
-            cadences = pd.concat(list_of_dfs, ignore_index=False)   
-            cols_to_move = ['Composer', 'Title', 'Date']
-            cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
-            if st.checkbox("Show Full Cadence Table"):
-                st.subheader("Detailed View of Cadences")
-                filtered_cadences = filter_dataframe_cads(cadences)
-                st.dataframe(filtered_cadences, use_container_width = True)
-                download_name = "corpus_cadence_results.csv"
-                # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Corpus Cadence Data as CSV",
-                    data=filtered_cadences.to_csv(),
-                    file_name = download_name,
-                    mime='text/csv',
-                    key=11,
-                    )
-                # possible Verovio Cadences use.  Needs to adapt renderer?
-                # if st.button("Print Filtered Cadences with Verovio"):
-                #     output = piece.verovioCadences(df = filtered_cadences)
-                #     components.html(output)
-            # summary of tone and type
-            if st.checkbox("Summary of Cadences by Tone and Type"):
-                grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
-                st.subheader("Summary of Cadences by Tone and Type")
-                grouped
-            # radar plots
-            if st.checkbox("Show Basic Radar Plot"):
-                st.subheader("Basic Radar Plot")    
-                radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
-                st.plotly_chart(radar, use_container_width=True)
-            if st.checkbox("Show Advanced Radar Plot"):
-                st.subheader("Advanced Radar Plot")    
-                radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
-                st.plotly_chart(radar, use_container_width=True)
-            if st.checkbox("Show Basic Progress Plot"):
-                st.subheader("Basic Radar Plot")    
-                progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-                st.pyplot(progress, use_container_width=True)
-            if st.checkbox("Show Advanced Progress Plot"):
-                st.subheader("Advanced Radar Plot")    
-                progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-                st.pyplot(progress, use_container_width=True)
+        
+        cadences = pd.concat(list_of_dfs, ignore_index=False)   
+        cols_to_move = ['Composer', 'Title', 'Date']
+        cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
+        if st.checkbox("Show Full Cadence Table"):
+            st.subheader("Detailed View of Cadences")
+            filtered_cadences = filter_dataframe_cads(cadences)
+            st.dataframe(filtered_cadences, use_container_width = True)
+            download_name = "corpus_cadence_results.csv"
+            # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
+            st.download_button(
+                label="Download Filtered Corpus Cadence Data as CSV",
+                data=filtered_cadences.to_csv(),
+                file_name = download_name,
+                mime='text/csv',
+                key=11,
+                )
+            # possible Verovio Cadences use.  Needs to adapt renderer?
+            # if st.button("Print Filtered Cadences with Verovio"):
+            #     output = piece.verovioCadences(df = filtered_cadences)
+            #     components.html(output)
+        # summary of tone and type
+        if st.checkbox("Summary of Cadences by Tone and Type"):
+            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+            st.subheader("Summary of Cadences by Tone and Type")
+            grouped
+        # radar plots
+        if st.checkbox("Show Basic Radar Plot"):
+            st.subheader("Basic Radar Plot")    
+            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Advanced Radar Plot"):
+            st.subheader("Advanced Radar Plot")    
+            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
+            st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Basic Progress Plot"):
+            st.subheader("Basic Radar Plot")    
+            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
+        if st.checkbox("Show Advanced Progress Plot"):
+            st.subheader("Advanced Radar Plot")    
+            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
+            st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
     st.subheader("Model Finder")
