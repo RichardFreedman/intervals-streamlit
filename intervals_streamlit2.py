@@ -1514,252 +1514,252 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
 # p type function
 # piece
 # @st.cache_data
-def piece_presentation_types(piece, 
-                            length_choice, 
-                            limit_entries_choice,
-                            body_flex_choice, 
-                            head_flex_choice,
-                            hidden_types_choice,
-                            combine_unisons_choice):  
-    p_types = piece.presentationTypes(melodic_ngram_length = length_choice, 
-                                      limit_to_entries = limit_entries_choice,
-                                      body_flex = body_flex_choice, 
-                                      head_flex = head_flex_choice,
-                                      include_hidden_types = hidden_types_choice,
-                                      combine_unisons = combine_unisons_choice)   
-    # clean up for streamlit facets
-    if p_types is not None:
-        p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-        # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()  
-        return p_types
-#corpus
-# @st.cache_data
-def presentation_types_corpus(corpus,
-                              length_choice, 
-                            limit_entries_choice,
-                            body_flex_choice, 
-                            head_flex_choice,
-                            hidden_types_choice,
-                            combine_unisons_choice):
+# def piece_presentation_types(piece, 
+#                             length_choice, 
+#                             limit_entries_choice,
+#                             body_flex_choice, 
+#                             head_flex_choice,
+#                             hidden_types_choice,
+#                             combine_unisons_choice):  
+#     p_types = piece.presentationTypes(melodic_ngram_length = length_choice, 
+#                                       limit_to_entries = limit_entries_choice,
+#                                       body_flex = body_flex_choice, 
+#                                       head_flex = head_flex_choice,
+#                                       include_hidden_types = hidden_types_choice,
+#                                       combine_unisons = combine_unisons_choice)   
+#     # clean up for streamlit facets
+#     if p_types is not None:
+#         p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         # p_types ["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()  
+#         return p_types
+# #corpus
+# # @st.cache_data
+# def presentation_types_corpus(corpus,
+#                               length_choice, 
+#                             limit_entries_choice,
+#                             body_flex_choice, 
+#                             head_flex_choice,
+#                             hidden_types_choice,
+#                             combine_unisons_choice):
                                
-    func = ImportedPiece.presentationTypes
-    list_of_dfs = corpus.batch(func = func,
-                               kwargs = {'melodic_ngram_length' : length_choice, 
-                                      'limit_to_entries' : limit_entries_choice,
-                                      'body_flex' : body_flex_choice, 
-                                      'head_flex' : head_flex_choice,
-                                      'include_hidden_types' : hidden_types_choice,
-                                      'combine_unisons' : combine_unisons_choice},
-                                        metadata = True)
-    # drop empty dfs:
-    list_of_dfs = [df for df in list_of_dfs if df is not None and not df.empty]
-    if len(list_of_dfs) > 0: 
-        for p_types in list_of_dfs:
-            # clean up for streamlit facets
-            p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
-            p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
-        p_types = pd.concat(list_of_dfs)
-        return p_types
+#     func = ImportedPiece.presentationTypes
+#     list_of_dfs = corpus.batch(func = func,
+#                                kwargs = {'melodic_ngram_length' : length_choice, 
+#                                       'limit_to_entries' : limit_entries_choice,
+#                                       'body_flex' : body_flex_choice, 
+#                                       'head_flex' : head_flex_choice,
+#                                       'include_hidden_types' : hidden_types_choice,
+#                                       'combine_unisons' : combine_unisons_choice},
+#                                         metadata = True)
+#     # drop empty dfs:
+#     list_of_dfs = [df for df in list_of_dfs if df is not None and not df.empty]
+#     if len(list_of_dfs) > 0: 
+#         for p_types in list_of_dfs:
+#             # clean up for streamlit facets
+#             p_types["Measures_Beats"] = p_types["Measures_Beats"].apply(lambda x: ', '.join(map(str, x))).copy()
+#             p_types["Melodic_Entry_Intervals"] = p_types["Melodic_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+#             p_types["Offsets"]= p_types["Offsets"].apply(lambda x: ', '.join(map(str, x))).copy()
+#             p_types["Soggetti"]= p_types["Soggetti"].apply(lambda x: ', '.join(map(str, x))).copy()
+#             p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()
+#         p_types = pd.concat(list_of_dfs)
+#         return p_types
 
-# p types form
-if st.sidebar.checkbox("Explore Presentation Types"):
-    search_type = "other"
-    st.subheader("Explore Presentation Types")
-    st.write("[Know the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)", unsafe_allow_html=True)
-    with st.form("Presentation Type Settings"):
-        combine_unisons_choice = st.selectbox(
-            "Combine Unisons", [False, True])
-        length_choice = st.number_input('Select ngram Length', value=4, step=1) 
-        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
-        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
-        limit_entries_choice = st.selectbox(
-            "Limit to Melodic Entries", [True, False])
-        hidden_types_choice = st.selectbox(
-            "Include Hidden Presentation Types", [False, True])
-        # form submission button
-        submitted = st.form_submit_button("Update and Submit")
-        if submitted:
-            if "p_types" in st.session_state.keys():
-                del st.session_state.p_types
-            if corpus_length == 0:
-                st.write("Please select one or more pieces")
-            # one piece
-            elif corpus_length == 1:
-                p_types = piece_presentation_types(piece, 
-                                                    length_choice,
-                                                    limit_entries_choice,
-                                                    body_flex_choice,
-                                                    head_flex_choice,
-                                                    hidden_types_choice,
-                                                    combine_unisons_choice)         
-                # Set up session state for these returns
-                if "p_types" not in st.session_state:
-                    st.session_state.p_types = p_types          
-            # corpus
-            if corpus_length > 1:
-                p_types = presentation_types_corpus(st.session_state.corpus,
-                              length_choice, 
-                            limit_entries_choice,
-                            body_flex_choice, 
-                            head_flex_choice,
-                            hidden_types_choice,
-                            combine_unisons_choice)            
-                # Set up session state for these returns
-                if "p_types" not in st.session_state:
-                    st.session_state.p_types = p_types
-    if 'p_types' not in st.session_state:
-        pass
-    else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
-        st.write("Filter Results by Contents of Each Column")
-        filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
-        st.dataframe(filtered_p_types, use_container_width = True)
-        # csv = convert_df(filtered_p_types)
+# # p types form
+# if st.sidebar.checkbox("Explore Presentation Types"):
+#     search_type = "other"
+#     st.subheader("Explore Presentation Types")
+#     st.write("[Know the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)", unsafe_allow_html=True)
+#     with st.form("Presentation Type Settings"):
+#         combine_unisons_choice = st.selectbox(
+#             "Combine Unisons", [False, True])
+#         length_choice = st.number_input('Select ngram Length', value=4, step=1) 
+#         head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
+#         body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
+#         limit_entries_choice = st.selectbox(
+#             "Limit to Melodic Entries", [True, False])
+#         hidden_types_choice = st.selectbox(
+#             "Include Hidden Presentation Types", [False, True])
+#         # form submission button
+#         submitted = st.form_submit_button("Update and Submit")
+#         if submitted:
+#             if "p_types" in st.session_state.keys():
+#                 del st.session_state.p_types
+#             if corpus_length == 0:
+#                 st.write("Please select one or more pieces")
+#             # one piece
+#             elif corpus_length == 1:
+#                 p_types = piece_presentation_types(piece, 
+#                                                     length_choice,
+#                                                     limit_entries_choice,
+#                                                     body_flex_choice,
+#                                                     head_flex_choice,
+#                                                     hidden_types_choice,
+#                                                     combine_unisons_choice)         
+#                 # Set up session state for these returns
+#                 if "p_types" not in st.session_state:
+#                     st.session_state.p_types = p_types          
+#             # corpus
+#             if corpus_length > 1:
+#                 p_types = presentation_types_corpus(st.session_state.corpus,
+#                               length_choice, 
+#                             limit_entries_choice,
+#                             body_flex_choice, 
+#                             head_flex_choice,
+#                             hidden_types_choice,
+#                             combine_unisons_choice)            
+#                 # Set up session state for these returns
+#                 if "p_types" not in st.session_state:
+#                     st.session_state.p_types = p_types
+#     if 'p_types' not in st.session_state:
+#         pass
+#     else:
+#         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+#         st.write("Filter Results by Contents of Each Column")
+#         filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
+#         st.dataframe(filtered_p_types, use_container_width = True)
+#         # csv = convert_df(filtered_p_types)
         
-        if corpus_length == 1:
-            download_name = piece.metadata['title'] + '_p_type_results.csv'
-            if filtered_p_types is not None:
-                # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Presentation Type Data as CSV",
-                    data=filtered_p_types.to_csv(),
-                    file_name = download_name,
-                    mime='text/csv',
-                    key=8,
-                    )
-        elif corpus_length > 1:
-            download_name = "corpus_p_type_results.csv"
-            if filtered_p_types is not None:
-                # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
-                st.download_button(
-                    label="Download Filtered Corpus Presentation Type Data as CSV",
-                    data=filtered_p_types.to_csv(),
-                    file_name = download_name,
-                    mime='text/csv',
-                    key=9,
-                    )
-# cadence form
-if st.sidebar.checkbox("Explore Cadences"):
-    search_type = "other"
-    st.subheader("Explore Cadences")
-    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
+#         if corpus_length == 1:
+#             download_name = piece.metadata['title'] + '_p_type_results.csv'
+#             if filtered_p_types is not None:
+#                 # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
+#                 st.download_button(
+#                     label="Download Filtered Presentation Type Data as CSV",
+#                     data=filtered_p_types.to_csv(),
+#                     file_name = download_name,
+#                     mime='text/csv',
+#                     key=8,
+#                     )
+#         elif corpus_length > 1:
+#             download_name = "corpus_p_type_results.csv"
+#             if filtered_p_types is not None:
+#                 # filtered_p_types = filtered_p_types.to_csv().encode('utf-8')
+#                 st.download_button(
+#                     label="Download Filtered Corpus Presentation Type Data as CSV",
+#                     data=filtered_p_types.to_csv(),
+#                     file_name = download_name,
+#                     mime='text/csv',
+#                     key=9,
+#                     )
+# # cadence form
+# if st.sidebar.checkbox("Explore Cadences"):
+#     search_type = "other"
+#     st.subheader("Explore Cadences")
+#     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
     
-    # st.write("Did you **change the piece list**?  If so, please **Click Update Cadence Results**")
-    # if st.button("Update Cadence Results"):
-    if corpus_length == 0:
-        st.write("Please select one or more pieces")
-    elif corpus_length == 1:
-    # the full table of cad
-        if st.checkbox("Show Full Cadence Table"):
-            cadences = piece.cadences()
-            st.subheader("Detailed View of Cadences")
-            filtered_cadences = filter_dataframe_cads(cadences)
-            st.dataframe(filtered_cadences, use_container_width = True)
-            # to download csv
-            download_name = piece.metadata['title'] + '_cadence_results.csv'
-            st.download_button(
-                label="Download Filtered Cadence Data as CSV",
-                data=filtered_cadences.to_csv(),
-                file_name = download_name,
-                key=10,
-                mime='text/csv')
-            # possible Verovio Cadences use.  Needs to adapt renderer?
-            # if st.button("Print Filtered Cadences with Verovio"):
-            #     output = piece.verovioCadences(df = filtered_cadences)
-            #     components.html(output)
-        # summary of tone and type
-        if st.checkbox("Summary of Cadences by Tone and Type"):
-            cadences = piece.cadences()
-            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
-            st.subheader("Summary of Cadences by Tone and Type")
-            grouped
-        # radar plots
-        if st.checkbox("Show Basic Radar Plot"):
-            st.subheader("Basic Radar Plot")    
-            radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Advanced Radar Plot"):
-            st.subheader("Advanced Radar Plot")    
-            radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Basic Progress Plot"):
-            st.subheader("Basic Progress Plot")    
-            progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
-        if st.checkbox("Show Advanced Progress Plot"):
-            st.subheader("Advanced Progress Plot")    
-            progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
-    # corpus
-    elif corpus_length >= 2:
-        func = ImportedPiece.cadences
-        list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+#     # st.write("Did you **change the piece list**?  If so, please **Click Update Cadence Results**")
+#     # if st.button("Update Cadence Results"):
+#     if corpus_length == 0:
+#         st.write("Please select one or more pieces")
+#     elif corpus_length == 1:
+#     # the full table of cad
+#         if st.checkbox("Show Full Cadence Table"):
+#             cadences = piece.cadences()
+#             st.subheader("Detailed View of Cadences")
+#             filtered_cadences = filter_dataframe_cads(cadences)
+#             st.dataframe(filtered_cadences, use_container_width = True)
+#             # to download csv
+#             download_name = piece.metadata['title'] + '_cadence_results.csv'
+#             st.download_button(
+#                 label="Download Filtered Cadence Data as CSV",
+#                 data=filtered_cadences.to_csv(),
+#                 file_name = download_name,
+#                 key=10,
+#                 mime='text/csv')
+#             # possible Verovio Cadences use.  Needs to adapt renderer?
+#             # if st.button("Print Filtered Cadences with Verovio"):
+#             #     output = piece.verovioCadences(df = filtered_cadences)
+#             #     components.html(output)
+#         # summary of tone and type
+#         if st.checkbox("Summary of Cadences by Tone and Type"):
+#             cadences = piece.cadences()
+#             grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+#             st.subheader("Summary of Cadences by Tone and Type")
+#             grouped
+#         # radar plots
+#         if st.checkbox("Show Basic Radar Plot"):
+#             st.subheader("Basic Radar Plot")    
+#             radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
+#             st.plotly_chart(radar, use_container_width=True)
+#         if st.checkbox("Show Advanced Radar Plot"):
+#             st.subheader("Advanced Radar Plot")    
+#             radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
+#             st.plotly_chart(radar, use_container_width=True)
+#         if st.checkbox("Show Basic Progress Plot"):
+#             st.subheader("Basic Progress Plot")    
+#             progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
+#             st.pyplot(progress, use_container_width=True)
+#         if st.checkbox("Show Advanced Progress Plot"):
+#             st.subheader("Advanced Progress Plot")    
+#             progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
+#             st.pyplot(progress, use_container_width=True)
+#     # corpus
+#     elif corpus_length >= 2:
+#         func = ImportedPiece.cadences
+#         list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
         
-        cadences = pd.concat(list_of_dfs, ignore_index=False)   
-        cols_to_move = ['Composer', 'Title', 'Date']
-        cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
-        if st.checkbox("Show Full Cadence Table"):
-            st.subheader("Detailed View of Cadences")
-            filtered_cadences = filter_dataframe_cads(cadences)
-            st.dataframe(filtered_cadences, use_container_width = True)
-            download_name = "corpus_cadence_results.csv"
-            # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
-            st.download_button(
-                label="Download Filtered Corpus Cadence Data as CSV",
-                data=filtered_cadences.to_csv(),
-                file_name = download_name,
-                mime='text/csv',
-                key=11,
-                )
-            # possible Verovio Cadences use.  Needs to adapt renderer?
-            # if st.button("Print Filtered Cadences with Verovio"):
-            #     output = piece.verovioCadences(df = filtered_cadences)
-            #     components.html(output)
-        # summary of tone and type
-        if st.checkbox("Summary of Cadences by Tone and Type"):
-            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
-            st.subheader("Summary of Cadences by Tone and Type")
-            grouped
-        # radar plots
-        if st.checkbox("Show Basic Radar Plot"):
-            st.subheader("Basic Radar Plot")    
-            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Advanced Radar Plot"):
-            st.subheader("Advanced Radar Plot")    
-            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Basic Progress Plot"):
-            st.subheader("Basic Radar Plot")    
-            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
-        if st.checkbox("Show Advanced Progress Plot"):
-            st.subheader("Advanced Radar Plot")    
-            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
+#         cadences = pd.concat(list_of_dfs, ignore_index=False)   
+#         cols_to_move = ['Composer', 'Title', 'Date']
+#         cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
+#         if st.checkbox("Show Full Cadence Table"):
+#             st.subheader("Detailed View of Cadences")
+#             filtered_cadences = filter_dataframe_cads(cadences)
+#             st.dataframe(filtered_cadences, use_container_width = True)
+#             download_name = "corpus_cadence_results.csv"
+#             # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
+#             st.download_button(
+#                 label="Download Filtered Corpus Cadence Data as CSV",
+#                 data=filtered_cadences.to_csv(),
+#                 file_name = download_name,
+#                 mime='text/csv',
+#                 key=11,
+#                 )
+#             # possible Verovio Cadences use.  Needs to adapt renderer?
+#             # if st.button("Print Filtered Cadences with Verovio"):
+#             #     output = piece.verovioCadences(df = filtered_cadences)
+#             #     components.html(output)
+#         # summary of tone and type
+#         if st.checkbox("Summary of Cadences by Tone and Type"):
+#             grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+#             st.subheader("Summary of Cadences by Tone and Type")
+#             grouped
+#         # radar plots
+#         if st.checkbox("Show Basic Radar Plot"):
+#             st.subheader("Basic Radar Plot")    
+#             radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
+#             st.plotly_chart(radar, use_container_width=True)
+#         if st.checkbox("Show Advanced Radar Plot"):
+#             st.subheader("Advanced Radar Plot")    
+#             radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
+#             st.plotly_chart(radar, use_container_width=True)
+#         if st.checkbox("Show Basic Progress Plot"):
+#             st.subheader("Basic Radar Plot")    
+#             progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
+#             st.pyplot(progress, use_container_width=True)
+#         if st.checkbox("Show Advanced Progress Plot"):
+#             st.subheader("Advanced Radar Plot")    
+#             progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
+#             st.pyplot(progress, use_container_width=True)
 
-if st.sidebar.checkbox("Explore Model Finder"):
-    st.subheader("Model Finder")
-    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
-    if corpus_length <= 1:
-        st.write("Please select at least two pieces to compare")
-    elif corpus_length > 1:
-        corpus = CorpusBase(corpus_list)
-        with st.form("Model Finder Settings"):
-            length_choice = st.number_input('Select ngram Length', value=4, step=1)
-            submitted = st.form_submit_button("Submit")
-            if submitted:
-                soggetto_cross_plot = corpus.modelFinder(n=length_choice)
-                st.dataframe(soggetto_cross_plot)
-                fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
-                st.plotly_chart(fig)
-            else:
-                pass
+# if st.sidebar.checkbox("Explore Model Finder"):
+#     st.subheader("Model Finder")
+#     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
+#     if corpus_length <= 1:
+#         st.write("Please select at least two pieces to compare")
+#     elif corpus_length > 1:
+#         corpus = CorpusBase(corpus_list)
+#         with st.form("Model Finder Settings"):
+#             length_choice = st.number_input('Select ngram Length', value=4, step=1)
+#             submitted = st.form_submit_button("Submit")
+#             if submitted:
+#                 soggetto_cross_plot = corpus.modelFinder(n=length_choice)
+#                 st.dataframe(soggetto_cross_plot)
+#                 fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
+#                 st.plotly_chart(fig)
+#             else:
+#                 pass
    
