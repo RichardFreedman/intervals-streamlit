@@ -23,6 +23,7 @@ import random
 from datetime import datetime
 import time
 from collections import deque
+from collections import Counter
 
 
 from pandas.api.types import (
@@ -320,6 +321,15 @@ pitch_order = ['A#1', 'B1',
                'C5', 'C#5','C##5', 'D-5','D5', 'D#5', 'E-5','E5', 'F-5','E#5','F5', 'F#5', 'G-5', 'F##5','G5', 'G#5', 'A-5', 'A5', 'A#5', 'B-5', 'B5',
               'C6']
 
+dur_order = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 
+             4.0, 4.25, 4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75, 7.0, 7.25, 7.5, 7.75, 8.0]
+
+# for radar notes plot
+category_order = {
+    'C': 0, 'C#': 1, 'Db': 2, 'D' : 3, 'D#': 4, 'Eb': 5, 'E': 6, 'E#': 7, 'F': 8, 'F#': 9, 'Gb': 10, 'F##': 11,
+    'G': 12, 'G#': 13, 'Ab': 14, 'A': 15, 'A#': 16, 'Bb': 17, 'B': 18, 'B#': 19
+}
+
 #old pitch order
 # pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
                 # 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
@@ -353,6 +363,65 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
     with modification_container:     
         # random_id = random.randrange(1,1000)
         to_filter_columns = st.multiselect("Filter Notes by Various Fields", df.columns)
+        st.write("Remember that initial choices will constrain subsequent filters!")
+        if to_filter_columns:
+        # here we are filtering by column
+            for column in to_filter_columns:
+                left, right = st.columns((1, 20))
+                left.write("↳")
+                # Treat columns with < 10 unique values as categorical
+                # here 
+                if is_categorical_dtype(df[column]) or df[column].nunique() < 50:
+                    user_cat_input = right.multiselect(
+                        f"Values for {column}",
+                        df[column].unique(),
+                        default=list(df[column].unique()),
+                    )
+                    df = df[df[column].isin(user_cat_input)]  
+        # gets values for highlighted filters
+        df_no_meta = df.loc[:, ~df.columns.isin(['Composer', "Title", 'Date', "Measure", "Beat"])]
+        df_no_meta_col_names = df_no_meta.columns.tolist()
+        df_voices_only = df[df_no_meta_col_names]
+        melted = pd.melt(df_voices_only)
+        values_list = melted['value'].unique()
+        values_list = [i for i in values_list if i]
+        values_list = [element for element in values_list if not pd.isnull(element)]
+        values_list = [x for x in values_list if x != "-"]
+        user_text_input = st.multiselect("Filter on Notes", values_list)
+        if user_text_input:
+            def highlight_matching_strings(val):
+                match_strings = user_text_input
+                for match_string in match_strings:
+                    if match_string == val:
+                        return 'background-color: #ccebc4'
+                return ''
+            df = df.reset_index().fillna('')
+            df = df[df[df_no_meta_col_names].apply(lambda x: x.isin(user_text_input)).any(axis=1)]
+            df = df.style.map(highlight_matching_strings)
+        else:
+            df = df.reset_index().fillna('')
+            df = df.style
+    return df
+
+# for dur
+@st.fragment()
+def filter_dataframe_dur(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a UI on top of a dataframe to let viewers filter columns
+
+    Args:
+        df (pd.DataFrame): Original dataframe
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+    """
+ 
+    df = df.copy()
+    random_id = random.randrange(1,1000)
+    modification_container = st.container()
+    with modification_container:     
+        # random_id = random.randrange(1,1000)
+        to_filter_columns = st.multiselect("Filter Durations by Various Fields", df.columns)
         st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
@@ -874,7 +943,256 @@ if st.sidebar.checkbox("Explore Notes"):
                         mime='text/csv',
                         key=2,
                         )
+# durations
+def piece_durs(piece):
+    dur = piece.durations()
+    dur = piece.numberParts(dur)
+    dur = piece.detailIndex(dur)
+    dur = dur.reset_index()
+    dur = dur.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+    cols_to_move = ['Composer', 'Title', 'Measure', 'Beat', 'Date']
+    dur = dur[cols_to_move + [col for col in dur.columns if col not in cols_to_move]]  
+    return dur
+
+# @st.cache_data
+def corpus_durs(corpus):
+    func = ImportedPiece.durations  # <- NB there are no parentheses here
+    list_of_dfs = corpus.batch(func = func, 
+                                metadata=False)
+    func1 = ImportedPiece.numberParts
+    list_of_dfs = corpus.batch(func = func1,
+                               kwargs = {'df': list_of_dfs},
+                               metadata=False)
+    func2 = ImportedPiece.detailIndex
+    list_of_dfs = corpus.batch(func = func2, 
+                            kwargs = {'df': list_of_dfs}, 
+                            metadata = True)
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+    dur = pd.concat(rev_list_of_dfs)
+    cols_to_move = ['Composer', 'Title', 'Measure', 'Beat', 'Date']
+    dur = dur[cols_to_move + [col for col in dur.columns if col not in cols_to_move]]
+    return dur
+
+# durs form
+# Durations form in sidebar
+if st.sidebar.checkbox("Explore Durations"):
+    # Move the main content outside of the sidebar
+    st.subheader("Explore Durations")
+    st.write("[Know the code! Read more about CRIM Intervals durations methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/03_Durations.md)", unsafe_allow_html=True)
+    
+    if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
+        st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
+    else:
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         
+        # Form submission button
+        submitted = st.button("Update and Run Search")
+        
+        if submitted:
+            # Clear previous results if they exist
+            if 'dur' in st.session_state:
+                del st.session_state.dur
+                
+            # For one piece
+            if corpus_length == 1:
+                dur = piece_durs(piece)
+            # For corpus
+            elif corpus_length > 1:
+                dur = corpus_durs(st.session_state.corpus)
+                
+            if "dur" not in st.session_state:
+                st.session_state.dur = dur
+        
+        # Display results if they exist
+        if 'dur' in st.session_state:
+            # Filter the results
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            st.write("Filter Results by Contents of Each Column")
+            
+            if len(st.session_state.dur.fillna('')) > 100000:
+                st.write("Results are too large to display; please filter again")
+            else:
+                filtered_dur = filter_dataframe_dur(st.session_state.dur.fillna(''))
+                
+                # For one piece
+                if corpus_length == 1:
+                    dur_no_mdata = filtered_dur.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    # Reset the index to get durations as a column
+                    dur_counts_reset = dur_no_mdata.reset_index()
+                    
+                    # Create the bar chart with Plotly Express
+                    dur_chart = px.bar(
+                        dur_counts_reset,
+                        x='index',  # This will be the name of the column containing your former index
+                        y=list(dur_no_mdata.columns),
+                        title="Distribution of Durations in " + piece.metadata['title']
+                    )
+                    
+                    # Update the layout
+                    dur_chart.update_layout(
+                        xaxis_title="Duration",
+                        yaxis_title="Count",
+                        legend_title='Voices'
+                    )
+                    
+                    st.plotly_chart(dur_chart, use_container_width=True)
+                    st.dataframe(filtered_dur, use_container_width=True)
+                
+                # For corpus
+                if corpus_length > 1:
+                    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+                    dur_no_mdata = filtered_dur.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
+                    
+                    # Reset the index to get durations as a column
+                    dur_counts_reset = dur_no_mdata.reset_index()
+                    
+                    # Create the bar chart with Plotly Express
+                    dur_chart = px.bar(
+                        dur_counts_reset,
+                        x='index',
+                        y=list(dur_no_mdata.columns),
+                        title="Distribution of Durations in Corpus"
+                    )
+                    
+                    # Update the layout
+                    dur_chart.update_layout(
+                        xaxis_title="Duration",
+                        yaxis_title="Count",
+                        legend_title='Voices'
+                    )
+                    
+                    st.plotly_chart(dur_chart, use_container_width=True)
+                    st.dataframe(filtered_dur, use_container_width=True)
+                
+                # Download option
+                st.download_button(
+                    label="Download Filtered Corpus Durations Data as CSV",
+                    data=filtered_dur.data.to_csv(),
+                    file_name='corpus_durations_results.csv',
+                    mime='text/csv',
+                    key=2,
+                )
+
+# weighted notes function
+
+# this function gets all the notes, but also calculates the 'proportion' of notes in each piece, so that we have a normalized view of the distributions
+
+# Your corpus_note_dfs function
+def corpus_note_dfs(corpus):
+    func = ImportedPiece.notes  # <- NB there are no parentheses here
+    list_of_dfs = corpus.batch(func=func, metadata=False)
+    func1 = ImportedPiece.numberParts
+    list_of_dfs = corpus.batch(func=func1, kwargs={'df': list_of_dfs}, metadata=True)
+    final_list_dfs = []
+    for df in list_of_dfs:
+        # clean up
+        df = df.map(lambda x: '' if x == 'Rest' else x).fillna('')
+        df['1'] = df['1'].map(lambda x: x[:-1])
+        df['2'] = df['2'].map(lambda x: x[:-1])
+        df = df[df.index != '']
+        stacked_df = df.set_index(['Composer', 'Title', 'Date']).stack()
+        counted_notes = Counter(stacked_df)
+        first_key = next(iter(counted_notes))
+        counted_notes.pop(first_key)
+        total_n = sum(counted_notes.values())
+        counted_notes = pd.Series(counted_notes).to_frame('count').sort_index()
+        counted_notes['scaled'] = counted_notes['count'] / total_n
+        counted_notes.rename(columns={"count": "Count", "scaled": "Scaled_Count"}, inplace=True)
+        counted_notes['Composer'] = df.iloc[0]['Composer']
+        counted_notes['Title'] = df.iloc[0]['Title']
+        counted_notes = counted_notes[counted_notes.index != '']
+        final_list_dfs.append(counted_notes)
+    corpus_notes_counts = pd.concat(final_list_dfs)
+    return corpus_notes_counts
+
+# Your existing code for the sidebar checkbox
+if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
+    st.subheader("Explore Weighted Notes")
+    if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
+        st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
+    else:
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+        # Form submission button
+        submitted = st.button("Update and Run Search")
+        if submitted:
+            # Clear previous results if they exist
+            if 'corpus_notes_weights' in st.session_state:
+                del st.session_state.corpus_notes_weights
+            # For one piece
+            if corpus_length == 1:
+                corpus_notes_weights = corpus_note_dfs(piece)
+            # For corpus
+            elif corpus_length > 1:
+                corpus_notes_weights = corpus_note_dfs(st.session_state.corpus)
+            if "corpus_notes_weights" not in st.session_state:
+                st.session_state.corpus_notes_weights = corpus_notes_weights
+        
+        # Display results if they exist
+        if 'corpus_notes_weights' in st.session_state:
+            # Get the data from session state
+            counted_notes_sorted = st.session_state.corpus_notes_weights
+            
+            # # Debug: Display the DataFrame structure
+            # st.write("DataFrame structure:")
+            # st.write(f"Columns: {counted_notes_sorted.columns.tolist()}")
+            # st.write(f"Index name: {counted_notes_sorted.index.name}")
+            # st.write(f"Index type: {type(counted_notes_sorted.index)}")
+            
+            # Reset the index to create a 'note' column
+            # The notes are in the index, not as a column
+            counted_notes_sorted = counted_notes_sorted.reset_index()
+            
+            # Rename the index column to 'note' if it doesn't have a name
+            if counted_notes_sorted.columns[0] == 'index':
+                counted_notes_sorted.rename(columns={'index': 'note'}, inplace=True)
+            
+            # Define the musical note order
+            category_order = {
+                'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+                'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 
+                'Bb': 10, 'B': 11
+            }
+            
+            # Get categories (notes)
+            note_column = 'note'  # This should now exist after reset_index()
+            categories = list(counted_notes_sorted[note_column].unique())
+            
+            try:
+                # Create the polar plot
+                fig = px.line_polar(
+                    counted_notes_sorted, 
+                    r="Scaled_Count",
+                    theta=note_column, 
+                    line_close=True,
+                    color="Title",
+                    category_orders={note_column: sorted(categories, key=lambda x: category_order.get(x, 99))}
+                )
+                
+                # Update layout
+                fig.update_layout(
+                    title_text="Relative Distribution of Notes in Corpus",
+                    polar=dict(
+                        radialaxis=dict(
+                            visible=True,
+                            range=[0, counted_notes_sorted["Scaled_Count"].max() * 1.1]  # Add some padding
+                        )
+                    ),
+                    showlegend=True
+                )
+                
+                # Display the plot in Streamlit
+                st.plotly_chart(fig)
+                
+            except Exception as e:
+                st.error(f"Error creating the radar plot: {str(e)}")
+                st.write("Please check your data structure and try again.")
+                st.write(counted_notes_sorted.head())
+            
+            # Optional: Display the data table
+            if st.checkbox("Show data table"):
+                st.write(counted_notes_sorted)
+
+
 # melodic functions
 # @st.cache_data
 def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
@@ -1064,7 +1382,7 @@ def corpus_har(corpus, kind_choice, directed, compound, against_low):
     
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_dfs = corpus.batch(func = func, 
-                                kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
+                                # kwargs = {'combineUnisons': combine_unisons_choice, 'combineRests': combine_rests_choice}, 
                                 metadata=False)
     
     func1 = ImportedPiece.numberParts
@@ -1157,7 +1475,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         har_counts.sort_index(inplace=True)
                     else:
                         har_counts = har_counts.sort_index()
-                        har_counts = har_counts.drop(index=['', 'Rest'])
+                        # har_counts = har_counts.drop(index=['', 'Rest'])
                     har_counts.index.rename('interval', inplace=True)
                     voices = har_counts.columns.to_list()
                     # set the figure size, type and colors
@@ -1192,7 +1510,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         har_counts.sort_index(inplace=True)
                     else:
                         har_counts = har_counts.sort_index()
-                        har_counts = har_counts.drop(index=['', 'Rest'])
+                        # har_counts = har_counts.drop(index=['', 'Rest'])
                     har_counts.index.rename('interval', inplace=True)
                     voices = har_counts.columns.to_list()
                         # set the figure size, type and colors
