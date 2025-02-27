@@ -1108,6 +1108,9 @@ def corpus_note_dfs(corpus):
 # Your existing code for the sidebar checkbox
 if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
     st.subheader("Explore Weighted Notes")
+    # st.sidebar.subheader("Plot Settings")
+    # plot_height = st.sidebar.slider("Plot Height", min_value=400, max_value=1000, value=600, step=50)
+    # use_full_width = st.sidebar.checkbox("Use Full Width", value=True)
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
@@ -1147,11 +1150,11 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                 counted_notes_sorted.rename(columns={'index': 'note'}, inplace=True)
             
             # Define the musical note order
-            category_order = {
-                'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
-                'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 
-                'Bb': 10, 'B': 11
-            }
+            # category_order = {
+            #     'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+            #     'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 
+            #     'Bb': 10, 'B': 11
+            # }
             
             # Get categories (notes)
             note_column = 'note'  # This should now exist after reset_index()
@@ -1181,7 +1184,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                 )
                 
                 # Display the plot in Streamlit
-                st.plotly_chart(fig)
+                # st.plotly_chart(fig)
+                st.plotly_chart(fig, use_container_width=True)
                 
             except Exception as e:
                 st.error(f"Error creating the radar plot: {str(e)}")
