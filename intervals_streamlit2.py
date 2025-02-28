@@ -33,92 +33,6 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-# def initialize_session_state():
-#     """Initialize all required session states"""
-#     if 'show_monitor' not in st.session_state:
-#         st.session_state.show_monitor = False
-#     if 'memory_history' not in st.session_state:
-#         st.session_state.memory_history = deque(maxlen=60)  # Store 60 seconds of history
-#     if 'last_update_time' not in st.session_state:
-#         st.session_state.last_update_time = time.time()
-
-# def get_memory_usage():
-#     """Get current memory usage of the process"""
-#     process = psutil.Process(os.getpid())
-#     return process.memory_info().rss / (1024 * 1024)
-
-# def get_previous_memory():
-#     """Get previous memory reading for delta calculation"""
-#     if len(st.session_state.memory_history) < 2:
-#         return 0
-#     return st.session_state.memory_history[-2]['memory_mb']
-
-# @st.cache_data
-# def create_memory_chart():
-#     # Create a DataFrame from the session state
-#     df = pd.DataFrame({
-#         'time': [t['time'] for t in st.session_state.memory_history],
-#         'memory_mb': [t['memory_mb'] for t in st.session_state.memory_history]
-#     })
-    
-#     # Create the figure using px.line
-#     fig = px.line(
-#         data_frame=df,
-#         x='time',
-#         y='memory_mb',
-#         title='Memory Usage Over Time',
-#         labels={
-#             'time': 'Time (seconds)',
-#             'memory_mb': 'Memory (MB)'
-#         }
-#     )
-    
-#     # Update layout
-#     fig.update_layout(
-#         showlegend=True,
-#         height=200
-#     )
-    
-#     return fig
-
-# def monitor_memory():
-#     """Main monitoring function that updates the display"""
-#     container = st.empty()
-#     while True:
-#         mem_usage = get_memory_usage()
-#         current_time = time.time()
-#         st.session_state.memory_history.append({
-#             'time': current_time,
-#             'memory_mb': mem_usage
-#         })
-        
-#         if time.time() - st.session_state.last_update_time >= 1:
-#             with container.container():
-#                 col1, col2 = st.columns([2, 1])
-#                 with col1:
-#                     st.metric(
-#                         label="Memory Usage",
-#                         value=f"{mem_usage:.2f} MB",
-#                         delta=f"+{(mem_usage - get_previous_memory()):.2f} MB"
-#                     )
-#                 with col2:
-#                     fig = create_memory_chart()
-#                     st.plotly_chart(fig, use_container_width=True)
-#             st.session_state.last_update_time = time.time()
-#         time.sleep(0.1)
-
-# # Main app
-# initialize_session_state()
-
-# st.title("Memory Monitor Control Panel")
-# col1, col2 = st.columns([1, 1])
-# with col1:
-#     if st.button("Start Monitoring"):
-#         st.session_state.show_monitor = True
-
-# if st.session_state.show_monitor:
-#     monitor_memory()
-
 
 # list of piece ids from json
 def make_piece_list(json_objects):
@@ -162,7 +76,8 @@ json_objects = json.loads(json_str)
 all_piece_list = make_piece_list(json_objects)
 crim_piece_selections= st.multiselect('**Select Pieces To View from CRIM Django**', 
                             all_piece_list)
-# st.write("Upload MEI or XML files")
+st.write("Upload MEI or XML files")
+
 
 uploaded_files_list = st.file_uploader("**Upload MEI or XML files**", type=['mei', 'xml'], accept_multiple_files=True)
 crim_view_url = ''
@@ -330,6 +245,9 @@ category_order = {
     'G': 12, 'G#': 13, 'Ab': 14, 'A': 15, 'A#': 16, 'Bb': 17, 'B': 18, 'B#': 19
 }
 
+pitch_class_order = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F-', 'E#', 'F', 'F#', 'G-', 'F##', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'B#', 'Rest']
+
+
 #old pitch order
 # pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
                 # 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
@@ -343,6 +261,15 @@ def convertTuple(tup):
         out = ', '.join(tup)
     return out  
 
+def extract_letter(value):
+    # Find the index of the first digit
+    if value is not None:
+        for i, char in enumerate(value):
+            if char.isdigit():
+                # Return everything before the first digit
+                return value[:i]
+        # If no digit is found, return the entire string
+        return value
 # for NR
 # st.cache_data(experimental_allow_widgets=True)
 @st.fragment()
@@ -1017,24 +944,57 @@ if st.sidebar.checkbox("Explore Durations"):
                 # For one piece
                 if corpus_length == 1:
                     dur_no_mdata = filtered_dur.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                    # Reset the index to get durations as a column
-                    dur_counts_reset = dur_no_mdata.reset_index()
-                    
-                    # Create the bar chart with Plotly Express
+                
+                     # Get all columns except 'index' for value_vars
+                    value_vars = [col for col in dur_no_mdata.columns if col != 'index']
+
+                    # Melt the DataFrame to get counts
+                    melted_df = pd.melt(dur_no_mdata, 
+                                        id_vars=['index'], 
+                                        value_vars=value_vars,
+                                        var_name='voice', 
+                                        value_name='duration')
+
+                    # Round the values and convert to strings
+                    melted_df['duration'] = melted_df['duration'].round(1).astype(str)
+
+                    # Function to safely convert string to float for sorting
+                    def safe_float(x):
+                        try:
+                            return float(x)
+                        except (ValueError, TypeError):
+                            return float('-inf')
+
+                    # Remove rows with empty duration values
+                    melted_df = melted_df[melted_df['duration'] != '']
+
+                    # Count occurrences
+                    dur_counts = melted_df.groupby(['duration', 'voice']).size().unstack().fillna(0)
+
+                    # Reset index to make 'duration' a column
+                    dur_counts_reset = dur_counts.reset_index()
+
+                    # Create the chart with safe sorting
                     dur_chart = px.bar(
                         dur_counts_reset,
-                        x='index',  # This will be the name of the column containing your former index
-                        y=list(dur_no_mdata.columns),
-                        title="Distribution of Durations in " + piece.metadata['title']
+                        x='duration',
+                        y=list(dur_counts.columns),
+                        title="Distribution of Durations",
+                        category_orders={"duration": sorted(dur_counts_reset['duration'].unique(), key=safe_float)}
                     )
-                    
-                    # Update the layout
+
+                    # Force the x-axis to be categorical with proper order
                     dur_chart.update_layout(
-                        xaxis_title="Duration",
+                        xaxis=dict(
+                            type='category',
+                            categoryorder='array',
+                            categoryarray=sorted(dur_counts_reset['duration'].unique(), key=safe_float),
+                            title="Duration"
+                        ),
                         yaxis_title="Count",
                         legend_title='Voices'
                     )
-                    
+
                     st.plotly_chart(dur_chart, use_container_width=True)
                     st.dataframe(filtered_dur, use_container_width=True)
                 
@@ -1042,27 +1002,60 @@ if st.sidebar.checkbox("Explore Durations"):
                 if corpus_length > 1:
                     st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
                     dur_no_mdata = filtered_dur.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                    
-                    # Reset the index to get durations as a column
-                    dur_counts_reset = dur_no_mdata.reset_index()
-                    
-                    # Create the bar chart with Plotly Express
+                
+                     # Get all columns except 'index' for value_vars
+                    value_vars = [col for col in dur_no_mdata.columns if col != 'index']
+
+                    # Melt the DataFrame to get counts
+                    melted_df = pd.melt(dur_no_mdata, 
+                                        id_vars=['index'], 
+                                        value_vars=value_vars,
+                                        var_name='voice', 
+                                        value_name='duration')
+
+                    # Round the values and convert to strings
+                    melted_df['duration'] = melted_df['duration'].round(1).astype(str)
+
+                    # Function to safely convert string to float for sorting
+                    def safe_float(x):
+                        try:
+                            return float(x)
+                        except (ValueError, TypeError):
+                            return float('-inf')
+
+                    # Remove rows with empty duration values
+                    melted_df = melted_df[melted_df['duration'] != '']
+
+                    # Count occurrences
+                    dur_counts = melted_df.groupby(['duration', 'voice']).size().unstack().fillna(0)
+
+                    # Reset index to make 'duration' a column
+                    dur_counts_reset = dur_counts.reset_index()
+
+                    # Create the chart with safe sorting
                     dur_chart = px.bar(
                         dur_counts_reset,
-                        x='index',
-                        y=list(dur_no_mdata.columns),
-                        title="Distribution of Durations in Corpus"
+                        x='duration',
+                        y=list(dur_counts.columns),
+                        title="Distribution of Durations",
+                        category_orders={"duration": sorted(dur_counts_reset['duration'].unique(), key=safe_float)}
                     )
-                    
-                    # Update the layout
+
+                    # Force the x-axis to be categorical with proper order
                     dur_chart.update_layout(
-                        xaxis_title="Duration",
+                        xaxis=dict(
+                            type='category',
+                            categoryorder='array',
+                            categoryarray=sorted(dur_counts_reset['duration'].unique(), key=safe_float),
+                            title="Duration"
+                        ),
                         yaxis_title="Count",
                         legend_title='Voices'
                     )
-                    
+
                     st.plotly_chart(dur_chart, use_container_width=True)
                     st.dataframe(filtered_dur, use_container_width=True)
+
                 
                 # Download option
                 st.download_button(
@@ -1076,126 +1069,194 @@ if st.sidebar.checkbox("Explore Durations"):
 # weighted notes function
 
 # this function gets all the notes, but also calculates the 'proportion' of notes in each piece, so that we have a normalized view of the distributions
+def piece_note_weight(piece):
+    metadata = piece.metadata['composer'] + ": " + piece.metadata['title']
+    melted_notes = piece.notes().melt()
+    melted_durations = piece.durations().melt()
+    note_dur = pd.merge(melted_notes, melted_durations, left_index=True, right_index=True)
+    note_dur = note_dur.dropna()
+    note_dur['value_x_clean'] = note_dur['value_x'].apply(extract_letter)
+
+    # Apply the function to the DataFrame
+    note_dur['value_x_clean'] = note_dur['value_x'].apply(extract_letter)
+    note_dur_sums = pd.DataFrame(note_dur.groupby('value_x_clean')['value_y'].sum()).reset_index(drop=False)
+    # total (for scaled calculation)
+    total_dur = note_dur_sums['value_y'].sum()
+    note_dur_sums['scaled'] = note_dur_sums['value_y'].apply(lambda x: x/total_dur).round(2)
+    note_dur_sums.rename(columns={"value_x_clean": "pitch_class", "value_y": "count"}, inplace=True)
+    # pitch class order defined above
+    note_dur_sums['pitch_class'] = pd.Categorical(note_dur_sums['pitch_class'], categories=pitch_class_order, ordered=True)
+    # Sort the DataFrame
+    sorted_df = note_dur_sums.sort_values('pitch_class')
+    weighted_notes = sorted_df.dropna()
+    weighted_notes['piece'] = metadata
+    return weighted_notes
+
 
 # Your corpus_note_dfs function
-def corpus_note_dfs(corpus):
+def corpus_note_weights(corpus):
+    # melted_notes = piece.notes().melt()
+    # melted_durations = piece.durations().melt()
+    # note_dur = pd.merge(melted_notes, melted_durations, left_index=True, right_index=True)
+    # note_dur = note_dur.dropna()
+
     func = ImportedPiece.notes  # <- NB there are no parentheses here
-    list_of_dfs = corpus.batch(func=func, metadata=False)
-    func1 = ImportedPiece.numberParts
-    list_of_dfs = corpus.batch(func=func1, kwargs={'df': list_of_dfs}, metadata=True)
-    final_list_dfs = []
-    for df in list_of_dfs:
-        # clean up
-        df = df.map(lambda x: '' if x == 'Rest' else x).fillna('')
-        df['1'] = df['1'].map(lambda x: x[:-1])
-        df['2'] = df['2'].map(lambda x: x[:-1])
-        df = df[df.index != '']
-        stacked_df = df.set_index(['Composer', 'Title', 'Date']).stack()
-        counted_notes = Counter(stacked_df)
-        first_key = next(iter(counted_notes))
-        counted_notes.pop(first_key)
-        total_n = sum(counted_notes.values())
-        counted_notes = pd.Series(counted_notes).to_frame('count').sort_index()
-        counted_notes['scaled'] = counted_notes['count'] / total_n
-        counted_notes.rename(columns={"count": "Count", "scaled": "Scaled_Count"}, inplace=True)
-        counted_notes['Composer'] = df.iloc[0]['Composer']
-        counted_notes['Title'] = df.iloc[0]['Title']
-        counted_notes = counted_notes[counted_notes.index != '']
-        final_list_dfs.append(counted_notes)
-    corpus_notes_counts = pd.concat(final_list_dfs)
-    return corpus_notes_counts
+    list_of_note_dfs = corpus.batch(func = func,  
+                                    metadata=True)
+    func2 = ImportedPiece.durations  # <- NB there are no parentheses here
+    list_of_dur_dfs = corpus.batch(func = func2,  
+                                    metadata=False)
+    zipped_dfs = zip(list_of_note_dfs,  list_of_dur_dfs)
+
+    weighted_note_dfs = []
+    for a, b in zipped_dfs:
+        # get metadata
+        first_row = a.iloc[1]
+        columns_of_interest = ['Composer', 'Title']
+        metadata = first_row[columns_of_interest].tolist()
+
+        # drop the same columns (we will add them back later)
+        a = a.drop(columns=['Composer', 'Title', 'Date'])
+        melted_notes = a.melt()
+        melted_durs = b.melt()
+        note_dur = pd.merge(melted_notes, melted_durs, left_index=True, right_index=True)
+        note_dur = note_dur.dropna()
+        note_dur['value_x_clean'] = note_dur['value_x'].apply(extract_letter)
+        # Apply the function to the DataFrame
+        note_dur['value_x_clean'] = note_dur['value_x'].apply(extract_letter)
+        note_dur_sums = pd.DataFrame(note_dur.groupby('value_x_clean')['value_y'].sum()).reset_index(drop=False)
+        # total (for scaled calculation)
+        total_dur = note_dur_sums['value_y'].sum()
+        note_dur_sums['scaled'] = note_dur_sums['value_y'].apply(lambda x: x/total_dur).round(2)
+        note_dur_sums.rename(columns={"value_x_clean": "pitch_class", "value_y": "count"}, inplace=True)
+        # pitch class order defined above
+        note_dur_sums['pitch_class'] = pd.Categorical(note_dur_sums['pitch_class'], categories=pitch_class_order, ordered=True)
+        # Sort the DataFrame
+        sorted_df = note_dur_sums.sort_values('pitch_class')
+        weighted_notes = sorted_df.dropna()
+        weighted_notes['piece'] = metadata[0] + ': ' + metadata[1]
+        weighted_note_dfs.append(weighted_notes)
+    corpus_note_weights = pd.concat(weighted_note_dfs)
+    return corpus_note_weights
+
 
 # Your existing code for the sidebar checkbox
 if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
     st.subheader("Explore Weighted Notes")
-    # st.sidebar.subheader("Plot Settings")
-    # plot_height = st.sidebar.slider("Plot Height", min_value=400, max_value=1000, value=600, step=50)
-    # use_full_width = st.sidebar.checkbox("Use Full Width", value=True)
+
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+        
         # Form submission button
         submitted = st.button("Update and Run Search")
         if submitted:
             # Clear previous results if they exist
             if 'corpus_notes_weights' in st.session_state:
                 del st.session_state.corpus_notes_weights
+            
             # For one piece
             if corpus_length == 1:
-                corpus_notes_weights = corpus_note_dfs(piece)
+                corpus_notes_weights = piece_note_weight(piece)
+                # Store in session state
+                st.session_state.corpus_notes_weights = corpus_notes_weights
+                # st.dataframe(corpus_notes_weights)
             # For corpus
             elif corpus_length > 1:
-                corpus_notes_weights = corpus_note_dfs(st.session_state.corpus)
-            if "corpus_notes_weights" not in st.session_state:
-                st.session_state.corpus_notes_weights = corpus_notes_weights
-        
+                try:
+                    corpus_notes_weights = corpus_note_weights(st.session_state.corpus)
+                    
+                    # Debug: Check the data before storing
+                    st.write(f"Data before storing: {len(corpus_notes_weights)} rows")
+                    st.write("Data columns:", corpus_notes_weights.columns.tolist())
+                    
+                    # Store in session state
+                    st.session_state.corpus_notes_weights = corpus_notes_weights
+                except Exception as e:
+                    st.error(f"Error processing corpus: {str(e)}")
+
         # Display results if they exist
         if 'corpus_notes_weights' in st.session_state:
             # Get the data from session state
             counted_notes_sorted = st.session_state.corpus_notes_weights
             
-            # # Debug: Display the DataFrame structure
-            # st.write("DataFrame structure:")
-            # st.write(f"Columns: {counted_notes_sorted.columns.tolist()}")
-            # st.write(f"Index name: {counted_notes_sorted.index.name}")
-            # st.write(f"Index type: {type(counted_notes_sorted.index)}")
+            # Debug: Check the retrieved data
+            st.write(f"Data retrieved from session state: {len(counted_notes_sorted)} rows")
+            st.write("Retrieved data columns:", counted_notes_sorted.columns.tolist())
             
-            # Reset the index to create a 'note' column
-            # The notes are in the index, not as a column
-            counted_notes_sorted = counted_notes_sorted.reset_index()
+            # Check if we have the required columns for plotting
+            required_columns = ['pitch_class', 'scaled']
+            missing_columns = [col for col in required_columns if col not in counted_notes_sorted.columns]
             
-            # Rename the index column to 'note' if it doesn't have a name
-            if counted_notes_sorted.columns[0] == 'index':
-                counted_notes_sorted.rename(columns={'index': 'note'}, inplace=True)
+            if missing_columns:
+                st.error(f"Missing required columns for plotting: {missing_columns}")
+                st.write("Available columns:", counted_notes_sorted.columns.tolist())
             
-            # Define the musical note order
-            # category_order = {
-            #     'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
-            #     'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 
-            #     'Bb': 10, 'B': 11
-            # }
-            
-            # Get categories (notes)
-            note_column = 'note'  # This should now exist after reset_index()
-            categories = list(counted_notes_sorted[note_column].unique())
-            
-            try:
-                # Create the polar plot
-                fig = px.line_polar(
-                    counted_notes_sorted, 
-                    r="Scaled_Count",
-                    theta=note_column, 
-                    line_close=True,
-                    color="Title",
-                    category_orders={note_column: sorted(categories, key=lambda x: category_order.get(x, 99))}
-                )
-                
-                # Update layout
-                fig.update_layout(
-                    title_text="Relative Distribution of Notes in Corpus",
-                    polar=dict(
-                        radialaxis=dict(
-                            visible=True,
-                            range=[0, counted_notes_sorted["Scaled_Count"].max() * 1.1]  # Add some padding
+            else:
+                # Create a radar plot using Plotly Express
+                try:
+                    # Check if we have multiple pieces to plot
+                    if 'piece' in counted_notes_sorted.columns and counted_notes_sorted['piece'].nunique() > 1:
+                        # Multiple pieces plot
+                        fig = px.line_polar(
+                            counted_notes_sorted,
+                            r='scaled',
+                            theta='pitch_class',
+                            color='piece',
+                            line_close=True,
+                            range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
+                            markers=True,
+                            category_orders=category_order
                         )
-                    ),
-                    showlegend=True
-                )
-                
-                # Display the plot in Streamlit
-                # st.plotly_chart(fig)
-                st.plotly_chart(fig, use_container_width=True)
-                
-            except Exception as e:
-                st.error(f"Error creating the radar plot: {str(e)}")
-                st.write("Please check your data structure and try again.")
-                st.write(counted_notes_sorted.head())
-            
-            # Optional: Display the data table
-            if st.checkbox("Show data table"):
-                st.write(counted_notes_sorted)
-
+                        
+                        fig.update_traces(fill='toself', opacity=0.4)
+                        title = 'Weighted Note Distribution Across Multiple Pieces'
+                    else:
+                        # Single piece plot
+                        fig = px.line_polar(
+                            counted_notes_sorted,
+                            r='scaled',
+                            theta='pitch_class',
+                            line_close=True,
+                            range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
+                            markers=True,
+                            category_orders=category_order
+                        )
+                        
+                        fig.update_traces(
+                            fill='toself',
+                            fillcolor='rgba(31, 119, 180, 0.3)',
+                            line=dict(width=2)
+                        )
+                        
+                        # Get piece name if available
+                        if 'piece' in counted_notes_sorted.columns:
+                            piece_name = counted_notes_sorted['piece'].iloc[0]
+                            title = f'Weighted Note Distribution in {piece_name}'
+                        else:
+                            title = 'Weighted Note Distribution'
+                    
+                    fig.update_layout(
+                        title=title,
+                        polar=dict(
+                            radialaxis=dict(
+                                visible=True,
+                                range=[0, counted_notes_sorted['scaled'].max() * 1.1]
+                            )
+                        ),
+                        showlegend='piece' in counted_notes_sorted.columns
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error creating the radar plot: {str(e)}")
+                    st.write("Data sample for debugging:")
+                    st.write(counted_notes_sorted.head())
+                    
+                    # More detailed error information
+                    import traceback
+                    st.code(traceback.format_exc())
 
 # melodic functions
 # @st.cache_data
