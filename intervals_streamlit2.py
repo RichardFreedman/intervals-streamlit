@@ -1182,8 +1182,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
             counted_notes_sorted = st.session_state.corpus_notes_weights
             
             # Debug: Check the retrieved data
-            st.write(f"Data retrieved from session state: {len(counted_notes_sorted)} rows")
-            st.write("Retrieved data columns:", counted_notes_sorted.columns.tolist())
+            # st.write(f"Data retrieved from session state: {len(counted_notes_sorted)} rows")
+            # st.write("Retrieved data columns:", counted_notes_sorted.columns.tolist())
             
             # Check if we have the required columns for plotting
             required_columns = ['pitch_class', 'scaled']
