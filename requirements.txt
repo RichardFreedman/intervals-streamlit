@@ -12,7 +12,7 @@ charset-normalizer==3.3.2 ; python_version >= "3.10"
 click==8.1.7 ; python_version >= "3.10"
 colorama==0.4.6 ; python_version >= "3.10" and (platform_system == "Windows" or sys_platform == "win32")
 contourpy==1.3.0 ; python_version >= "3.10"
-crim-intervals @ git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit_dev
+crim-intervals @ git+https://github.com/HCDigitalScholarship/intervals.git@intervals_4_streamlit
 cycler==0.12.1 ; python_version >= "3.10"
 decorator==5.1.1 ; python_version >= "3.10"
 exceptiongroup==1.2.2 ; python_version < "3.11" and python_version >= "3.10"
