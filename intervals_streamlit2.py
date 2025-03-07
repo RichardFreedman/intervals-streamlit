@@ -1169,8 +1169,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                     corpus_notes_weights = corpus_note_weights(st.session_state.corpus)
                     
                     # Debug: Check the data before storing
-                    st.write(f"Data before storing: {len(corpus_notes_weights)} rows")
-                    st.write("Data columns:", corpus_notes_weights.columns.tolist())
+                    # st.write(f"Data before storing: {len(corpus_notes_weights)} rows")
+                    # st.write("Data columns:", corpus_notes_weights.columns.tolist())
                     
                     # Store in session state
                     st.session_state.corpus_notes_weights = corpus_notes_weights
