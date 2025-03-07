@@ -2129,21 +2129,21 @@ if st.sidebar.checkbox("Explore Cadences"):
             progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
             st.pyplot(progress, use_container_width=True)
 
-# if st.sidebar.checkbox("Explore Model Finder"):
-#     st.subheader("Model Finder")
-#     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
-#     if corpus_length <= 1:
-#         st.write("Please select at least two pieces to compare")
-#     elif corpus_length > 1:
-#         corpus = CorpusBase(corpus_list)
-#         with st.form("Model Finder Settings"):
-#             length_choice = st.number_input('Select ngram Length', value=4, step=1)
-#             submitted = st.form_submit_button("Submit")
-#             if submitted:
-#                 soggetto_cross_plot = corpus.modelFinder(n=length_choice)
-#                 st.dataframe(soggetto_cross_plot)
-#                 fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
-#                 st.plotly_chart(fig)
-#             else:
-#                 pass
+if st.sidebar.checkbox("Explore Model Finder"):
+    st.subheader("Model Finder")
+    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
+    if corpus_length <= 1:
+        st.write("Please select at least two pieces to compare")
+    elif corpus_length > 1:
+        corpus = CorpusBase(corpus_list)
+        with st.form("Model Finder Settings"):
+            length_choice = st.number_input('Select ngram Length', value=4, step=1)
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                soggetto_cross_plot = corpus.modelFinder(n=length_choice)
+                st.dataframe(soggetto_cross_plot)
+                fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
+                st.plotly_chart(fig)
+            else:
+                pass
    
