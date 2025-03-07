@@ -34,6 +34,7 @@ six = "1.16.0"
 sniffio = "1.2.0"
 textdistance = "4.2.1"
 crim-intervals = { git = "https://github.com/HCDigitalScholarship/intervals.git", branch = "intervals_4_streamlit" }
+seaborn = "^0.13.2"
 
 
 
