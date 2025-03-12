@@ -912,17 +912,11 @@ if st.sidebar.checkbox("Explore Notes"):
                         data=filtered_nr.data.to_csv(),
                         file_name = 'corpus_notes_results.csv',
                         mime='text/csv',
-                        key=1,
+                        key=2,
                         )
                     # download option       
                     
-                    st.download_button(
-                        label="Download Filtered Corpus Notes Data as CSV",
-                        data=filtered_nr.data.to_csv(),
-                        file_name = 'corpus_notes_results.csv',
-                        mime='text/csv',
-                        key=2,
-                        )
+                   
 # durations
 def piece_durs(piece):
     dur = piece.durations()
@@ -1055,7 +1049,7 @@ if st.sidebar.checkbox("Explore Durations"):
                         data=filtered_dur.data.to_csv(),
                         file_name = piece.metadata['title'] + '_notes_results.csv',
                         mime='text/csv',
-                        key=1,
+                        key=3,
                         )
 
                 # For corpus
@@ -1091,7 +1085,7 @@ if st.sidebar.checkbox("Explore Durations"):
                         data=filtered_dur.data.to_csv(),
                         file_name = 'corpus_notes_results.csv',
                         mime='text/csv',
-                        key=1,
+                        key=4,
                         )
                     
                     titles = dur_counts['Title'].unique()
@@ -1114,7 +1108,7 @@ if st.sidebar.checkbox("Explore Durations"):
                         data=filtered_dur.data.to_csv(),
                         file_name='corpus_durations_results.csv',
                         mime='text/csv',
-                        key=2,
+                        key=5,
                     )
 
 # weighted notes function
@@ -1516,7 +1510,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             data=filtered_mel.data.to_csv(),
                             file_name = 'corpus_melodic_results.csv',
                             mime='text/csv',
-                            key=4,
+                            key=6,
                             )
                 # # for corpus
                 elif corpus_length > 1:
@@ -1563,7 +1557,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             data=filtered_mel.data.to_csv(),
                             file_name = 'corpus_melodic_results.csv',
                             mime='text/csv',
-                            key=4,
+                            key=7,
                             )
         
 # harmonic functions
@@ -1748,7 +1742,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                             data=filtered_mel.data.to_csv(),
                             file_name = 'harmonic_results.csv',
                             mime='text/csv',
-                            key=4,
+                            key=8,
                             )
                 # # for corpus
                 elif corpus_length > 1:
@@ -1852,7 +1846,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         data=filtered_har.data.to_csv(),
                         file_name = 'corpus_harmonic_results.csv',
                         mime='text/csv',
-                        key=6,
+                        key=9,
                         )           
 
 # function for ngram heatmap
@@ -1982,7 +1976,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=filtered_ngrams.data.to_csv(),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
-                key=6,
+                key=10,
                 )
     # for corpus
     elif corpus_length > 1:
@@ -2054,7 +2048,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=filtered_combined_ngrams.data.to_csv(),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
-                key=7,
+                key=11,
                 )            
 # hr functions
 # one piece
@@ -2279,7 +2273,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     data=filtered_p_types.to_csv(),
                     file_name = download_name,
                     mime='text/csv',
-                    key=8,
+                    key=12,
                     )
         elif corpus_length > 1:
             download_name = "corpus_p_type_results.csv"
@@ -2290,7 +2284,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     data=filtered_p_types.to_csv(),
                     file_name = download_name,
                     mime='text/csv',
-                    key=9,
+                    key=13,
                     )
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
@@ -2315,7 +2309,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                 label="Download Filtered Cadence Data as CSV",
                 data=filtered_cadences.to_csv(),
                 file_name = download_name,
-                key=10,
+                key=14,
                 mime='text/csv')
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
@@ -2363,7 +2357,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                 data=filtered_cadences.to_csv(),
                 file_name = download_name,
                 mime='text/csv',
-                key=11,
+                key=15,
                 )
             # possible Verovio Cadences use.  Needs to adapt renderer?
             # if st.button("Print Filtered Cadences with Verovio"):
