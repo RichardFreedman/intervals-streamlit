@@ -861,7 +861,7 @@ if st.sidebar.checkbox("Explore Notes"):
                                     x='Note', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Notes in " + ', '.join(titles))
+                                    title="Distribution of Notes in Corpus")
                     nr_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -899,7 +899,7 @@ if st.sidebar.checkbox("Explore Notes"):
                                     x='Note', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Notes in " + ', '.join(titles))
+                                    title="Distribution of Notes in Corpus")
                     nr_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -978,11 +978,7 @@ def corpus_durs(corpus):
     dur_melted = dur_melted.dropna().copy()
 
     return dur_melted
-    # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    # dur = pd.concat(rev_list_of_dfs)
-    # cols_to_move = ['Composer', 'Title', 'Measure', 'Beat', 'Date']
-    # dur = dur[cols_to_move + [col for col in dur.columns if col not in cols_to_move]]
-    # return dur
+    
 
 # durs form
 # Durations form in sidebar
@@ -1036,7 +1032,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Duration", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -1072,7 +1068,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Duration", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -1093,7 +1089,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -1141,10 +1137,7 @@ def piece_note_weight(piece):
 
 # Your corpus_note_dfs function
 def corpus_note_weights(corpus):
-    # melted_notes = piece.notes().melt()
-    # melted_durations = piece.durations().melt()
-    # note_dur = pd.merge(melted_notes, melted_durations, left_index=True, right_index=True)
-    # note_dur = note_dur.dropna()
+    
 
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_note_dfs = corpus.batch(func = func,  
@@ -1497,7 +1490,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color="Voice",
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         mel_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title="Voice")
@@ -1543,7 +1536,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color=color_grouping,
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         mel_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title=color_grouping)
@@ -1729,7 +1722,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color="Voices",
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         har_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title="Voices")
