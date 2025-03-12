@@ -861,7 +861,7 @@ if st.sidebar.checkbox("Explore Notes"):
                                     x='Note', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Notes in " + ', '.join(titles))
+                                    title="Distribution of Notes in Corpus")
                     nr_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -899,7 +899,7 @@ if st.sidebar.checkbox("Explore Notes"):
                                     x='Note', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Notes in " + ', '.join(titles))
+                                    title="Distribution of Notes in Corpus")
                     nr_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -1032,7 +1032,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Duration", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -1068,7 +1068,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Duration", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -1089,7 +1089,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color=color_grouping,
-                                    title="Distribution of Durations in " + ', '.join(titles))
+                                    title="Distribution of Durations in Corpus")
                     dur_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
@@ -1490,7 +1490,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color="Voice",
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         mel_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title="Voice")
@@ -1536,7 +1536,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color=color_grouping,
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         mel_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title=color_grouping)
@@ -1722,7 +1722,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color="Voices",
-                                        title="Distribution of Intervals in " + ', '.join(titles))
+                                        title="Distribution of Intervals in Corpus")
                         har_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title="Voices")
