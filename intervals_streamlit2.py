@@ -978,11 +978,7 @@ def corpus_durs(corpus):
     dur_melted = dur_melted.dropna().copy()
 
     return dur_melted
-    # rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-    # dur = pd.concat(rev_list_of_dfs)
-    # cols_to_move = ['Composer', 'Title', 'Measure', 'Beat', 'Date']
-    # dur = dur[cols_to_move + [col for col in dur.columns if col not in cols_to_move]]
-    # return dur
+    
 
 # durs form
 # Durations form in sidebar
@@ -1141,10 +1137,7 @@ def piece_note_weight(piece):
 
 # Your corpus_note_dfs function
 def corpus_note_weights(corpus):
-    # melted_notes = piece.notes().melt()
-    # melted_durations = piece.durations().melt()
-    # note_dur = pd.merge(melted_notes, melted_durations, left_index=True, right_index=True)
-    # note_dur = note_dur.dropna()
+    
 
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_note_dfs = corpus.batch(func = func,  
