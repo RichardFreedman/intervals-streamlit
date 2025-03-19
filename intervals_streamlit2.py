@@ -248,7 +248,28 @@ category_order = {
 
 pitch_class_order = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F-', 'E#', 'F', 'F#', 'G-', 'F##', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'B#', 'Rest']
 
-
+contrasting_colors = [
+        '#636EFA',  # Blue
+        '#DC267F',  # Pink
+        '#009E73',  # Green
+        '#FFB000',  # Orange
+        '#977277',  # Purple
+        '#EC4899',  # Hot Pink
+        '#48BB78',  # Teal
+        '#ED8936',  # Coral
+        '#2563EB',  # Deep Blue
+        '#8338EC',  # Violet
+        '#FF922B',  # Tangerine
+        '#06D6A0',  # Mint
+        '#EF4444',  # Red
+        '#F97316',  # Carrot
+        '#84CC16',  # Lime
+        '#3B82F6',  # Sky Blue
+        '#A855F7',  # Plum
+        '#22C55E',  # Forest
+        '#EA580C',  # Persimmon
+        '#94A3B8',  # Slate
+    ]
 #old pitch order
 # pitch_order = ['E-2', 'E2', 'F2', 'F#2', 'G2', 'A2', 'B-2', 'B2', 
                 # 'C3', 'C#3', 'D3', 'E-3','E3', 'F3', 'F#3', 'G3', 'G#3','A3', 'B-3','B3',
@@ -1247,6 +1268,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             horizontal=True,  # Display options horizontally
                             captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
                         )
+
+    
                         titles = counted_notes_sorted['Title'].unique()
                         fig = px.line_polar(
                             counted_notes_sorted,
@@ -1256,7 +1279,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             line_close=True,
                             range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
                             markers=True,
-                            category_orders=category_order
+                            category_orders=dict(color_grouping=list(counted_notes_sorted[color_grouping].unique())),
+                            color_discrete_sequence=contrasting_colors[:len(counted_notes_sorted[color_grouping].unique())]
                         )
                         fig.update_layout(
                             showlegend=True,
