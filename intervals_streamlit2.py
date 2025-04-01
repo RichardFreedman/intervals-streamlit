@@ -874,7 +874,7 @@ if st.sidebar.checkbox("Explore Notes"):
                 if corpus_length == 1:
                     nr_counts = nr.groupby(['Composer', 'Title', 'Voice', 'Note']).size().reset_index(name='Count')
                     nr_counts['Note'] = pd.CategoricalIndex(nr_counts['Note'], categories=pitch_order, ordered=True)
-                    sorted_nr = nr_counts.sort_values('Interval').reset_index(drop=True)
+                    sorted_nr = nr_counts.sort_values('Note').reset_index(drop=True)
 
                     # make plot
                     titles = sorted_nr['Title'].unique()
