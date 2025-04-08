@@ -1282,6 +1282,9 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             category_orders=dict(color_grouping=list(counted_notes_sorted[color_grouping].unique())),
                             color_discrete_sequence=contrasting_colors[:len(counted_notes_sorted[color_grouping].unique())]
                         )
+                        fig.update_traces(fill='toself', 
+                                          mode='markers+lines',
+                                          opacity=.7)
                         fig.update_layout(
                             showlegend=True,
                             legend=dict(
