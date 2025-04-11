@@ -1282,6 +1282,9 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             category_orders=dict(color_grouping=list(counted_notes_sorted[color_grouping].unique())),
                             color_discrete_sequence=contrasting_colors[:len(counted_notes_sorted[color_grouping].unique())]
                         )
+                        fig.update_traces(fill='toself', 
+                                          mode='markers+lines',
+                                          opacity=.7)
                         fig.update_layout(
                             showlegend=True,
                             legend=dict(
@@ -2303,8 +2306,115 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     mime='text/csv',
                     key=13,
                     )
+def cadence_radar(cadences):
+    # Define the category order for cad tones
+    category_order = {
+        'C': 0, 'D': 1, 'E-': 2, 'E': 3, 'F': 4, 'G': 5, 'A': 6, 'B-': 7
+    }
+    # Get all unique titles for this final
+    titles = cadences['Title'].unique()
+    # Create a list to store our count data
+    count_data = []
+    # For each title, count the occurrences of each tone
+    for title in titles:
+        title_data = cadences[cadences['Title'] == title]
+        # Count occurrences of each Tone for this Title
+        for tone in category_order.keys():
+            count = len(title_data[title_data['Tone'] == tone])
+            count_data.append({
+                'Title': title,
+                'Tone': tone,
+                'count': count
+            })
+    # Convert to DataFrame
+    count_df = pd.DataFrame(count_data)
+    count_df = count_df[count_df['count'] > 0]
+    # calculate % for each cadence vs total number of cadences for each piece
+    title_sums = count_df.groupby('Title')['count'].sum().reset_index()
+    title_sums.rename(columns={'count': 'TitleSum'}, inplace=True)
+    # Merge the sums back to the original DataFrame
+    count_df = count_df.merge(title_sums, on='Title', how='left')
+    # Calculate percentage
+    count_df['Percentage'] = np.round((count_df['count'] / count_df['TitleSum']) * 100)
+    # Create the radar plot with Plotly Express
+    fig = px.line_polar(
+        count_df, 
+        r='Percentage',       
+        theta='Tone', 
+        line_close=True,
+        color='Title',
+        markers=True,
+        category_orders={'Tone': sorted(category_order.keys(), key=lambda x: category_order[x])}
+    )
+    # Update traces to fill the area
+    fig.update_traces(
+        fill='toself',
+        line=dict(width=2)
+    )
+    # Update layout with size control and legend positioning
+    fig.update_layout(
+        # Control the size of the plot
+        width=800,  # Width in pixels
+        height=600,  # Height in pixels
+        # Position the legend
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="right",  # Changed from 'center' to 'right'
+            x=1.05,           # Changed from 0.5 to 1.05
+            title={
+                'text': 'Musical Pieces',
+                'side': 'top',
+                'font_size': 12
+            },
+            itemsizing='constant',
+            itemwidth=30,
+            bordercolor="black",
+            borderwidth=1,
+            bgcolor="rgba(255,255,255,0.8)"
+        ),
+        # Add title
+        title_text="Relative Distribution of Cadence Tones in Corpus",
+        title_x=0.5,  # Center the title
+        # Adjust margins if needed
+        margin=dict(l=80, r=80, t=100, b=200),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                title='Percentage'
+            )
+        )
+    )
+    return fig
+
+# progress
+
+custom_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  # Your desired order
+
+
+
+def cadence_progress(cadences, composer, title):
+    # Add print statements to track execution
+    print("Creating figure...")
+    fig = px.scatter(
+        cadences,
+        x='Progress',
+        y='Tone',
+        color='CadType'
+    )
+
+    fig.update_traces(marker=dict(size=15))
+
+    fig.update_layout(title=f'Progress of Cadences in ' + composer + ': ' + title)
+
+    fig.update_yaxes(categoryorder='array', categoryarray=custom_order)
+
+    return fig
+
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
+    
     search_type = "other"
     st.subheader("Explore Cadences")
     st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
@@ -2314,9 +2424,21 @@ if st.sidebar.checkbox("Explore Cadences"):
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
-    # the full table of cad
+        title = piece.metadata['title']
+        composer = title = piece.metadata['composer']
+        cadences = piece.cadences()
+        cadences['Title'] = title
+        cadences['Composer'] = composer
+        grouped_cadences = cadences.groupby(['Tone', 'CadType', 'CVFs'])['Title'].count()
+        grouped_cadences = pd.DataFrame(grouped_cadences).reset_index()
+        grouped_cadences = grouped_cadences.rename(columns={'Title': 'Count'})
+        total_cads = grouped_cadences['Count'].sum()
+        grouped_cadences = grouped_cadences[grouped_cadences['Count'] != 0]
+        grouped_cadences.reset_index(drop=True, inplace=True)
+        grouped_cadences
+        # the full table of cad
         if st.checkbox("Show Full Cadence Table"):
-            cadences = piece.cadences()
+            # cadences = piece.cadences()
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
             st.dataframe(filtered_cadences, use_container_width = True)
@@ -2333,36 +2455,68 @@ if st.sidebar.checkbox("Explore Cadences"):
             #     output = piece.verovioCadences(df = filtered_cadences)
             #     components.html(output)
         # summary of tone and type
-        if st.checkbox("Summary of Cadences by Tone and Type"):
-            cadences = piece.cadences()
-            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+        if st.checkbox("Chart of Cadences by Tone and Type"):
+            # cadences = piece.cadences()
+            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='Count')
+              # Create the stacked bar chart
+            cad_chart = px.bar(grouped, 
+                        x='Tone',            # The tones go on the x-axis
+                        y='Count',           # The counts go on the y-axis
+                        color='CadType',  
+                        # color_discrete_map=color_map,
+                        # Color the bars by CVF type
+                        title='Cadence Tones and Types',
+                        barmode='stack')     # This makes it stacked instead of grouped
+
+            
+            cad_chart.update_layout(xaxis_title="Cadence Final Tone", 
+                            yaxis_title="Count",
+                            font=dict(family="Arial", size=14),
+                            title_font_size=20,
+                            title_x=0.5,
+                            width = 1000,
+                            height=400,
+                            legend=dict(orientation="v")
+                            )
+
+            cad_chart.update_traces(
+                hovertemplate='<b>%{x}</b><br>CVF: %{customdata[0]}<br>Count: %{y}<br> Scaled: %{customdata[1]}'
+            )
             st.subheader("Summary of Cadences by Tone and Type")
-            grouped
+            st.plotly_chart(cad_chart, use_container_width=True)
         # radar plots
-        if st.checkbox("Show Basic Radar Plot"):
-            st.subheader("Basic Radar Plot")    
-            radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Advanced Radar Plot"):
-            st.subheader("Advanced Radar Plot")    
-            radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Basic Progress Plot"):
-            st.subheader("Basic Progress Plot")    
-            progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
-        if st.checkbox("Show Advanced Progress Plot"):
-            st.subheader("Advanced Progress Plot")    
-            progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
+        if st.checkbox("Show Radar Plot"):
+            st.subheader("Radar Plot of Cadences") 
+            radar_new = cadence_radar(cadences)
+            st.plotly_chart(radar_new, use_container_width=True)
+        # if st.checkbox("Show Basic Radar Plot"):
+        #     st.subheader("Basic Radar Plot")    
+        #     radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
+        #     st.plotly_chart(radar, use_container_width=True)
+        # if st.checkbox("Show Advanced Radar Plot"):
+        #     st.subheader("Advanced Radar Plot")    
+        #     radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
+        #     st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Progress Plot"):
+            st.subheader("Progress Plot")
+            # cadence_progress(cadences, composer, title)
+            st.plotly_chart(cadence_progress(cadences, composer, title), use_container_width=True)
+        # if st.checkbox("Show Basic Progress Plot"):
+        #     st.subheader("Basic Progress Plot")    
+        #     progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
+        #     st.pyplot(progress, use_container_width=True)
+        # if st.checkbox("Show Advanced Progress Plot"):
+        #     st.subheader("Advanced Progress Plot")    
+        #     progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
+        #     st.pyplot(progress, use_container_width=True)
     # corpus
     elif corpus_length >= 2:
         func = ImportedPiece.cadences
         list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
         
-        cadences = pd.concat(list_of_dfs, ignore_index=False)   
+        cadences_metadata = pd.concat(list_of_dfs, ignore_index=False)   
         cols_to_move = ['Composer', 'Title', 'Date']
-        cadences = cadences[cols_to_move + [col for col in cadences.columns if col not in cols_to_move]] 
+        cadences = cadences_metadata[cols_to_move + [col for col in cadences_metadata.columns if col not in cols_to_move]] 
         if st.checkbox("Show Full Cadence Table"):
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
@@ -2381,27 +2535,65 @@ if st.sidebar.checkbox("Explore Cadences"):
             #     output = piece.verovioCadences(df = filtered_cadences)
             #     components.html(output)
         # summary of tone and type
-        if st.checkbox("Summary of Cadences by Tone and Type"):
-            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='counts')
+        if st.checkbox("Chart of Cadences by Tone and Type"):
+            grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='Count')
+              # Create the stacked bar chart
+            cad_chart = px.bar(grouped, 
+                        x='Tone',            # The tones go on the x-axis
+                        y='Count',           # The counts go on the y-axis
+                        color='CadType',  
+                        # color_discrete_map=color_map,
+                        # Color the bars by CVF type
+                        title='Cadence Tones and Types',
+                        barmode='stack')     # This makes it stacked instead of grouped
+
+            cad_chart.update_layout(xaxis_title="Cadence Final Tone", 
+                            yaxis_title="Count",
+                            font=dict(family="Arial", size=14),
+                            title_font_size=20,
+                            title_x=0.5,
+                            width = 1000,
+                            height=400,
+                            legend=dict(orientation="v")
+                            )
+
+            cad_chart.update_traces(
+                hovertemplate='<b>%{x}</b><br>CVF: %{customdata[0]}<br>Count: %{y}<br> Scaled: %{customdata[1]}'
+            )
+            
             st.subheader("Summary of Cadences by Tone and Type")
-            grouped
+            st.plotly_chart(cad_chart, use_container_width=True)
+            
         # radar plots
-        if st.checkbox("Show Basic Radar Plot"):
-            st.subheader("Basic Radar Plot")    
-            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Advanced Radar Plot"):
-            st.subheader("Advanced Radar Plot")    
-            radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
-            st.plotly_chart(radar, use_container_width=True)
-        if st.checkbox("Show Basic Progress Chart"):
-            st.subheader("Basic Progress Chart")    
-            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
-        if st.checkbox("Show Advanced Progress Chart"):
-            st.subheader("Advanced Progress Chart")    
-            progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-            st.pyplot(progress, use_container_width=True)
+        if st.checkbox('Show Radar Plot'):
+            st.subheader("Radar Plot of Cadences") 
+            radar_new = cadence_radar(cadences)
+            st.plotly_chart(radar_new, use_container_width=True)
+        # if st.checkbox("Show Basic Radar Plot"):
+        #     st.subheader("Radar Plot of Cadences") 
+        #     # radar = st.session_state.cadence_radar(cadences)
+        #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
+        #     st.plotly_chart(radar, use_container_width=True)
+        # if st.checkbox("Show Advanced Radar Plot"):
+        #     st.subheader("Advanced Radar Plot")    
+        #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
+        #     st.plotly_chart(radar, use_container_width=True)
+        if st.checkbox("Show Progress Charts"):
+            titles = cadences_metadata["Title"].unique()
+            for title in titles:
+                filtered_cadences = cadences_metadata[cadences_metadata['Title'] == title]
+                composer = filtered_cadences.iloc[1]['Composer']
+                # print('Cadences Progress Plot for' + title)
+                # cadence_progress(filtered_cadences, composer, title)
+                st.plotly_chart(cadence_progress(filtered_cadences, composer, title), use_container_width=True)
+        # if st.checkbox("Basic Progress Chart"):    
+        #     st.subheader("Basic Progress Chart")
+        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
+        #     st.pyplot(progress, use_container_width=True)
+        # if st.checkbox("Show Advanced Progress Chart"):
+        #     st.subheader("Advanced Progress Chart")    
+        #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
+        #     st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
     st.subheader("Model Finder")
