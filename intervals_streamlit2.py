@@ -14,6 +14,9 @@ import glob as glob
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.figure_factory as ff
+from plotly.offline import plot
+import plotly.io as pio
+# import base64
 import streamlit.components.v1 as components
 from os import listdir 
 import json
@@ -872,6 +875,8 @@ if st.sidebar.checkbox("Explore Notes"):
                 nr = filtered_nr.data.copy()
                 # for one piece
                 if corpus_length == 1:
+                    composer = nr.iloc[0]["Composer"]
+                    title = nr.iloc[0]["Title"]
                     nr_counts = nr.groupby(['Composer', 'Title', 'Voice', 'Note']).size().reset_index(name='Count')
                     nr_counts['Note'] = pd.CategoricalIndex(nr_counts['Note'], categories=pitch_order, ordered=True)
                     sorted_nr = nr_counts.sort_values('Note').reset_index(drop=True)
@@ -882,21 +887,84 @@ if st.sidebar.checkbox("Explore Notes"):
                                     x='Note', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Notes in Corpus")
+                                    title=f"Distribution of Notes in {composer}, {title}")
                     nr_chart.update_layout(xaxis_title="Note", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
                     # and show results
-                    st.plotly_chart(nr_chart, use_container_width = True)
-                    st.dataframe(sorted_nr, use_container_width = True)
+                    pio.templates.default = 'plotly'
+
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
                     
-                    st.download_button(
-                        label="Download Filtered Notes Data as CSV",
-                        data=filtered_nr.data.to_csv(),
-                        file_name = piece.metadata['title'] + '_notes_results.csv',
-                        mime='text/csv',
-                        key=1,
-                        )
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(nr_chart, use_container_width=True)
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_nr_html():
+                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Note Chart - {composer} - {title}</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {nr_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                    
+                
+                
+                        st.markdown("")     
+                        if st.button('📥 Prepare Notes Chart for Download'):
+                            html_content = get_nr_html()
+                            st.download_button(
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"{composer}_{title}_notes_chart.html",
+                                mime="text/html"
+                            )
+                    
+                    if st.checkbox("Show Table of Notes"):
+                        st.dataframe(sorted_nr, use_container_width = True)
+                        
+                        st.download_button(
+                            label="Download Filtered Notes Data as CSV",
+                            data=filtered_nr.data.to_csv(),
+                            file_name = piece.metadata['title'] + '_notes_results.csv',
+                            mime='text/csv',
+                            key=1,
+                            )
+                    # Create container for chart and button
+                    
                 # for corpus:
                 if corpus_length > 1:  
                     st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
@@ -925,16 +993,78 @@ if st.sidebar.checkbox("Explore Notes"):
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
                     # and show results
-                    st.plotly_chart(nr_chart, use_container_width = True)
-                    st.dataframe(sorted_nr, use_container_width = True)
+                    # and show results
+                    pio.templates.default = 'plotly'
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
                     
-                    st.download_button(
-                        label="Download Filtered Notes Data as CSV",
-                        data=filtered_nr.data.to_csv(),
-                        file_name = 'corpus_notes_results.csv',
-                        mime='text/csv',
-                        key=2,
-                        )
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(nr_chart, use_container_width=True, )
+                        # st.plotly_chart(fig, theme=None)
+
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_nr_html():
+                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Notes in Corpus</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {nr_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                    
+                
+                        st.markdown("")     
+                        if st.button('📥 Prepare Notes Chart for Download'):
+                            html_content = get_nr_html()
+                            st.download_button(
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"corpus_notes_chart.html",
+                                mime="text/html"
+                            )
+                    
+                    if st.checkbox("Show Table of Notes"):
+                        st.dataframe(sorted_nr, use_container_width = True)
+                    
+                        st.download_button(
+                            label="Download Filtered Notes Data as CSV",
+                            data=filtered_nr.data.to_csv(),
+                            file_name = 'corpus_notes_results.csv',
+                            mime='text/csv',
+                            key=2,
+                            )
                     # download option       
                     
                    
@@ -1046,6 +1176,8 @@ if st.sidebar.checkbox("Explore Durations"):
                 
                 # For one piece
                 if corpus_length == 1:
+                    composer = dur.iloc[0]["Composer"]
+                    title = dur.iloc[0]["Title"]
                     dur_counts = dur.groupby(['Composer', 'Title','Voice', 'Duration']).size().reset_index(name='Count')
                     sorted_dur = dur_counts.sort_values('Duration').reset_index(drop=True)
                     titles = sorted_dur["Title"].unique()
@@ -1053,21 +1185,82 @@ if st.sidebar.checkbox("Explore Durations"):
                                     x='Duration', 
                                     y='Count',
                                     color="Voice",
-                                    title="Distribution of Durations in Corpus")
+                                    title=f"Distribution of Durations in {composer}, {title}")
                     dur_chart.update_layout(xaxis_title="Duration", 
                                             yaxis_title="Count",
                                             legend_title="Voice")
                     # and show results
-                    st.plotly_chart(dur_chart, use_container_width = True)
-                    st.dataframe(sorted_dur, use_container_width = True)
+                    pio.templates.default = 'plotly'
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
                     
-                    st.download_button(
-                        label="Download Filtered Notes Data as CSV",
-                        data=filtered_dur.data.to_csv(),
-                        file_name = piece.metadata['title'] + '_notes_results.csv',
-                        mime='text/csv',
-                        key=3,
-                        )
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(dur_chart, use_container_width=True, )
+                        # st.plotly_chart(fig, theme=None)
+
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_nr_html():
+                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Note Chart - {composer} - {title}</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {dur_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                    
+                
+                        st.markdown("")     
+                        if st.button('📥 Prepare Durations Chart for Download'):
+                            html_content = get_nr_html()
+                            st.download_button(
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"{composer}_{title}_durations_chart.html",
+                                mime="text/html"
+                            )
+
+                    if st.checkbox('Show Table of Durations'):
+                        st.dataframe(sorted_dur, use_container_width = True)
+                        
+                        st.download_button(
+                            label="Download Filtered Notes Data as CSV",
+                            data=filtered_dur.data.to_csv(),
+                            file_name = piece.metadata['title'] + '_notes_results.csv',
+                            mime='text/csv',
+                            key=3,
+                            )
 
                 # For corpus
                 if corpus_length > 1:
@@ -1084,26 +1277,7 @@ if st.sidebar.checkbox("Explore Durations"):
                         horizontal=True,  # Display options horizontally
                         captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
                     )
-                    titles = sorted_dur["Title"].unique()
-                    dur_chart = px.bar(sorted_dur, 
-                                    x='Duration', 
-                                    y='Count',
-                                    color=color_grouping,
-                                    title="Distribution of Durations in Corpus")
-                    dur_chart.update_layout(xaxis_title="Duration", 
-                                            yaxis_title="Count",
-                                            legend_title=color_grouping)
-                    # and show results
-                    st.plotly_chart(dur_chart, use_container_width = True)
-                    st.dataframe(sorted_dur, use_container_width = True)
                     
-                    st.download_button(
-                        label="Download Filtered Notes Data as CSV",
-                        data=filtered_dur.data.to_csv(),
-                        file_name = 'corpus_notes_results.csv',
-                        mime='text/csv',
-                        key=4,
-                        )
                     
                     titles = dur_counts['Title'].unique()
                     dur_chart = px.bar(dur_counts, 
@@ -1115,18 +1289,76 @@ if st.sidebar.checkbox("Explore Durations"):
                                             yaxis_title="Count",
                                             legend_title=color_grouping)
 
-                    st.plotly_chart(dur_chart, use_container_width=True)
-                    st.dataframe(filtered_dur, use_container_width=True)
-
+                    pio.templates.default = 'plotly'
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
+                    
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(dur_chart, use_container_width=True, )
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_nr_html():
+                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Durations in Corpus</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {dur_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                    
                 
-                    # Download option
-                    st.download_button(
-                        label="Download Filtered Corpus Durations Data as CSV",
-                        data=filtered_dur.data.to_csv(),
-                        file_name='corpus_durations_results.csv',
-                        mime='text/csv',
-                        key=5,
-                    )
+                        st.markdown("")     
+                        if st.button('📥 Prepare Durations Chart for Download'):
+                            html_content = get_nr_html()
+                            st.download_button(
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"corpus_notes_chart.html",
+                                mime="text/html"
+                            )                    
+                    if st.checkbox('Show Table of Durations'):
+                        st.dataframe(filtered_dur, use_container_width=True)
+
+                    
+                        # Download option
+                        st.download_button(
+                            label="Download Filtered Corpus Durations Data as CSV",
+                            data=filtered_dur.data.to_csv(),
+                            file_name='corpus_durations_results.csv',
+                            mime='text/csv',
+                            key=4,
+                        )
 
 # weighted notes function
 
@@ -1259,85 +1491,191 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                 try:
                     # Check if we have multiple pieces to plot
                     if 'Title' in counted_notes_sorted.columns and counted_notes_sorted['Title'].nunique() > 1:
-                        # Multiple pieces plot
-                        # make plot
-                        color_grouping = st.radio(
-                            "Select Color Grouping",
-                            ['Composer', 'Title'],
-                            index=0,  # Pre-select the first option (default)
-                            horizontal=True,  # Display options horizontally
-                            captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
-                        )
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        with col1:
+                            # Multiple pieces plot
+                            # make plot
+                            color_grouping = st.radio(
+                                "Select Color Grouping",
+                                ['Composer', 'Title'],
+                                index=0,  # Pre-select the first option (default)
+                                horizontal=True,  # Display options horizontally
+                                captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
+                            )
 
-    
-                        titles = counted_notes_sorted['Title'].unique()
-                        fig = px.line_polar(
-                            counted_notes_sorted,
-                            r='scaled',
-                            theta='pitch_class',
-                            color=color_grouping,
-                            line_close=True,
-                            range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
-                            markers=True,
-                            category_orders=dict(color_grouping=list(counted_notes_sorted[color_grouping].unique())),
-                            color_discrete_sequence=contrasting_colors[:len(counted_notes_sorted[color_grouping].unique())]
-                        )
-                        fig.update_traces(fill='toself', 
-                                          mode='markers+lines',
-                                          opacity=.7)
-                        fig.update_layout(
-                            showlegend=True,
-                            legend=dict(
-                                title=color_grouping,
-                                orientation="h",
-                                yanchor="bottom",
-                                y=-0.5,
-                                xanchor="right",
-                                x=1
-                            ),
-                            title = 'Weighted Note Distribution in Corpus')
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                       
-                        
+        
+                            titles = counted_notes_sorted['Title'].unique()
+                            fig = px.line_polar(
+                                counted_notes_sorted,
+                                r='scaled',
+                                theta='pitch_class',
+                                color=color_grouping,
+                                line_close=True,
+                                range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
+                                markers=True,
+                                category_orders=dict(color_grouping=list(counted_notes_sorted[color_grouping].unique())),
+                                color_discrete_sequence=contrasting_colors[:len(counted_notes_sorted[color_grouping].unique())]
+                            )
+                            fig.update_traces(fill='toself', 
+                                            mode='markers+lines',
+                                            opacity=.7)
+                            fig.update_layout(
+                                showlegend=True,
+                                legend=dict(
+                                    title=color_grouping,
+                                    orientation="h",
+                                    yanchor="bottom",
+                                    y=-0.5,
+                                    xanchor="right",
+                                    x=1
+                                ),
+                                title = 'Weighted Note Distribution in Corpus')
+                            
+                            st.plotly_chart(fig, use_container_width=True)
+                        with col2:
+                            @st.cache_data(ttl=3600)
+                            def get_radar_html():
+                                """Convert radar plot to HTML with preserved colors and interactivity"""
+                                # Create a complete HTML file with embedded styles
+                                html_content = f"""
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8">
+                                    <title>Corpus Cadence Radar Plot</title>
+                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                    <style>
+                                        body {{
+                                            margin: 0;
+                                            padding: 20px;
+                                            font-family: Arial, sans-serif;
+                                        }}
+                                        .chart-container {{
+                                            width: 100%;
+                                            height: 600px;
+                                        }}
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="chart-container" id="chart"></div>
+                                    <script>
+                                        var figure = {fig.to_json()};
+                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false
+                                        }});
+                                    </script>
+                                </body>
+                                </html>
+                                """
+                                return html_content
+                                
+                            if st.button('📥 Prepare Weighted Note Plot for Download'):
+                                radar_html = get_radar_html()
+                                st.download_button(
+                                    label="Download Radar Plot",
+                                    data=radar_html,
+                                    file_name=f"corpus_weighted_note_plot.html",
+                                    mime="text/html"
+                                )
+                            
                     else:
                         # Single piece plot
-                        fig = px.line_polar(
-                            counted_notes_sorted,
-                            r='scaled',
-                            theta='pitch_class',
-                            line_close=True,
-                            range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
-                            markers=True,
-                            category_orders=category_order
-                        )
-                        
-                        fig.update_traces(
-                            fill='toself',
-                            fillcolor='rgba(31, 119, 180, 0.3)',
-                            line=dict(width=2)
-                        )
-                        
-                        # Get piece name if available
-                        if 'piece' in counted_notes_sorted.columns:
-                            piece_name = counted_notes_sorted['piece'].iloc[0]
-                            title = f'Weighted Note Distribution in {piece_name}'
-                        else:
-                            title = 'Weighted Note Distribution'
-                    
-                        fig.update_layout(
-                            title=title,
-                            polar=dict(
-                                radialaxis=dict(
-                                    visible=True,
-                                    range=[0, counted_notes_sorted['scaled'].max() * 1.1]
-                                ),
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        if piece:
+                            composer = piece.metadata['composer']
+                            title = piece.metadata['title']
+            
+                            # Plot chart in first column
+                            with col1:
+                                fig = px.line_polar(
+                                    counted_notes_sorted,
+                                    r='scaled',
+                                    theta='pitch_class',
+                                    line_close=True,
+                                    range_r=[0, counted_notes_sorted['scaled'].max() * 1.1],
+                                    markers=True,
+                                    category_orders=category_order
+                                )
                                 
-                            ),
-                            showlegend='piece' in counted_notes_sorted.columns,
-                        )
-                    
-                        st.plotly_chart(fig, use_container_width=True)
+                                fig.update_traces(
+                                    fill='toself',
+                                    fillcolor='rgba(31, 119, 180, 0.3)',
+                                    line=dict(width=2)
+                                )
+                                
+                                # Get piece name if available
+                                # if 'piece' in counted_notes_sorted.columns:
+                                    # piece_name = counted_notes_sorted['piece'].iloc[0]
+                                # title = f"Weighted Note Distribution in {composer}, {title}"
+                                
+                            
+                                fig.update_layout(
+                                    title=title,
+                                    polar=dict(
+                                        radialaxis=dict(
+                                            visible=True,
+                                            range=[0, counted_notes_sorted['scaled'].max() * 1.1]
+                                        ),
+                                        
+                                    ),
+                                    showlegend='piece' in counted_notes_sorted.columns,
+                                )
+                            
+                                st.plotly_chart(fig, use_container_width=True)
+                            # Add download button in second column
+                            with col2:
+                                @st.cache_data(ttl=3600)
+                                def get_radar_html():
+                                    """Convert radar plot to HTML with preserved colors and interactivity"""
+                                    # Create a complete HTML file with embedded styles
+                                    html_content = f"""
+                                    <!DOCTYPE html>
+                                    <html>
+                                    <head>
+                                        <meta charset="utf-8">
+                                        <title>Weighted Note Distribution</title>
+                                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                        <style>
+                                            body {{
+                                                margin: 0;
+                                                padding: 20px;
+                                                font-family: Arial, sans-serif;
+                                            }}
+                                            .chart-container {{
+                                                width: 100%;
+                                                height: 600px;
+                                            }}
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <div class="chart-container" id="chart"></div>
+                                        <script>
+                                            var figure = {fig.to_json()};
+                                            Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                                responsive: true,
+                                                displayModeBar: true,
+                                                displaylogo: false
+                                            }});
+                                        </script>
+                                    </body>
+                                    </html>
+                                    """
+                                    return html_content
+                                    
+                                if st.button('📥 Prepare Weighted Note Plot for Download'):
+                                    radar_html = get_radar_html()
+                                    st.download_button(
+                                        label="Download Weighted Note Plot Plot",
+                                        data=radar_html,
+                                        file_name=f"{composer}_{title}_weighted_note_plot.html",
+                                        mime="text/html"
+                                    )
+                            # Add download button in second column
+                
                 
                 except Exception as e:
                     st.error(f"Error creating the radar plot: {str(e)}")
@@ -1494,6 +1832,8 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                 if corpus_length  == 1: 
                     # 
                     mel = filtered_mel.data.copy()
+                    composer = mel.iloc[0]['Composer']
+                    title = mel.iloc[0]['Title']
                     
                     if interval_kinds[select_kind] == 'q':
                         mel_interval_counts = mel.groupby(['Composer', 'Title', 'Voice', 'Interval']).size().reset_index(name='Count')
@@ -1517,21 +1857,85 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                         x='Interval', 
                                         y='Count',
                                         color="Voice",
-                                        title="Distribution of Intervals in Corpus")
+                                        title=f"Distribution of Intervals in {composer}, {title}")
                         mel_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title="Voice")
                         # and show results
-                        st.plotly_chart(mel_chart, use_container_width = True)
-                        st.dataframe(sorted_mel, use_container_width = True)
+                        pio.templates.default = 'plotly'
 
-                        st.download_button(
-                            label="Download Filtered Melodic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = 'corpus_melodic_results.csv',
-                            mime='text/csv',
-                            key=6,
-                            )
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        
+                        # Plot chart in first column
+                        with col1:
+                            st.plotly_chart(mel_chart, use_container_width=True)
+                            
+                        # Add download button in second column
+                        with col2:
+                            # @st.cache_data(ttl=3600)
+                            def get_mel_html():
+                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                # Create a complete HTML file with embedded styles
+                                html_content = f"""
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8">
+                                    <title>Melodic Interval Chart - {composer} - {title}</title>
+                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                    <style>
+                                        body {{
+                                            margin: 0;
+                                            padding: 20px;
+                                            font-family: Arial, sans-serif;
+                                        }}
+                                        .chart-container {{
+                                            width: 100%;
+                                            height: 600px;
+                                        }}
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="chart-container" id="chart"></div>
+                                    <script>
+                                        var figure = {mel_chart.to_json()};
+                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false
+                                        }});
+                                    </script>
+                                </body>
+                                </html>
+                                """
+                                return html_content
+                        
+                    
+                    
+                            st.markdown("")     
+                            if st.button('📥 Prepare Melodic Chart for Download'):
+                                html_content = get_mel_html()
+                                st.download_button(
+                                    label="Download the Chart",
+                                    data=html_content,
+                                    file_name=f"{composer}_{title}_mel_chart.html",
+                                    mime="text/html"
+                                )
+
+
+                        if st.checkbox("Show Table of Melodic Intervals"):
+                            st.dataframe(sorted_mel, use_container_width = True)
+                            composer = mel.iloc[0]['Composer']
+                            title = mel.iloc[0]['Title']
+
+                            st.download_button(
+                                label="Download Filtered Melodic Data as CSV",
+                                data=filtered_mel.data.to_csv(),
+                                file_name = f'{composer}_{title}_melodic_intervals.csv',
+                                mime='text/csv',
+                                key=5,
+                                )
                 # # for corpus
                 elif corpus_length > 1:
                     mel = filtered_mel.data.copy()  
@@ -1568,17 +1972,77 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                                 yaxis_title="Count",
                                                 legend_title=color_grouping)
                         # and show results
-                        st.plotly_chart(mel_chart, use_container_width = True)
-                        st.dataframe(filtered_mel, use_container_width = True)
-                        #csv = convert_df(filtered_mel.data)
-                        # filtered_mel = filtered_mel.to_csv().encode('utf-8')
-                        st.download_button(
-                            label="Download Filtered Corpus Melodic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = 'corpus_melodic_results.csv',
-                            mime='text/csv',
-                            key=7,
-                            )
+
+                         # and show results
+                        pio.templates.default = 'plotly'
+
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        
+                        # Plot chart in first column
+                        with col1:
+                            st.plotly_chart(mel_chart, use_container_width=True)
+                            
+                        # Add download button in second column
+                        with col2:
+                            # @st.cache_data(ttl=3600)
+                            def get_mel_html():
+                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                # Create a complete HTML file with embedded styles
+                                html_content = f"""
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8">
+                                    <title>Corpus Melodic Interval Chart </title>
+                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                    <style>
+                                        body {{
+                                            margin: 0;
+                                            padding: 20px;
+                                            font-family: Arial, sans-serif;
+                                        }}
+                                        .chart-container {{
+                                            width: 100%;
+                                            height: 600px;
+                                        }}
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="chart-container" id="chart"></div>
+                                    <script>
+                                        var figure = {mel_chart.to_json()};
+                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false
+                                        }});
+                                    </script>
+                                </body>
+                                </html>
+                                """
+                                return html_content
+                            
+                            st.markdown("")     
+                            if st.button('📥 Prepare Melodic Chart for Download'):
+                                html_content = get_mel_html()
+                                st.download_button(
+                                    label="Download the Chart",
+                                    data=html_content,
+                                    file_name=f"corpus_mel_chart.html",
+                                    mime="text/html"
+                                )
+
+                        if st.checkbox("Show Table of Melodic Intervals"):
+                            st.dataframe(sorted_mel, use_container_width = True)
+                            
+                            st.download_button(
+                                label="Download Filtered Melodic Data as CSV",
+                                data=filtered_mel.data.to_csv(),
+                                file_name = f'corpus_melodic_intervals.csv',
+                                mime='text/csv',
+                                key=6,
+                                )
         
 # harmonic functions
 # @st.cache_data
@@ -1739,7 +2203,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         har_interval_counts = har.groupby(['Composer', 'Title', 'Voices', 'Interval']).size().reset_index(name='Count')
                         # remove rests
                         har_int_counts_no_rest = har_interval_counts[har_interval_counts['Interval'] != 'Rest']
-                        har_int_counts_no_rest['Interval'] = har_int_counts_no_rest['Interval'].astype('int64')
+                        # har_int_counts_no_rest['Interval'] = har_int_counts_no_rest['Interval'].astype('int64')
                         # sorting
                         sorted_har = har_int_counts_no_rest.sort_values(by='Interval', ascending=True)
                         
@@ -1754,16 +2218,83 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                                                 yaxis_title="Count",
                                                 legend_title="Voices")
                         # and show results
-                        st.plotly_chart(har_chart, use_container_width = True)
-                        st.dataframe(sorted_har, use_container_width = True)
+                        # and show results
+                        pio.templates.default = 'plotly'
 
-                        st.download_button(
-                            label="Download Filtered Melodic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = 'harmonic_results.csv',
-                            mime='text/csv',
-                            key=8,
-                            )
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        composer = har.iloc[0]['Composer']
+                        title = har.iloc[0]['Title']
+                        
+                        # Plot chart in first column
+                        with col1:
+                            st.plotly_chart(har_chart, use_container_width=True)
+                            
+                        # Add download button in second column
+                        with col2:
+                            # @st.cache_data(ttl=3600)
+                            def get_har_html():
+                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                # Create a complete HTML file with embedded styles
+                                html_content = f"""
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8">
+                                    <title>Harmonic Interval Chart - {composer} - {title}</title>
+                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                    <style>
+                                        body {{
+                                            margin: 0;
+                                            padding: 20px;
+                                            font-family: Arial, sans-serif;
+                                        }}
+                                        .chart-container {{
+                                            width: 100%;
+                                            height: 600px;
+                                        }}
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="chart-container" id="chart"></div>
+                                    <script>
+                                        var figure = {har_chart.to_json()};
+                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false
+                                        }});
+                                    </script>
+                                </body>
+                                </html>
+                                """
+                                return html_content
+                        
+                    
+                    
+                            st.markdown("")     
+                            if st.button('📥 Prepare Harmonic Chart for Download'):
+                                html_content = get_har_html()
+                                st.download_button(
+                                    label="Download the Chart",
+                                    data=html_content,
+                                    file_name=f"{composer}_{title}_har_chart.html",
+                                    mime="text/html"
+                                )
+
+
+                        if st.checkbox("Show Table of Harmonic Intervals"):
+                            st.dataframe(sorted_mel, use_container_width = True)
+                            composer = har.iloc[0]['Composer']
+                            title = har.iloc[0]['Title']
+
+                            st.download_button(
+                                label="Download Filtered Melodic Data as CSV",
+                                data=filtered_har.data.to_csv(),
+                                file_name = f'{composer}_{title}_harmonic_intervals.csv',
+                                mime='text/csv',
+                                key=7,
+                                )
                 # # for corpus
                 elif corpus_length > 1:
                     har = filtered_har.data.copy()  
@@ -1799,75 +2330,78 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         har_chart.update_layout(xaxis_title="Interval", 
                                                 yaxis_title="Count",
                                                 legend_title=color_grouping)
-                # filtered_har = filter_dataframe_har(st.session_state.har.fillna(''))
-                # # for one piece
-                # if corpus_length == 1: 
-                #     har_no_mdata = filtered_har.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                #     har_no_mdata = har_no_mdata.map(str)
-                #     har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                #     # apply the categorical list and sort.  
-                #     if interval_kinds[select_kind] == 'q':
-                #         har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
-                #         har_counts = har_counts[har_counts.index.notna()]
-                #         har_counts.sort_index(inplace=True)
-                #     else:
-                #         har_counts = har_counts.sort_index()
-                #         # har_counts = har_counts.drop(index=['', 'Rest'])
-                #     har_counts.index.rename('interval', inplace=True)
-                #     voices = har_counts.columns.to_list()
-                #     # set the figure size, type and colors
-                #     har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns), 
-                #                     title="Distribution of Harmonic Intervals in " + piece.metadata['title'])
-                #     har_chart.update_layout(xaxis_title="Interval", 
-                #                         yaxis_title="Count",
-                #                         legend_title='Voices')
-                #     # show results
-                #     st.plotly_chart(har_chart, use_container_width = True)
-                #     st.dataframe(har_counts, use_container_width = True)
-                #     #csv = convert_df(filtered_har.data)
-                #     # filtered_har = filtered_har.to_csv().encode('utf-8')
-                #     st.download_button(
-                #         label="Download Filtered Harmonic Data as CSV",
-                #         data=filtered_har.data.to_csv(),
-                #         file_name = piece.metadata['title'] + '_harmonic_results.csv',
-                #         mime='text/csv',
-                #         key=5,
-                #         )
-                # elif corpus_length > 1: 
-                #     if 'Composer' not in filtered_har.columns:
-                #         st.write("Did you **change the piece list**? If so, please **Update and Submit form**")
-                #     else:
-                #         har_no_mdata = filtered_har.data.drop(['Composer', 'Title', "Date", "Measure", "Beat"], axis=1)
-                #     har_no_mdata = har_no_mdata.map(str)
-                #     har_counts = har_no_mdata.apply(lambda x: x.value_counts(), axis=0).fillna('0').astype(int)
-                #     # apply the categorical list and sort.  
-                #     if interval_kinds[select_kind] == 'q':
-                #         har_counts.index = pd.Categorical(har_counts.index, categories=interval_order_quality, ordered=True)
-                #         har_counts = har_counts[har_counts.index.notna()]
-                #         har_counts.sort_index(inplace=True)
-                #     else:
-                #         har_counts = har_counts.sort_index()
-                #         # har_counts = har_counts.drop(index=['', 'Rest'])
-                #     har_counts.index.rename('interval', inplace=True)
-                #     voices = har_counts.columns.to_list()
-                #         # set the figure size, type and colors
-                #     har_chart = px.bar(har_counts, x=har_counts.index, y=list(har_counts.columns),
-                #                     title="Distribution of Harmonic Intervals in " + ', '.join(titles))
-                #     har_chart.update_layout(xaxis_title="Interval", 
-                #                         yaxis_title="Count",
-                #                         legend_title='Voices')
+                
                     # show results
-                    st.plotly_chart(har_chart, use_container_width = True)
-                    st.dataframe(filtered_har, use_container_width = True)
-                    #csv = convert_df(filtered_har.data)
-                    # filtered_har = filtered_har.to_csv().encode('utf-8')
-                    st.download_button(
-                        label="Download Filtered Corpus Harmonic Data as CSV",
-                        data=filtered_har.data.to_csv(),
-                        file_name = 'corpus_harmonic_results.csv',
-                        mime='text/csv',
-                        key=9,
-                        )           
+                    # and show results
+                        pio.templates.default = 'plotly'
+
+                        container = st.container()
+                        col1, col2 = container.columns([10, 2])
+                        
+                        # Plot chart in first column
+                        with col1:
+                            st.plotly_chart(har_chart, use_container_width=True)
+                            
+                        # Add download button in second column
+                        with col2:
+                            # @st.cache_data(ttl=3600)
+                            def get_har_html():
+                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                # Create a complete HTML file with embedded styles
+                                html_content = f"""
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <meta charset="utf-8">
+                                    <title>Corpus Harmonic Interval Chart </title>
+                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                    <style>
+                                        body {{
+                                            margin: 0;
+                                            padding: 20px;
+                                            font-family: Arial, sans-serif;
+                                        }}
+                                        .chart-container {{
+                                            width: 100%;
+                                            height: 600px;
+                                        }}
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="chart-container" id="chart"></div>
+                                    <script>
+                                        var figure = {har_chart.to_json()};
+                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false
+                                        }});
+                                    </script>
+                                </body>
+                                </html>
+                                """
+                                return html_content
+                            
+                            st.markdown("")     
+                            if st.button('📥 Prepare Harmonic Chart for Download'):
+                                html_content = get_har_html()
+                                st.download_button(
+                                    label="Download the Chart",
+                                    data=html_content,
+                                    file_name=f"corpus_har_chart.html",
+                                    mime="text/html"
+                                )
+
+                        if st.checkbox("Show Table of Harmonic Intervals"):
+                            st.dataframe(sorted_har, use_container_width = True)
+                            
+                            st.download_button(
+                                label="Download Filtered Harmonic Data as CSV",
+                                data=filtered_mel.data.to_csv(),
+                                file_name = f'corpus_harmonic_intervals.csv',
+                                mime='text/csv',
+                                key=8,
+                                ) 
 
 # function for ngram heatmap
 # @st.cache_data
@@ -1996,7 +2530,7 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=filtered_ngrams.data.to_csv(),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
-                key=10,
+                key=9,
                 )
     # for corpus
     elif corpus_length > 1:
@@ -2068,109 +2602,109 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 data=filtered_combined_ngrams.data.to_csv(),
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
-                key=11,
+                key=10,
                 )            
 # hr functions
 # one piece
-# @st.cache_data
-# def piece_homorhythm(piece, length_choice, full_hr_choice):
-#     hr = piece.homorhythm(ngram_length=length_choice, 
-#                     full_hr=full_hr_choice)
-#     # Check if hr is None or empty
-#     if hr is None or hr.empty:
-#         # Define the required columns
-#         columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set',  
-#            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-#         # Return an empty DataFrame with the required columns
-#         return pd.DataFrame(columns=columns_to_keep)
-#     # fix update error for type
-#     hr.fillna(0, inplace=True)
-#     # voices_list = list(piece.notes().columns)
-#     # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-#     columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-#            'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
-#     hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-#     hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-#     hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-#     # hr = piece.emaAddresses(df=hr, mode='h')
-#     hr = hr.reset_index()
-#     hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-#     cols_to_move = ['Composer', 'Title', 'Date']
-#     hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+@st.cache_data
+def piece_homorhythm(piece, length_choice, full_hr_choice):
+    hr = piece.homorhythm(ngram_length=length_choice, 
+                    full_hr=full_hr_choice)
+    # Check if hr is None or empty
+    if hr is None or hr.empty:
+        # Define the required columns
+        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set',  
+           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+        # Return an empty DataFrame with the required columns
+        return pd.DataFrame(columns=columns_to_keep)
+    # fix update error for type
+    hr.fillna(0, inplace=True)
+    # voices_list = list(piece.notes().columns)
+    # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+    columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+           'count_lyr_ngrams', 'active_syll_voices', 'voice_match']
+    hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+    hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+    hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+    # hr = piece.emaAddresses(df=hr, mode='h')
+    hr = hr.reset_index()
+    hr = hr.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+    cols_to_move = ['Composer', 'Title', 'Date']
+    hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
 
-#     return hr
-# # orpus
-# # @st.cache_data
-# def corpus_homorhythm(corpus, length_choice, full_hr_choice):
-#     func = ImportedPiece.homorhythm
-#     list_of_dfs = corpus.batch(func = func,
-#                                kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
-#                                metadata = True)
-#     # func2 = ImportedPiece.emaAddresses
-#     # list_of_hr_with_ema = corpus.batch(func = func2,
-#     #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
-#     #                                    metadata = True)
-# #
-#     # Filter out DataFrames with zero length
-#     list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
-#     rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
-#     if len(rev_list_of_dfs) > 0:
-#         hr = pd.concat(rev_list_of_dfs)
-#         # voices_list = list(piece.notes().columns)
-#         # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
-#         columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
-#             'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
-#         hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
-#         hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
-#         hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
-#         cols_to_move = ['Composer', 'Title', 'Date']
-#         hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
-#         return hr
+    return hr
+# orpus
+# @st.cache_data
+def corpus_homorhythm(corpus, length_choice, full_hr_choice):
+    func = ImportedPiece.homorhythm
+    list_of_dfs = corpus.batch(func = func,
+                               kwargs = {'ngram_length' : length_choice, 'full_hr' : full_hr_choice},
+                               metadata = True)
+    # func2 = ImportedPiece.emaAddresses
+    # list_of_hr_with_ema = corpus.batch(func = func2,
+    #                                    kwargs = {'df': list_of_dfs, 'mode' : 'h'},
+    #                                    metadata = True)
+#
+    # Filter out DataFrames with zero length
+    list_of_dfs = [df for df in list_of_dfs if df is not None and len(df) >  0]
+    rev_list_of_dfs = [df.reset_index() for df in list_of_dfs]
+    if len(rev_list_of_dfs) > 0:
+        hr = pd.concat(rev_list_of_dfs)
+        # voices_list = list(piece.notes().columns)
+        # hr[voices_list] = hr[voices_list].map(convertTuple).fillna('-')
+        columns_to_keep = ['active_voices', 'number_dur_ngrams', 'hr_voices', 'syllable_set', 
+            'count_lyr_ngrams', 'active_syll_voices', 'voice_match', 'Composer', 'Title', 'Date']
+        hr = hr.drop(columns=[col for col in hr.columns if col not in columns_to_keep])
+        hr['hr_voices'] = hr['hr_voices'].apply(', '.join)
+        hr['syllable_set'] = hr['syllable_set'].apply(lambda x: ''.join(map(str, x[0]))).copy()
+        cols_to_move = ['Composer', 'Title', 'Date']
+        hr = hr[cols_to_move + [col for col in hr.columns if col not in cols_to_move]]
+        return hr
 
 # HR form--now commented out for Ditigal Ocean
 # if st.sidebar.checkbox("Explore Homorhythm"):
-#     search_type = "other"
-#     st.subheader("Explore Homorhythm")
-#     st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
+    search_type = "other"
+    st.subheader("Explore Homorhythm")
+    st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
 
-#     with st.form("Homorhythm Settings"):
-#         full_hr_choice = st.selectbox(
-#             "Select HR Full Status",
-#             [True, False])
-#         length_choice = st.number_input('Select ngram Length', value=4, step=1)
-#         submitted = st.form_submit_button("Update and Submit")
-#         if submitted:
-#             if 'hr' in st.session_state:
-#                 del st.session_state.hr
-#             if corpus_length == 0:
-#                 st.write("Please select one or more pieces")
-#             elif corpus_length == 1:
-#                  hr = piece_homorhythm(st.session_state.piece, length_choice, full_hr_choice)
-#             elif corpus_length > 1:
-#                  hr = corpus_homorhythm(st.session_state.corpus, length_choice, full_hr_choice)
-#             if "hr" not in st.session_state:
-#                 st.session_state.hr = hr
-# # and use the session state variables for display
-#     if 'hr' not in st.session_state:
-#         pass
-#     else:
-#         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
-#         st.write("Filter Results by Contents of Each Column")
-#         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-#         st.dataframe(filtered_hr, use_container_width = True)
-#         # csv = convert_df(filtered_hr)
-#         if corpus_length == 1:
-#             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
-#         elif corpus_length > 1:
-#             download_name = "corpus_homorhythm_results.csv"
-#         # filtered_hr = filtered_hr.to_csv().encode('utf-8')
-#         st.download_button(
-#             label="Download Filtered Homorhythm Data as CSV",
-#             data=filtered_hr.to_csv(),
-#             file_name = download_name,
-#             mime='text/csv',
-#             key=8,
-#             ) 
+    with st.form("Homorhythm Settings"):
+        full_hr_choice = st.selectbox(
+            "Select HR Full Status",
+            [True, False])
+        length_choice = st.number_input('Select ngram Length', value=4, step=1)
+        submitted = st.form_submit_button("Update and Submit")
+        if submitted:
+            if 'hr' in st.session_state:
+                del st.session_state.hr
+            if corpus_length == 0:
+                st.write("Please select one or more pieces")
+            elif corpus_length == 1:
+                 hr = piece_homorhythm(st.session_state.piece, length_choice, full_hr_choice)
+            elif corpus_length > 1:
+                 hr = corpus_homorhythm(st.session_state.corpus, length_choice, full_hr_choice)
+            if "hr" not in st.session_state:
+                st.session_state.hr = hr
+# and use the session state variables for display
+    if 'hr' not in st.session_state:
+        pass
+    else:
+        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+        st.write("Filter Results by Contents of Each Column")
+        filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
+        st.dataframe(filtered_hr, use_container_width = True)
+        # csv = convert_df(filtered_hr)
+        if corpus_length == 1:
+            download_name = piece.metadata['title'] + '_homorhythm_results.csv'
+        elif corpus_length > 1:
+            download_name = "corpus_homorhythm_results.csv"
+        # filtered_hr = filtered_hr.to_csv().encode('utf-8')
+        st.download_button(
+            label="Download Filtered Homorhythm Data as CSV",
+            data=filtered_hr.to_csv(),
+            file_name = download_name,
+            mime='text/csv',
+            key=11,
+            ) 
         
 # p type function
 # piece
@@ -2358,27 +2892,31 @@ def cadence_radar(cadences):
         height=600,  # Height in pixels
         # Position the legend
         legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.7,
-            xanchor="right",  # Changed from 'center' to 'right'
-            x=1.05,           # Changed from 0.5 to 1.05
-            title={
-                'text': 'Musical Pieces',
-                'side': 'top',
-                'font_size': 12
-            },
-            itemsizing='constant',
-            itemwidth=30,
-            bordercolor="black",
-            borderwidth=1,
-            bgcolor="rgba(255,255,255,0.8)"
-        ),
+        orientation="v",  # Vertical layout
+        yanchor="middle",  # Vertical centering
+        y=0.5,  # Vertical position
+        xanchor="right",  # Right alignment
+        x=1.05,  # Offset from right edge
+        xref="paper",  # Use paper coordinates
+        yref="paper",  # Use paper coordinates
+        title={
+            'text': 'Titles',
+            'side': 'top',
+            'font_size': 12
+        },
+        itemsizing='constant',
+        itemwidth=30,
+        bordercolor="black",
+        borderwidth=1,
+        bgcolor="rgba(255,255,255,0.8)"
+    ),
+    # Add right margin to accommodate legend
+    
         # Add title
         title_text="Relative Distribution of Cadence Tones in Corpus",
         title_x=0.5,  # Center the title
         # Adjust margins if needed
-        margin=dict(l=80, r=80, t=100, b=200),
+        margin=dict(l=80, r=100, t=100, b=200),
         polar=dict(
             radialaxis=dict(
                 visible=True,
@@ -2393,23 +2931,73 @@ def cadence_radar(cadences):
 custom_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  # Your desired order
 
 
-
 def cadence_progress(cadences, composer, title):
-    # Add print statements to track execution
-    print("Creating figure...")
+    # Define custom ordering for CadTypes
+    custom_order = [
+        'Authentic', 'Evaded Authentic', 
+        'Clausula Vera', 'Evaded Clausula Vera', 'Abandoned Clausula Vera', 'Phrygian Clausula Vera',
+        'Double Leading Tone', 'Evaded Double Leading Tone', 'Abandoned Double Leading Tone',
+        'Altizans Only', 'Phrygian Altizans', 'Evaded Altizans Only',
+        'Phrygian', 'Reinterpreted', 'Quince', 'Leaping Contratenor'
+    ]
+    
+    # Define color mappings grouped by cadence type
+    # Create the base colors dictionary
+    base_colors = {
+        'Authentic': '#FF0000',              # Pure Red
+        'Clausula Vera': '#0000FF',          # Pure Blue
+        'Double Leading Tone': '#00FF00',    # Pure Green
+        'Altizans Only': '#800080',          # Purple (maximally different from red)
+        'Phrygian': '#00FF00',               # Pure Green
+        'Reinterpreted': '#00FFFF',          # Cyan
+        'Quince': '#4B0082',                 # Indigo
+        'Leaping Contratenor': '#000000',    # Black
+        'Phrygian Clausula Vera': '#FF00FF'  # Magenta
+    }
+
+    # Create lighter versions for modified cadences
+    color_mapping = base_colors.copy()
+    # Evaded versions (50% lighter)
+    color_mapping['Evaded Authentic'] = '#FF6666'     # Lighter red
+    color_mapping['Evaded Clausula Vera'] = '#6666FF' # Lighter blue
+    color_mapping['Evaded Double Leading Tone'] = '#66FF66' # Lighter green
+    color_mapping['Evaded Altizans Only'] = '#CC99CC' # Lighter purple
+    color_mapping['Evaded Phrygian'] = '#66FF66'      # Lighter green
+    color_mapping['Evaded Reinterpreted'] = '#99FFFF' # Lighter cyan
+    color_mapping['Evaded Quince'] = '#9966CC'       # Lighter indigo
+    color_mapping['Evaded Phrygian Clausula Vera'] = '#FF66FF' # Lighter magenta
+    # Abandoned versions (75% lighter)
+    color_mapping['Abandoned Clausula Vera'] = '#CCCCFF' # Much lighter blue
+    color_mapping['Abandoned Double Leading Tone'] = '#CCFFCC' # Much lighter green
+    color_mapping['Abandoned Phrygian'] = '#FFE5CC'    # Much lighter orange
+    color_mapping['Abandoned Authentic'] = '#FFCCCC'  # Much lighter red
+    color_mapping['Abandoned Phrygian Clausula Vera'] = '#FFCCFF' # Much lighter magenta
+    
     fig = px.scatter(
         cadences,
         x='Progress',
         y='Tone',
-        color='CadType'
+        color='CadType',
+        color_discrete_map=color_mapping,
+        category_orders={'CadType': custom_order}
     )
-
-    fig.update_traces(marker=dict(size=15))
-
-    fig.update_layout(title=f'Progress of Cadences in ' + composer + ': ' + title)
-
-    fig.update_yaxes(categoryorder='array', categoryarray=custom_order)
-
+    
+    # Update marker properties
+    fig.update_traces(marker=dict(size=25))
+    
+    # Customize layout
+    fig.update_layout(
+        title=f'Progress of Cadences in {composer}: {title}',
+        legend=dict(
+            title_text="Cadence Type",
+            orientation="v",
+            yanchor="bottom",
+            y=-0.5,
+            xanchor="right",
+            x=1
+        )
+    )
+    
     return fig
 
 # cadence form
@@ -2425,7 +3013,7 @@ if st.sidebar.checkbox("Explore Cadences"):
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
         title = piece.metadata['title']
-        composer = title = piece.metadata['composer']
+        composer = piece.metadata['composer']
         cadences = piece.cadences()
         cadences['Title'] = title
         cadences['Composer'] = composer
@@ -2435,7 +3023,7 @@ if st.sidebar.checkbox("Explore Cadences"):
         total_cads = grouped_cadences['Count'].sum()
         grouped_cadences = grouped_cadences[grouped_cadences['Count'] != 0]
         grouped_cadences.reset_index(drop=True, inplace=True)
-        grouped_cadences
+    
         # the full table of cad
         if st.checkbox("Show Full Cadence Table"):
             # cadences = piece.cadences()
@@ -2455,60 +3043,239 @@ if st.sidebar.checkbox("Explore Cadences"):
             #     output = piece.verovioCadences(df = filtered_cadences)
             #     components.html(output)
         # summary of tone and type
+        # Your existing chart creation code remains unchanged
         if st.checkbox("Chart of Cadences by Tone and Type"):
-            # cadences = piece.cadences()
+            st.subheader("Chart of Cadence Tones and Types") 
             grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='Count')
-              # Create the stacked bar chart
-            cad_chart = px.bar(grouped, 
-                        x='Tone',            # The tones go on the x-axis
-                        y='Count',           # The counts go on the y-axis
-                        color='CadType',  
-                        # color_discrete_map=color_map,
-                        # Color the bars by CVF type
-                        title='Cadence Tones and Types',
-                        barmode='stack')     # This makes it stacked instead of grouped
-
             
-            cad_chart.update_layout(xaxis_title="Cadence Final Tone", 
-                            yaxis_title="Count",
-                            font=dict(family="Arial", size=14),
-                            title_font_size=20,
-                            title_x=0.5,
-                            width = 1000,
-                            height=400,
-                            legend=dict(orientation="v")
-                            )
-
-            cad_chart.update_traces(
-                hovertemplate='<b>%{x}</b><br>CVF: %{customdata[0]}<br>Count: %{y}<br> Scaled: %{customdata[1]}'
+            # Create the chart with explicit color preservation
+            cad_chart = px.bar(
+                grouped,
+                x='Tone',
+                y='Count',
+                color='CadType',
+                barmode='stack',
+                title=f"Cadence Tones and Types in {composer}, {title}",
+                template="plotly_white"  # Ensures consistent styling
             )
-            st.subheader("Summary of Cadences by Tone and Type")
-            st.plotly_chart(cad_chart, use_container_width=True)
-        # radar plots
+            
+            # Enhance layout for better preservation
+            cad_chart.update_layout(
+                xaxis_title="Cadence Final Tone",
+                yaxis_title="Count",
+                font=dict(family="Arial", size=14),
+                title_font_size=20,
+                title_x=0.5,
+                width=1000,
+                height=400,
+                legend=dict(orientation="v"),
+                showlegend=True,
+                title=dict(
+                    text=f"Cadence Tones and Types in {composer}, {title}",
+                    x=0.5,  # Centers the title horizontally
+                    xanchor='center',  # Ensures proper centering
+                    font=dict(size=20)  # Maintains title size),
+                    )
+            )
+            
+            # Create container for chart and button
+            container = st.container()
+            col1, col2 = container.columns([10, 2])
+            
+            # Plot chart in first column
+            with col1:
+                st.plotly_chart(cad_chart, use_container_width=True)
+                
+            # Add download button in second column
+            with col2:
+                @st.cache_data(ttl=3600)  # Cache for 1 hour
+                def get_html_content():
+                    """Convert Plotly figure to HTML string with preserved colors"""
+                    return pio.to_html(
+                        cad_chart,
+                        include_plotlyjs='cdn',
+                        full_html=False,
+                        config=dict(
+                            displayModeBar=True,  # Enable toolbar
+                            responsive=True,
+                            scrollZoom=True,
+                            displaylogo=False,
+                            modeBarButtonsToRemove=['lasso2d', 'select2d'],
+                            title=f"Cadence Tones and Types in {composer}, {title}"
+                        )
+                    )
+        
+                st.markdown("")     
+                if st.button('📥 Prepare Chart for Download'):
+                    html_content = get_html_content()
+                    st.download_button(
+                        label="Download the Chart",
+                        data=html_content,
+                        file_name=f"{composer}_{title}_cadence_chart.html",
+                        mime="text/html"
+                    )
+
+        # Radar plots
         if st.checkbox("Show Radar Plot"):
-            st.subheader("Radar Plot of Cadences") 
-            radar_new = cadence_radar(cadences)
-            st.plotly_chart(radar_new, use_container_width=True)
-        # if st.checkbox("Show Basic Radar Plot"):
-        #     st.subheader("Basic Radar Plot")    
-        #     radar = piece.cadenceRadarPlot(combinedType=False, displayAll=False, renderer='streamlit')
-        #     st.plotly_chart(radar, use_container_width=True)
-        # if st.checkbox("Show Advanced Radar Plot"):
-        #     st.subheader("Advanced Radar Plot")    
-        #     radar = piece.cadenceRadarPlot(combinedType=True, displayAll=True, renderer='streamlit')
-        #     st.plotly_chart(radar, use_container_width=True)
+            st.subheader("Radar Plot of Cadences")
+            
+            # Create container for chart and button
+            container = st.container()
+            col1, col2 = container.columns([10, 2])
+            
+            # Plot chart in first column
+            with col1:
+                radar_new = cadence_radar(cadences)
+                
+                # Explicitly set colors for each trace
+                for i, trace in enumerate(radar_new.data):
+                    trace.update(
+                        marker=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)]),
+                        line=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)])
+                    )
+                
+                radar_new.update_layout(
+                    template="plotly_white",
+                    showlegend=True,
+                    legend=dict(orientation="v",  # Changed from 'h' to 'v' for vertical layout
+                                yanchor="middle",  # Changed from 'bottom' to 'middle'
+                                y=0.5,  # Changed from -0.7 to 0.5
+                                xanchor="right",  # Keep right alignment
+                                x=1.05,  # Keep right offset
+                                title={'text': 'Titles',
+                                    'side': 'top',
+                                    'font_size': 12},
+                                    itemsizing='constant',
+                                    itemwidth=30,
+                                        bordercolor="black",
+                                        borderwidth=1,
+                                        bgcolor="rgba(255,255,255,0.8)"
+                                )
+                )
+                st.plotly_chart(radar_new, use_container_width=True)
+                
+            # Add download button in second column
+            with col2:
+                @st.cache_data(ttl=3600)
+                def get_radar_html():
+                    """Convert radar plot to HTML with preserved colors and interactivity"""
+                    # Create a complete HTML file with embedded styles
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Radar Plot - {composer} - {title}</title>
+                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                        <style>
+                            body {{
+                                margin: 0;
+                                padding: 20px;
+                                font-family: Arial, sans-serif;
+                            }}
+                            .chart-container {{
+                                width: 100%;
+                                height: 600px;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="chart-container" id="chart"></div>
+                        <script>
+                            var figure = {radar_new.to_json()};
+                            Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                responsive: true,
+                                displayModeBar: true,
+                                displaylogo: false
+                            }});
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    return html_content
+                    
+                if st.button('📥 Prepare Radar Plot for Download'):
+                    radar_html = get_radar_html()
+                    st.download_button(
+                        label="Download Radar Plot",
+                        data=radar_html,
+                        file_name=f"{composer}_{title}_radar_plot.html",
+                        mime="text/html"
+                    )
+
+        # Progress plot
         if st.checkbox("Show Progress Plot"):
-            st.subheader("Progress Plot")
-            # cadence_progress(cadences, composer, title)
-            st.plotly_chart(cadence_progress(cadences, composer, title), use_container_width=True)
-        # if st.checkbox("Show Basic Progress Plot"):
-        #     st.subheader("Basic Progress Plot")    
-        #     progress = piece.cadenceProgressPlot(includeType=False, renderer='streamlit')
-        #     st.pyplot(progress, use_container_width=True)
-        # if st.checkbox("Show Advanced Progress Plot"):
-        #     st.subheader("Advanced Progress Plot")    
-        #     progress = piece.cadenceProgressPlot(includeType=True, renderer='streamlit')
-        #     st.pyplot(progress, use_container_width=True)
+            st.subheader("Progress Plot of Cadences")
+            
+            # Create container for chart and button
+            container = st.container()
+            col1, col2 = container.columns([10, 2])
+            
+            # Plot chart in first column
+            with col1:
+                progress_plot = cadence_progress(cadences, composer, title)
+                
+                progress_plot.update_layout(
+                    # template="plotly_white",
+                    showlegend=True,
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=-0.3,
+                        xanchor="center",
+                        x=0.5
+                    )
+                )
+                st.plotly_chart(progress_plot, use_container_width=True)
+                
+            # Add download button in second column
+            with col2:
+                @st.cache_data(ttl=3600)
+                def get_progress_html():
+                    """Convert progress plot to HTML with preserved colors and interactivity"""
+                    # Create a complete HTML file with embedded styles
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Progress Plot - {composer} - {title}</title>
+                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                        <style>
+                            body {{
+                                margin: 0;
+                                padding: 20px;
+                                font-family: Arial, sans-serif;
+                            }}
+                            .chart-container {{
+                                width: 100%;
+                                height: 600px;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="chart-container" id="chart"></div>
+                        <script>
+                            var figure = {progress_plot.to_json()};
+                            Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                responsive: true,
+                                displayModeBar: true,
+                                displaylogo: false
+                            }});
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    return html_content
+                    
+                if st.button('📥 Prepare Progress Plot for Download'):
+                    progress_html = get_progress_html()
+                    st.download_button(
+                        label="Download Progress Plot",
+                        data=progress_html,
+                        file_name=f"{composer}_{title}_progress_plot.html",
+                        mime="text/html"
+                    )
     # corpus
     elif corpus_length >= 2:
         func = ImportedPiece.cadences
@@ -2536,39 +3303,170 @@ if st.sidebar.checkbox("Explore Cadences"):
             #     components.html(output)
         # summary of tone and type
         if st.checkbox("Chart of Cadences by Tone and Type"):
+            st.subheader("Chart of Cadence Tones and Types") 
             grouped = cadences.groupby(['Tone', 'CadType']).size().reset_index(name='Count')
-              # Create the stacked bar chart
-            cad_chart = px.bar(grouped, 
-                        x='Tone',            # The tones go on the x-axis
-                        y='Count',           # The counts go on the y-axis
-                        color='CadType',  
-                        # color_discrete_map=color_map,
-                        # Color the bars by CVF type
-                        title='Cadence Tones and Types',
-                        barmode='stack')     # This makes it stacked instead of grouped
-
-            cad_chart.update_layout(xaxis_title="Cadence Final Tone", 
-                            yaxis_title="Count",
-                            font=dict(family="Arial", size=14),
-                            title_font_size=20,
-                            title_x=0.5,
-                            width = 1000,
-                            height=400,
-                            legend=dict(orientation="v")
-                            )
-
-            cad_chart.update_traces(
-                hovertemplate='<b>%{x}</b><br>CVF: %{customdata[0]}<br>Count: %{y}<br> Scaled: %{customdata[1]}'
+            
+            # Create the chart with explicit color preservation
+            cad_chart = px.bar(
+                grouped,
+                x='Tone',
+                y='Count',
+                color='CadType',
+                barmode='stack',
+                title=f"Cadence Tones and Types in Corpus",
+                template="plotly_white"  # Ensures consistent styling
             )
             
-            st.subheader("Summary of Cadences by Tone and Type")
-            st.plotly_chart(cad_chart, use_container_width=True)
+            # Enhance layout for better preservation
+            cad_chart.update_layout(
+                xaxis_title="Cadence Final Tone",
+                yaxis_title="Count",
+                font=dict(family="Arial", size=14),
+                title_font_size=20,
+                title_x=0.5,
+                width=1000,
+                height=400,
+                legend=dict(orientation="v"),
+                showlegend=True,
+                title=dict(
+                    text=f"Cadence Tones and Types in Corpus",
+                    x=0.5,  # Centers the title horizontally
+                    xanchor='center',  # Ensures proper centering
+                    font=dict(size=20)  # Maintains title size),
+                    )
+            )
             
+            # Create container for chart and button
+            container = st.container()
+            col1, col2 = container.columns([10, 2])
+            
+            # Plot chart in first column
+            with col1:
+                st.plotly_chart(cad_chart, use_container_width=True)
+                
+            # Add download button in second column
+            with col2:
+                @st.cache_data(ttl=3600)  # Cache for 1 hour
+                def get_html_content():
+                    """Convert Plotly figure to HTML string with preserved colors"""
+                    return pio.to_html(
+                        cad_chart,
+                        include_plotlyjs='cdn',
+                        full_html=False,
+                        config=dict(
+                            displayModeBar=True,  # Enable toolbar
+                            responsive=True,
+                            scrollZoom=True,
+                            displaylogo=False,
+                            modeBarButtonsToRemove=['lasso2d', 'select2d'],
+                            title=f"Cadence Tones and Types in Corpus"
+                        )
+                    )
+        
+                st.markdown("")     
+                if st.button('📥 Prepare Chart for Download'):
+                    html_content = get_html_content()
+                    st.download_button(
+                        label="Download the Chart",
+                        data=html_content,
+                        file_name=f"corpus_cadence_chart.html",
+                        mime="text/html"
+                    )
         # radar plots
         if st.checkbox('Show Radar Plot'):
-            st.subheader("Radar Plot of Cadences") 
-            radar_new = cadence_radar(cadences)
-            st.plotly_chart(radar_new, use_container_width=True)
+            st.subheader("Combined Radar Plot of Cadences in Corpus") 
+            # Create container for chart and button
+            container = st.container()
+            col1, col2 = container.columns([10, 2])
+            
+            # Plot chart in first column
+            with col1:
+                radar_new = cadence_radar(cadences)
+                
+                # Explicitly set colors for each trace
+                for i, trace in enumerate(radar_new.data):
+                    trace.update(
+                        marker=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)]),
+                        line=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)])
+                    )
+                
+                radar_new.update_layout(
+                    template="plotly_white",
+                    showlegend=True,
+                    legend=dict(orientation="v",  # Changed from 'h' to 'v' for vertical layout
+                                yanchor="middle",  # Changed from 'bottom' to 'middle'
+                                y=0.5,  # Changed from -0.7 to 0.5
+                                xanchor="right",  # Keep right alignment
+                                x=1.05,  # Keep right offset
+                                title={'text': 'Titles',
+                                    'side': 'top',
+                                    'font_size': 12},
+                                    itemsizing='constant',
+                                    itemwidth=30,
+                                        bordercolor="black",
+                                        borderwidth=1,
+                                        bgcolor="rgba(255,255,255,0.8)"
+                                ),
+                    title=dict(text=f"Cadences in Corpus",
+                            x=0.5,  # Centers the title horizontally
+                            xanchor='center',  # Ensures proper centering
+                            font=dict(size=20)  # Maintains title size),
+                            )
+                )
+                st.plotly_chart(radar_new, use_container_width=True)
+                
+            # Add download button in second column
+            with col2:
+                @st.cache_data(ttl=3600)
+                def get_radar_html():
+                    """Convert radar plot to HTML with preserved colors and interactivity"""
+                    # Create a complete HTML file with embedded styles
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Radar Plot in Corpus</title>
+                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                        <style>
+                            body {{
+                                margin: 0;
+                                padding: 40px;
+                                font-family: Arial, sans-serif;
+                            }}
+                            .chart-container {{
+                                width: 100%;
+                                height: 600px;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="chart-container" id="chart"></div>
+                        <script>
+                            var figure = {radar_new.to_json()};
+                            Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                responsive: true,
+                                displayModeBar: true,
+                                displaylogo: false
+                            }});
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    return html_content
+                    
+                if st.button('📥 Download Radar Plot'):
+                    radar_html = get_radar_html()
+                    st.download_button(
+                        label="Download Radar Plot",
+                        data=radar_html,
+                        file_name=f"corpus_radar_plot.html",
+                        mime="text/html"
+                    )
+            # old code
+            # radar_new = cadence_radar(cadences)
+            # st.plotly_chart(radar_new, use_container_width=True)
+        # old radar from Intervals
         # if st.checkbox("Show Basic Radar Plot"):
         #     st.subheader("Radar Plot of Cadences") 
         #     # radar = st.session_state.cadence_radar(cadences)
@@ -2579,13 +3477,87 @@ if st.sidebar.checkbox("Explore Cadences"):
         #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
         #     st.plotly_chart(radar, use_container_width=True)
         if st.checkbox("Show Progress Charts"):
+            st.subheader("Progress Plot of Cadences for each Piece in Corpus")
             titles = cadences_metadata["Title"].unique()
-            for title in titles:
+            for idx, title in enumerate(titles):
                 filtered_cadences = cadences_metadata[cadences_metadata['Title'] == title]
                 composer = filtered_cadences.iloc[1]['Composer']
-                # print('Cadences Progress Plot for' + title)
+                
+                # Create container for chart and button
+                container = st.container()
+                col1, col2 = container.columns([10, 2])
+                
+                # Plot chart in first column
+                with col1:
+                    progress_plot = cadence_progress(filtered_cadences, composer, title)
+                    
+                    progress_plot.update_layout(
+                        template="plotly_white",
+                        showlegend=True,
+                        legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=-0.3,
+                            xanchor="center",
+                            x=0.5
+                        )
+                    )
+                    st.plotly_chart(progress_plot, use_container_width=True)
+                
+                # Add download button in second column
+                with col2:
+                    @st.cache_data(ttl=3600)
+                    def get_progress_html(progress_plot, composer, title):
+                        """Convert progress plot to HTML with preserved colors and interactivity"""
+                        # Create a complete HTML file with embedded styles
+                        html_content = f"""
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                        <meta charset="utf-8">
+                        <title>Progress Plot - {composer} - {title}</title>
+                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                        <style>
+                        body {{
+                            margin: 0;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                        }}
+                        .chart-container {{
+                            width: 100%;
+                            height: 600px;
+                        }}
+                        </style>
+                        </head>
+                        <body>
+                        <div class="chart-container" id="chart"></div>
+                        <script>
+                        var figure = {progress_plot.to_json()};
+                        Plotly.newPlot('chart', figure.data, figure.layout, {{
+                            responsive: true,
+                            displayModeBar: true,
+                            displaylogo: false
+                        }});
+                        </script>
+                        </body>
+                        </html>
+                        """
+                        return html_content
+
+                    # Inside your loop:
+                    with col2:
+                        if st.button('📥 Prepare This Progress Plot for Download', key=f"download_{idx}"):
+                            progress_html = get_progress_html(progress_plot, composer, title)
+                            st.download_button(
+                                label="Download This Progress Plot",
+                                data=progress_html,
+                                file_name=f"{composer}_{title}_progress_plot.html",
+                                mime="text/html"
+                            )
+                                
                 # cadence_progress(filtered_cadences, composer, title)
-                st.plotly_chart(cadence_progress(filtered_cadences, composer, title), use_container_width=True)
+                # st.plotly_chart(cadence_progress(filtered_cadences, composer, title), use_container_width=True)
+        # old progress from intervals
         # if st.checkbox("Basic Progress Chart"):    
         #     st.subheader("Basic Progress Chart")
         #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
@@ -2602,14 +3574,70 @@ if st.sidebar.checkbox("Explore Model Finder"):
         st.write("Please select at least two pieces to compare")
     elif corpus_length > 1:
         corpus = CorpusBase(corpus_list)
-        with st.form("Model Finder Settings"):
-            length_choice = st.number_input('Select ngram Length', value=4, step=1)
-            submitted = st.form_submit_button("Submit")
-            if submitted:
-                soggetto_cross_plot = corpus.modelFinder(n=length_choice)
-                st.dataframe(soggetto_cross_plot)
-                fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
-                st.plotly_chart(fig)
-            else:
-                pass
+        # Initialize session state
+# if 'ready_to_download' not in st.session_state:
+#     st.session_state.ready_to_download = False
+
+# Main form for settings
+    with st.form("Model Finder Settings"):
+        length_choice = st.number_input('Select ngram Length', value=4, step=1)
+        
+        # Plot section
+        soggetto_cross_plot = corpus.modelFinder(n=length_choice)
+        st.dataframe(soggetto_cross_plot)
+        fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
+        
+        if st.form_submit_button('Submit'):
+            # Prepare data for download but don't show button yet
+            st.session_state.plot_data = soggetto_cross_plot
+        st.plotly_chart(fig)
+        
+
+    # Separate section for download
+    if hasattr(st.session_state, 'plot_data'):
+        def get_model_html():
+            """Convert progress plot to HTML with preserved colors and interactivity"""
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Model Finder Crossplot</title>
+                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                <style>
+                    body {{
+                        margin: 0;
+                        padding: 20px;
+                        font-family: Arial, sans-serif;
+                    }}
+                    .chart-container {{
+                        width: 100%;
+                        height: 600px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="chart-container" id="chart"></div>
+                <script>
+                    var figure = {fig.to_json()};
+                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                        responsive: true,
+                        displayModeBar: true,
+                        displaylogo: false
+                    }});
+                </script>
+            </body>
+            </html>
+            """
+            return html_content
+        
+        html_content = get_model_html()
+        st.download_button(
+            label="Download the Chart",
+            data=html_content,
+            file_name=f"model_finder.html",
+            mime="text/html"
+        )
+    else:
+        pass
    
