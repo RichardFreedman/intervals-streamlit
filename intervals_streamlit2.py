@@ -2302,7 +2302,6 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     har = filtered_har.data.copy()  
                     if interval_kinds[select_kind] == 'q':
                         # remove rests
-                        har = filtered_har
                         har_interval_counts = har.groupby(['Composer', 'Title', 'Voices', 'Interval']).size().reset_index(name='Count')
                         har_int_counts_no_rest = har_interval_counts[har_interval_counts['Interval'] != 'Rest']
                         # apply the categorical list and sort.
