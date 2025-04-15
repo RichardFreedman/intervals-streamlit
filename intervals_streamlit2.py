@@ -1008,7 +1008,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     with col2:
                         # @st.cache_data(ttl=3600)
                         def get_nr_html():
-                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            """Convert notes plot to HTML with preserved colors and interactivity"""
                             # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
@@ -1204,7 +1204,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     with col2:
                         # @st.cache_data(ttl=3600)
                         def get_nr_html():
-                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            """Convert dur plot to HTML with preserved colors and interactivity"""
                             # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
@@ -1301,7 +1301,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     with col2:
                         # @st.cache_data(ttl=3600)
                         def get_nr_html():
-                            """Convert progress plot to HTML with preserved colors and interactivity"""
+                            """Convert nr plot to HTML with preserved colors and interactivity"""
                             # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
@@ -1875,7 +1875,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         with col2:
                             # @st.cache_data(ttl=3600)
                             def get_mel_html():
-                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                """Convert dur plot to HTML with preserved colors and interactivity"""
                                 # Create a complete HTML file with embedded styles
                                 html_content = f"""
                                 <!DOCTYPE html>
@@ -1987,7 +1987,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         with col2:
                             # @st.cache_data(ttl=3600)
                             def get_mel_html():
-                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                """Convert mel plot to HTML with preserved colors and interactivity"""
                                 # Create a complete HTML file with embedded styles
                                 html_content = f"""
                                 <!DOCTYPE html>
@@ -2234,7 +2234,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         with col2:
                             # @st.cache_data(ttl=3600)
                             def get_har_html():
-                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                """Convert har plot to HTML with preserved colors and interactivity"""
                                 # Create a complete HTML file with embedded styles
                                 html_content = f"""
                                 <!DOCTYPE html>
@@ -2346,7 +2346,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         with col2:
                             # @st.cache_data(ttl=3600)
                             def get_har_html():
-                                """Convert progress plot to HTML with preserved colors and interactivity"""
+                                """Convert har plot to HTML with preserved colors and interactivity"""
                                 # Create a complete HTML file with embedded styles
                                 html_content = f"""
                                 <!DOCTYPE html>
@@ -2987,7 +2987,7 @@ def cadence_radar(cadences):
     return fig
 # progress
 
-custom_tone_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  # Your desired order
+custom_tone_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  
 
 
 def cadence_progress(cadences, composer, title):
@@ -3031,7 +3031,16 @@ def cadence_progress(cadences, composer, title):
     color_mapping['Abandoned Phrygian'] = '#FFE5CC'    # Much lighter orange
     color_mapping['Abandoned Authentic'] = '#FFCCCC'  # Much lighter red
     color_mapping['Abandoned Phrygian Clausula Vera'] = '#FFCCFF' # Much lighter magenta
+
+    # def cadence_progress(cadences, composer, title):
+    # Ensure the Tone column is categorical with correct ordering
+    cadences['Tone'] = pd.Categorical(
+        cadences['Tone'],
+        categories=custom_tone_order,
+        ordered=True
+    )
     
+    # Create figure with explicit category ordering
     fig = px.scatter(
         cadences,
         x='Progress',
@@ -3039,6 +3048,21 @@ def cadence_progress(cadences, composer, title):
         color='CadType',
         color_discrete_map=color_mapping,
         category_orders={'Tone': custom_tone_order}
+    )
+    
+    # Configure Y-axis to show E- at bottom
+    fig.update_layout(
+        yaxis=dict(
+            categoryorder='array',
+            categoryarray=custom_tone_order,
+            autorange=True,
+            fixedrange=True,
+            scaleanchor='y',
+            scaleratio=1,
+            showgrid=True,
+            showticklabels=True
+        ),
+        yaxis_range=[None, None]  # Allow Plotly to determine range
     )
     
     # Update marker properties
@@ -3058,6 +3082,33 @@ def cadence_progress(cadences, composer, title):
     )
     
     return fig
+    
+    # fig = px.scatter(
+    #     cadences,
+    #     x='Progress',
+    #     y='Tone',
+    #     color='CadType',
+    #     color_discrete_map=color_mapping,
+    #     category_orders={'Tone': custom_tone_order}
+    # )
+    
+    # # Update marker properties
+    # fig.update_traces(marker=dict(size=25))
+    
+    # # Customize layout
+    # fig.update_layout(
+    #     title=f'Progress of Cadences in {composer}: {title}',
+    #     legend=dict(
+    #         title_text="Cadence Type",
+    #         orientation="v",
+    #         yanchor="bottom",
+    #         y=-0.5,
+    #         xanchor="right",
+    #         x=1
+    #     )
+    # )
+    
+    # return fig
 
 # cadence form
 if st.sidebar.checkbox("Explore Cadences"):
