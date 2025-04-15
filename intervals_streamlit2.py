@@ -1839,10 +1839,11 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         mel_interval_counts = mel.groupby(['Composer', 'Title', 'Voice', 'Interval']).size().reset_index(name='Count')
                         # remove rests
                         mel_int_counts_no_rest = mel_interval_counts[mel_interval_counts['Interval'] != 'Rest']
-                        mel_int_counts_no_rest['Interval'] = mel_int_counts_no_rest['Interval'].astype('int64')
+                        # mel_int_counts_no_rest['Interval'] = mel_int_counts_no_rest['Interval'].astype('str')
                         # apply the categorical list and sort.  
                         mel_int_counts_no_rest['Interval'] = pd.CategoricalIndex(mel_int_counts_no_rest['Interval'], categories=interval_order_quality, ordered=True)
                         sorted_mel = mel_int_counts_no_rest.sort_values('Interval').reset_index(drop=True)
+                        # st.dataframe(sorted_mel)
                     else:
                         mel_interval_counts = mel.groupby(['Composer', 'Title', 'Voice', 'Interval']).size().reset_index(name='Count')
                         # remove rests
@@ -1851,102 +1852,103 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         # sorting
                         sorted_mel = mel_int_counts_no_rest.sort_values(by='Interval', ascending=True)
                         
-                        # make plot
-                        titles = sorted_mel['Title'].unique()
-                        mel_chart = px.bar(sorted_mel, 
-                                        x='Interval', 
-                                        y='Count',
-                                        color="Voice",
-                                        title=f"Distribution of Intervals in {composer}, {title}")
-                        mel_chart.update_layout(xaxis_title="Interval", 
-                                                yaxis_title="Count",
-                                                legend_title="Voice")
-                        # and show results
-                        pio.templates.default = 'plotly'
+                    # make plot
+                    titles = sorted_mel['Title'].unique()
+                    mel_chart = px.bar(sorted_mel, 
+                                    x='Interval', 
+                                    y='Count',
+                                    color="Voice",
+                                    title=f"Distribution of Intervals in {composer}, {title}")
+                    mel_chart.update_layout(xaxis_title="Interval", 
+                                            yaxis_title="Count",
+                                            legend_title="Voice")
+                    # and show results
+                    pio.templates.default = 'plotly'
 
-                        container = st.container()
-                        col1, col2 = container.columns([10, 2])
-                        
-                        # Plot chart in first column
-                        with col1:
-                            st.plotly_chart(mel_chart, use_container_width=True)
-                            
-                        # Add download button in second column
-                        with col2:
-                            # @st.cache_data(ttl=3600)
-                            def get_mel_html():
-                                """Convert dur plot to HTML with preserved colors and interactivity"""
-                                # Create a complete HTML file with embedded styles
-                                html_content = f"""
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Melodic Interval Chart - {composer} - {title}</title>
-                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                    <style>
-                                        body {{
-                                            margin: 0;
-                                            padding: 20px;
-                                            font-family: Arial, sans-serif;
-                                        }}
-                                        .chart-container {{
-                                            width: 100%;
-                                            height: 600px;
-                                        }}
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="chart-container" id="chart"></div>
-                                    <script>
-                                        var figure = {mel_chart.to_json()};
-                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                            responsive: true,
-                                            displayModeBar: true,
-                                            displaylogo: false
-                                        }});
-                                    </script>
-                                </body>
-                                </html>
-                                """
-                                return html_content
-                        
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
                     
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(mel_chart, use_container_width=True)
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_mel_html():
+                            """Convert dur plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Melodic Interval Chart - {composer} - {title}</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {mel_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
                     
-                            st.markdown("")     
-                            if st.button('📥 Prepare Melodic Chart for Download'):
-                                html_content = get_mel_html()
-                                st.download_button(
-                                    label="Download the Chart",
-                                    data=html_content,
-                                    file_name=f"{composer}_{title}_mel_chart.html",
-                                    mime="text/html"
-                                )
-
-
-                        if st.checkbox("Show Table of Melodic Intervals"):
-                            st.dataframe(sorted_mel, use_container_width = True)
-                            composer = mel.iloc[0]['Composer']
-                            title = mel.iloc[0]['Title']
-
+                
+                
+                        st.markdown("")     
+                        if st.button('📥 Prepare Melodic Chart for Download'):
+                            html_content = get_mel_html()
                             st.download_button(
-                                label="Download Filtered Melodic Data as CSV",
-                                data=filtered_mel.data.to_csv(),
-                                file_name = f'{composer}_{title}_melodic_intervals.csv',
-                                mime='text/csv',
-                                key=5,
-                                )
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"{composer}_{title}_mel_chart.html",
+                                mime="text/html"
+                            )
+
+
+                    if st.checkbox("Show Table of Melodic Intervals"):
+                        st.dataframe(sorted_mel, use_container_width = True)
+                        composer = mel.iloc[0]['Composer']
+                        title = mel.iloc[0]['Title']
+
+                        st.download_button(
+                            label="Download Filtered Melodic Data as CSV",
+                            data=filtered_mel.data.to_csv(),
+                            file_name = f'{composer}_{title}_melodic_intervals.csv',
+                            mime='text/csv',
+                            key=5,
+                            )
                 # # for corpus
                 elif corpus_length > 1:
                     mel = filtered_mel.data.copy()  
                     if interval_kinds[select_kind] == 'q':
                         # remove rests
-                        mel = filtered_mel
+                        # mel = filtered_mel
                         mel_interval_counts = mel.groupby(['Composer', 'Title', 'Voice', 'Interval']).size().reset_index(name='Count')
                         mel_int_counts_no_rest = mel_interval_counts[mel_interval_counts['Interval'] != 'Rest']
                         # apply the categorical list and sort.
                         mel_int_counts_no_rest['Interval'] = pd.CategoricalIndex(mel_int_counts_no_rest['Interval'], categories=interval_order_quality, ordered=True)
                         sorted_mel = mel_int_counts_no_rest.sort_values('Interval').reset_index(drop=True)
+                        # st.dataframe(sorted_mel)
                     else:
                         mel_interval_counts = mel.groupby(['Composer', 'Title', 'Voice', 'Interval']).size().reset_index(name='Count')
                         # remove rests
@@ -1954,95 +1956,95 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         # sorting
                         sorted_mel = mel_interval_counts_no_rest.sort_values(by='Interval', ascending=True)
 
-                        # make plot
-                        color_grouping = st.radio(
-                            "Select Color Grouping",
-                            ['Composer', 'Title', 'Voice'],
-                            index=0,  # Pre-select the first option (default)
-                            horizontal=True,  # Display options horizontally
-                            captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
-                        )
-                        titles = sorted_mel['Title'].unique()
-                        mel_chart = px.bar(sorted_mel, 
-                                        x='Interval', 
-                                        y='Count',
-                                        color=color_grouping,
-                                        title="Distribution of Intervals in Corpus")
-                        mel_chart.update_layout(xaxis_title="Interval", 
-                                                yaxis_title="Count",
-                                                legend_title=color_grouping)
+                    # make plot
+                    color_grouping = st.radio(
+                        "Select Color Grouping",
+                        ['Composer', 'Title', 'Voice'],
+                        index=0,  # Pre-select the first option (default)
+                        horizontal=True,  # Display options horizontally
+                        captions=["Color by Composer", "Color by Title", "Color by Voice"]  # Add captions
+                    )
+                    titles = sorted_mel['Title'].unique()
+                    mel_chart = px.bar(sorted_mel, 
+                                    x='Interval', 
+                                    y='Count',
+                                    color=color_grouping,
+                                    title="Distribution of Intervals in Corpus")
+                    mel_chart.update_layout(xaxis_title="Interval", 
+                                            yaxis_title="Count",
+                                            legend_title=color_grouping)
+                    # and show results
+
                         # and show results
+                    pio.templates.default = 'plotly'
 
-                         # and show results
-                        pio.templates.default = 'plotly'
-
-                        container = st.container()
-                        col1, col2 = container.columns([10, 2])
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
+                    
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(mel_chart, use_container_width=True)
                         
-                        # Plot chart in first column
-                        with col1:
-                            st.plotly_chart(mel_chart, use_container_width=True)
-                            
-                        # Add download button in second column
-                        with col2:
-                            # @st.cache_data(ttl=3600)
-                            def get_mel_html():
-                                """Convert mel plot to HTML with preserved colors and interactivity"""
-                                # Create a complete HTML file with embedded styles
-                                html_content = f"""
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Corpus Melodic Interval Chart </title>
-                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                    <style>
-                                        body {{
-                                            margin: 0;
-                                            padding: 20px;
-                                            font-family: Arial, sans-serif;
-                                        }}
-                                        .chart-container {{
-                                            width: 100%;
-                                            height: 600px;
-                                        }}
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="chart-container" id="chart"></div>
-                                    <script>
-                                        var figure = {mel_chart.to_json()};
-                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                            responsive: true,
-                                            displayModeBar: true,
-                                            displaylogo: false
-                                        }});
-                                    </script>
-                                </body>
-                                </html>
-                                """
-                                return html_content
-                            
-                            st.markdown("")     
-                            if st.button('📥 Prepare Melodic Chart for Download'):
-                                html_content = get_mel_html()
-                                st.download_button(
-                                    label="Download the Chart",
-                                    data=html_content,
-                                    file_name=f"corpus_mel_chart.html",
-                                    mime="text/html"
-                                )
-
-                        if st.checkbox("Show Table of Melodic Intervals"):
-                            st.dataframe(sorted_mel, use_container_width = True)
-                            
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_mel_html():
+                            """Convert mel plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Corpus Melodic Interval Chart </title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {mel_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                        
+                        st.markdown("")     
+                        if st.button('📥 Prepare Melodic Chart for Download'):
+                            html_content = get_mel_html()
                             st.download_button(
-                                label="Download Filtered Melodic Data as CSV",
-                                data=filtered_mel.data.to_csv(),
-                                file_name = f'corpus_melodic_intervals.csv',
-                                mime='text/csv',
-                                key=6,
-                                )
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"corpus_mel_chart.html",
+                                mime="text/html"
+                            )
+
+                    if st.checkbox("Show Table of Melodic Intervals"):
+                        st.dataframe(sorted_mel, use_container_width = True)
+                        
+                        st.download_button(
+                            label="Download Filtered Melodic Data as CSV",
+                            data=filtered_mel.data.to_csv(),
+                            file_name = f'corpus_melodic_intervals.csv',
+                            mime='text/csv',
+                            key=6,
+                            )
         
 # harmonic functions
 # @st.cache_data
@@ -2195,7 +2197,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         har_interval_counts = har.groupby(['Composer', 'Title', 'Voices', 'Interval']).size().reset_index(name='Count')
                         # remove rests
                         har_int_counts_no_rest = har_interval_counts[har_interval_counts['Interval'] != 'Rest']
-                        har_int_counts_no_rest['Interval'] = har_int_counts_no_rest['Interval'].astype('int64')
+                        # har_int_counts_no_rest['Interval'] = har_int_counts_no_rest['Interval'].astype('int64')
                         # apply the categorical list and sort.  
                         har_int_counts_no_rest['Interval'] = pd.CategoricalIndex(har_int_counts_no_rest['Interval'], categories=interval_order_quality, ordered=True)
                         sorted_har = har_int_counts_no_rest.sort_values('Interval').reset_index(drop=True)
@@ -2207,94 +2209,94 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         # sorting
                         sorted_har = har_int_counts_no_rest.sort_values(by='Interval', ascending=True)
                         
-                        # make plot
-                        titles = sorted_har['Title'].unique()
-                        har_chart = px.bar(sorted_har, 
-                                        x='Interval', 
-                                        y='Count',
-                                        color="Voices",
-                                        title="Distribution of Intervals in Corpus")
-                        har_chart.update_layout(xaxis_title="Interval", 
-                                                yaxis_title="Count",
-                                                legend_title="Voices")
-                        # and show results
-                        # and show results
-                        pio.templates.default = 'plotly'
+                    # make plot
+                    titles = sorted_har['Title'].unique()
+                    har_chart = px.bar(sorted_har, 
+                                    x='Interval', 
+                                    y='Count',
+                                    color="Voices",
+                                    title="Distribution of Intervals in Corpus")
+                    har_chart.update_layout(xaxis_title="Interval", 
+                                            yaxis_title="Count",
+                                            legend_title="Voices")
+                    # and show results
+                    # and show results
+                    pio.templates.default = 'plotly'
 
-                        container = st.container()
-                        col1, col2 = container.columns([10, 2])
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
+                    composer = har.iloc[0]['Composer']
+                    title = har.iloc[0]['Title']
+                    
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(har_chart, use_container_width=True)
+                        
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_har_html():
+                            """Convert har plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Harmonic Interval Chart - {composer} - {title}</title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {har_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                    
+                
+                
+                        st.markdown("")     
+                        if st.button('📥 Prepare Harmonic Chart for Download'):
+                            html_content = get_har_html()
+                            st.download_button(
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"{composer}_{title}_har_chart.html",
+                                mime="text/html"
+                            )
+
+
+                    if st.checkbox("Show Table of Harmonic Intervals"):
+                        st.dataframe(sorted_mel, use_container_width = True)
                         composer = har.iloc[0]['Composer']
                         title = har.iloc[0]['Title']
-                        
-                        # Plot chart in first column
-                        with col1:
-                            st.plotly_chart(har_chart, use_container_width=True)
-                            
-                        # Add download button in second column
-                        with col2:
-                            # @st.cache_data(ttl=3600)
-                            def get_har_html():
-                                """Convert har plot to HTML with preserved colors and interactivity"""
-                                # Create a complete HTML file with embedded styles
-                                html_content = f"""
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Harmonic Interval Chart - {composer} - {title}</title>
-                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                    <style>
-                                        body {{
-                                            margin: 0;
-                                            padding: 20px;
-                                            font-family: Arial, sans-serif;
-                                        }}
-                                        .chart-container {{
-                                            width: 100%;
-                                            height: 600px;
-                                        }}
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="chart-container" id="chart"></div>
-                                    <script>
-                                        var figure = {har_chart.to_json()};
-                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                            responsive: true,
-                                            displayModeBar: true,
-                                            displaylogo: false
-                                        }});
-                                    </script>
-                                </body>
-                                </html>
-                                """
-                                return html_content
-                        
-                    
-                    
-                            st.markdown("")     
-                            if st.button('📥 Prepare Harmonic Chart for Download'):
-                                html_content = get_har_html()
-                                st.download_button(
-                                    label="Download the Chart",
-                                    data=html_content,
-                                    file_name=f"{composer}_{title}_har_chart.html",
-                                    mime="text/html"
-                                )
 
-
-                        if st.checkbox("Show Table of Harmonic Intervals"):
-                            st.dataframe(sorted_mel, use_container_width = True)
-                            composer = har.iloc[0]['Composer']
-                            title = har.iloc[0]['Title']
-
-                            st.download_button(
-                                label="Download Filtered Melodic Data as CSV",
-                                data=filtered_har.data.to_csv(),
-                                file_name = f'{composer}_{title}_harmonic_intervals.csv',
-                                mime='text/csv',
-                                key=7,
-                                )
+                        st.download_button(
+                            label="Download Filtered Melodic Data as CSV",
+                            data=filtered_har.data.to_csv(),
+                            file_name = f'{composer}_{title}_harmonic_intervals.csv',
+                            mime='text/csv',
+                            key=7,
+                            )
                 # # for corpus
                 elif corpus_length > 1:
                     har = filtered_har.data.copy()  
@@ -2313,95 +2315,95 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         # sorting
                         sorted_har = har_interval_counts_no_rest.sort_values(by='Interval', ascending=True)
 
-                        # make plot
-                        color_grouping = st.radio(
-                            "Select Color Grouping",
-                            ['Composer', 'Title', 'Voices'],
-                            index=0,  # Pre-select the first option (default)
-                            horizontal=True,  # Display options horizontally
-                            captions=["Color by Composer", "Color by Title", "Color by Voices"]  # Add captions
-                        )
-                        titles = sorted_har['Title'].unique()
-                        har_chart = px.bar(sorted_har, 
-                                        x='Interval', 
-                                        y='Count',
-                                        color=color_grouping,
-                                        title="Distribution of Intervals in Corpus")
-                        har_chart.update_layout(xaxis_title="Interval", 
-                                                yaxis_title="Count",
-                                                legend_title=color_grouping)
-                
-                    # show results
-                    # and show results
-                        pio.templates.default = 'plotly'
+                    # make plot
+                    color_grouping = st.radio(
+                        "Select Color Grouping",
+                        ['Composer', 'Title', 'Voices'],
+                        index=0,  # Pre-select the first option (default)
+                        horizontal=True,  # Display options horizontally
+                        captions=["Color by Composer", "Color by Title", "Color by Voices"]  # Add captions
+                    )
+                    titles = sorted_har['Title'].unique()
+                    har_chart = px.bar(sorted_har, 
+                                    x='Interval', 
+                                    y='Count',
+                                    color=color_grouping,
+                                    title="Distribution of Intervals in Corpus")
+                    har_chart.update_layout(xaxis_title="Interval", 
+                                            yaxis_title="Count",
+                                            legend_title=color_grouping)
+            
+                # show results
+                # and show results
+                    pio.templates.default = 'plotly'
 
-                        container = st.container()
-                        col1, col2 = container.columns([10, 2])
+                    container = st.container()
+                    col1, col2 = container.columns([10, 2])
+                    
+                    # Plot chart in first column
+                    with col1:
+                        st.plotly_chart(har_chart, use_container_width=True)
                         
-                        # Plot chart in first column
-                        with col1:
-                            st.plotly_chart(har_chart, use_container_width=True)
-                            
-                        # Add download button in second column
-                        with col2:
-                            # @st.cache_data(ttl=3600)
-                            def get_har_html():
-                                """Convert har plot to HTML with preserved colors and interactivity"""
-                                # Create a complete HTML file with embedded styles
-                                html_content = f"""
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Corpus Harmonic Interval Chart </title>
-                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                    <style>
-                                        body {{
-                                            margin: 0;
-                                            padding: 20px;
-                                            font-family: Arial, sans-serif;
-                                        }}
-                                        .chart-container {{
-                                            width: 100%;
-                                            height: 600px;
-                                        }}
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="chart-container" id="chart"></div>
-                                    <script>
-                                        var figure = {har_chart.to_json()};
-                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                            responsive: true,
-                                            displayModeBar: true,
-                                            displaylogo: false
-                                        }});
-                                    </script>
-                                </body>
-                                </html>
-                                """
-                                return html_content
-                            
-                            st.markdown("")     
-                            if st.button('📥 Prepare Harmonic Chart for Download'):
-                                html_content = get_har_html()
-                                st.download_button(
-                                    label="Download the Chart",
-                                    data=html_content,
-                                    file_name=f"corpus_har_chart.html",
-                                    mime="text/html"
-                                )
-
-                        if st.checkbox("Show Table of Harmonic Intervals"):
-                            st.dataframe(sorted_har, use_container_width = True)
-                            
+                    # Add download button in second column
+                    with col2:
+                        # @st.cache_data(ttl=3600)
+                        def get_har_html():
+                            """Convert har plot to HTML with preserved colors and interactivity"""
+                            # Create a complete HTML file with embedded styles
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <title>Corpus Harmonic Interval Chart </title>
+                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                                <style>
+                                    body {{
+                                        margin: 0;
+                                        padding: 20px;
+                                        font-family: Arial, sans-serif;
+                                    }}
+                                    .chart-container {{
+                                        width: 100%;
+                                        height: 600px;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="chart-container" id="chart"></div>
+                                <script>
+                                    var figure = {har_chart.to_json()};
+                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
+                                        responsive: true,
+                                        displayModeBar: true,
+                                        displaylogo: false
+                                    }});
+                                </script>
+                            </body>
+                            </html>
+                            """
+                            return html_content
+                        
+                        st.markdown("")     
+                        if st.button('📥 Prepare Harmonic Chart for Download'):
+                            html_content = get_har_html()
                             st.download_button(
-                                label="Download Filtered Harmonic Data as CSV",
-                                data=filtered_mel.data.to_csv(),
-                                file_name = f'corpus_harmonic_intervals.csv',
-                                mime='text/csv',
-                                key=8,
-                                ) 
+                                label="Download the Chart",
+                                data=html_content,
+                                file_name=f"corpus_har_chart.html",
+                                mime="text/html"
+                            )
+
+                    if st.checkbox("Show Table of Harmonic Intervals"):
+                        st.dataframe(sorted_har, use_container_width = True)
+                        
+                        st.download_button(
+                            label="Download Filtered Harmonic Data as CSV",
+                            data=filtered_mel.data.to_csv(),
+                            file_name = f'corpus_harmonic_intervals.csv',
+                            mime='text/csv',
+                            key=8,
+                            ) 
 
 # function for ngram heatmap
 # @st.cache_data
