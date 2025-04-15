@@ -2840,95 +2840,154 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     mime='text/csv',
                     key=13,
                     )
+# def cadence_radar(cadences):
+#     # Define the category order for cad tones
+#     category_order = {
+#         'C': 0, 'D': 1, 'E-': 2, 'E': 3, 'F': 4, 'G': 5, 'A': 6, 'B-': 7
+#     }
+#     # Get all unique titles for this final
+#     titles = cadences['Title'].unique()
+#     # Create a list to store our count data
+#     count_data = []
+#     # For each title, count the occurrences of each tone
+#     for title in titles:
+#         title_data = cadences[cadences['Title'] == title]
+#         # Count occurrences of each Tone for this Title
+#         for tone in category_order.keys():
+#             count = len(title_data[title_data['Tone'] == tone])
+#             count_data.append({
+#                 'Title': title,
+#                 'Tone': tone,
+#                 'count': count
+#             })
+#     # Convert to DataFrame
+#     count_df = pd.DataFrame(count_data)
+#     count_df = count_df[count_df['count'] > 0]
+#     # calculate % for each cadence vs total number of cadences for each piece
+#     title_sums = count_df.groupby('Title')['count'].sum().reset_index()
+#     title_sums.rename(columns={'count': 'TitleSum'}, inplace=True)
+#     # Merge the sums back to the original DataFrame
+#     count_df = count_df.merge(title_sums, on='Title', how='left')
+#     # Calculate percentage
+#     count_df['Percentage'] = np.round((count_df['count'] / count_df['TitleSum']) * 100)
+#     # Create the radar plot with Plotly Express
+#     fig = px.line_polar(
+#         count_df, 
+#         r='Percentage',       
+#         theta='Tone', 
+#         line_close=True,
+#         color='Title',
+#         markers=True,
+#         category_orders={'Tone': sorted(category_order.keys(), key=lambda x: category_order[x])}
+#     )
+#     # Update traces to fill the area
+#     fig.update_traces(
+#         fill='toself',
+#         line=dict(width=2)
+#     )
+#     # Update layout with size control and legend positioning
+#     fig.update_layout(
+#         # Control the size of the plot
+#         width=800,  # Width in pixels
+#         height=600,  # Height in pixels
+#         # Position the legend
+#         legend=dict(
+#         orientation="v",  # Vertical layout
+#         yanchor="top",  # Vertical centering
+#         y=0.5,  # Vertical position
+#         xanchor="center",  # Right alignment
+#         # x=1,  # Offset from right edge
+#         title={
+#             'text': 'Titles',
+#             'side': 'top',
+#             'font_size': 12
+#         },
+#         itemsizing='constant',
+#         itemwidth=30,
+#         bordercolor="black",
+#         borderwidth=1,
+#         bgcolor="rgba(255,255,255,0.8)"
+#     ),
+#     # Add right margin to accommodate legend
+    
+#         # Add title
+#         title_text="Relative Distribution of Cadence Tones in Corpus",
+#         title_x=0.5,  # Center the title
+#         # Adjust margins if needed
+#         polar=dict(
+#             radialaxis=dict(
+#                 visible=True,
+#                 title='Percentage'
+#             )
+#         )
+#     )
+#     return fig
 def cadence_radar(cadences):
-    # Define the category order for cad tones
-    category_order = {
-        'C': 0, 'D': 1, 'E-': 2, 'E': 3, 'F': 4, 'G': 5, 'A': 6, 'B-': 7
+    # Define constants at function scope
+    CATEGORY_ORDER = {
+        'C': 0, 'D': 1, 'E-': 2, 'E': 3, 'F': 4,
+        'G': 5, 'A': 6, 'B-': 7
     }
-    # Get all unique titles for this final
+    
+    # Get unique titles and create base DataFrame
     titles = cadences['Title'].unique()
-    # Create a list to store our count data
-    count_data = []
-    # For each title, count the occurrences of each tone
-    for title in titles:
-        title_data = cadences[cadences['Title'] == title]
-        # Count occurrences of each Tone for this Title
-        for tone in category_order.keys():
-            count = len(title_data[title_data['Tone'] == tone])
-            count_data.append({
-                'Title': title,
-                'Tone': tone,
-                'count': count
-            })
-    # Convert to DataFrame
-    count_df = pd.DataFrame(count_data)
-    count_df = count_df[count_df['count'] > 0]
-    # calculate % for each cadence vs total number of cadences for each piece
-    title_sums = count_df.groupby('Title')['count'].sum().reset_index()
-    title_sums.rename(columns={'count': 'TitleSum'}, inplace=True)
-    # Merge the sums back to the original DataFrame
-    count_df = count_df.merge(title_sums, on='Title', how='left')
-    # Calculate percentage
-    count_df['Percentage'] = np.round((count_df['count'] / count_df['TitleSum']) * 100)
-    # Create the radar plot with Plotly Express
+    base_data = []
+    
+    # Vectorized approach using groupby operations
+    grouped = cadences.groupby(['Title', 'Tone']).size().reset_index(name='count')
+    
+    # Calculate percentages efficiently
+    title_sums = grouped.groupby('Title')['count'].sum()
+    grouped['Percentage'] = (grouped['count'] / grouped['Title'].map(title_sums)) * 100
+    
+    # Create radar plot
     fig = px.line_polar(
-        count_df, 
-        r='Percentage',       
-        theta='Tone', 
+        grouped[grouped['count'] > 0],
+        r='Percentage',
+        theta='Tone',
         line_close=True,
         color='Title',
         markers=True,
-        category_orders={'Tone': sorted(category_order.keys(), key=lambda x: category_order[x])}
+        category_orders={'Tone': sorted(CATEGORY_ORDER.keys(), key=lambda x: CATEGORY_ORDER[x])}
     )
-    # Update traces to fill the area
-    fig.update_traces(
-        fill='toself',
-        line=dict(width=2)
-    )
-    # Update layout with size control and legend positioning
-    fig.update_layout(
-        # Control the size of the plot
-        width=800,  # Width in pixels
-        height=600,  # Height in pixels
-        # Position the legend
-        legend=dict(
-        orientation="v",  # Vertical layout
-        yanchor="middle",  # Vertical centering
-        y=0.5,  # Vertical position
-        xanchor="right",  # Right alignment
-        x=1.05,  # Offset from right edge
-        xref="paper",  # Use paper coordinates
-        yref="paper",  # Use paper coordinates
-        title={
-            'text': 'Titles',
-            'side': 'top',
-            'font_size': 12
-        },
-        itemsizing='constant',
-        itemwidth=30,
-        bordercolor="black",
-        borderwidth=1,
-        bgcolor="rgba(255,255,255,0.8)"
-    ),
-    # Add right margin to accommodate legend
     
-        # Add title
-        title_text="Relative Distribution of Cadence Tones in Corpus",
-        title_x=0.5,  # Center the title
-        # Adjust margins if needed
-        margin=dict(l=80, r=100, t=100, b=200),
+    # Apply optimizations
+    fig.update_traces(fill='toself', line=dict(width=2))
+    
+    # Update layout with bottom legend
+    fig.update_layout(
+        width=800,
+        height=600,
+        legend=dict(
+            orientation="h",  # Horizontal layout for better space usage
+            yanchor="bottom",
+            y=-0.4,           # Position below plot
+            xanchor="center",
+            x=0.5,            # Center horizontally
+            xref="container", # Scale with container
+            yref="container", # Scale with container
+            title=dict(
+                text="Titles",
+                side="top",
+                font_size=12
+            ),
+            itemsizing='constant',
+            itemwidth=30,
+            bordercolor="black",
+            borderwidth=1,
+            bgcolor="rgba(255,255,255,0.8)"
+        ),
+        title=dict(text="Relative Distribution of Cadence Tones in Corpus", x=0.5),
         polar=dict(
-            radialaxis=dict(
-                visible=True,
-                title='Percentage'
-            )
-        )
+            radialaxis=dict(visible=True, title='Percentage')
+        ),
+        margin=dict(b=120)  # Bottom margin for legend
     )
+    
     return fig
-
 # progress
 
-custom_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  # Your desired order
+custom_tone_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  # Your desired order
 
 
 def cadence_progress(cadences, composer, title):
@@ -2979,7 +3038,7 @@ def cadence_progress(cadences, composer, title):
         y='Tone',
         color='CadType',
         color_discrete_map=color_mapping,
-        category_orders={'CadType': custom_order}
+        category_orders={'Tone': custom_tone_order}
     )
     
     # Update marker properties
@@ -3138,7 +3197,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                     template="plotly_white",
                     showlegend=True,
                     legend=dict(orientation="v",  # Changed from 'h' to 'v' for vertical layout
-                                yanchor="middle",  # Changed from 'bottom' to 'middle'
+                                yanchor="bottom",  # Changed from 'bottom' to 'middle'
                                 y=0.5,  # Changed from -0.7 to 0.5
                                 xanchor="right",  # Keep right alignment
                                 x=1.05,  # Keep right offset
@@ -3152,7 +3211,9 @@ if st.sidebar.checkbox("Explore Cadences"):
                                         bgcolor="rgba(255,255,255,0.8)"
                                 )
                 )
-                st.plotly_chart(radar_new, use_container_width=True)
+                # st.plotly_chart(radar_new, use_container_width=True)
+                st.container().plotly_chart(radar_new, use_container_width=True)
+
                 
             # Add download button in second column
             with col2:
@@ -3169,13 +3230,13 @@ if st.sidebar.checkbox("Explore Cadences"):
                         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
                         <style>
                             body {{
-                                margin: 0;
+                                margin: 40px;
                                 padding: 20px;
                                 font-family: Arial, sans-serif;
                             }}
                             .chart-container {{
-                                width: 100%;
-                                height: 600px;
+                                width: 400px;
+                                height: 400px;
                             }}
                         </style>
                     </head>
@@ -3394,7 +3455,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                     template="plotly_white",
                     showlegend=True,
                     legend=dict(orientation="v",  # Changed from 'h' to 'v' for vertical layout
-                                yanchor="middle",  # Changed from 'bottom' to 'middle'
+                                yanchor="bottom",  # Changed from 'bottom' to 'middle'
                                 y=0.5,  # Changed from -0.7 to 0.5
                                 xanchor="right",  # Keep right alignment
                                 x=1.05,  # Keep right offset
@@ -3413,7 +3474,9 @@ if st.sidebar.checkbox("Explore Cadences"):
                             font=dict(size=20)  # Maintains title size),
                             )
                 )
-                st.plotly_chart(radar_new, use_container_width=True)
+                # st.plotly_chart(radar_new, use_container_width=True)
+                st.container().plotly_chart(radar_new, use_container_width=True)
+
                 
             # Add download button in second column
             with col2:
@@ -3435,8 +3498,8 @@ if st.sidebar.checkbox("Explore Cadences"):
                                 font-family: Arial, sans-serif;
                             }}
                             .chart-container {{
-                                width: 100%;
-                                height: 600px;
+                                width: 800px;
+                                height: 800px;
                             }}
                         </style>
                     </head>
