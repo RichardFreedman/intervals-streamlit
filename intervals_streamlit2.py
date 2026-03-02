@@ -3162,8 +3162,8 @@ if st.sidebar.checkbox("Explore Cadences"):
             filtered_cadences = filter_dataframe_cads(cadences)
             sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
-                        'SinceLast', 'ToNext', 'Pattern', 'Key']
-            filtered_cadences = filtered_cadences[sel_cols] 
+                        'SinceLast', 'ToNext']
+            filtered_cadences = filtered_cadences[sel_cols]
             st.dataframe(filtered_cadences, use_container_width=True)
             # to download csv
             download_name = piece.metadata['title'] + '_cadence_results.csv'
@@ -3482,7 +3482,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             filtered_cadences = filter_dataframe_cads(cadences)
             sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
-                        'SinceLast', 'ToNext', 'Pattern', 'Key']
+                        'SinceLast', 'ToNext']
             filtered_cadences = filtered_cadences[sel_cols] 
             st.dataframe(filtered_cadences, use_container_width=True)
             download_name = "corpus_cadence_results.csv"
