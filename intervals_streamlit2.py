@@ -7,6 +7,8 @@ import requests
 import crim_intervals
 from crim_intervals import * 
 from crim_intervals import main_objs
+from crim_intervals.corpus_tools import corpus_sonority_ngrams
+from crim_intervals.main_objs import CorpusBase
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
@@ -2458,12 +2460,33 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                                          voices=[], 
                                          includeCount=include_count)
         
-        mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)  
+        mel_ngrams_detail = piece.detailIndex(mel_ngrams, offset = False)
         return mel_ngrams_detail, ng_heatmap
+
+# function for harmonic ngram heatmap
+# @st.cache_data
+def harmonic_ngram_heatmap(piece, kind_choice, directed, compound, against_low, length_choice, include_count):
+    nr = piece.notes()
+    nr = piece.numberParts(nr)
+    har = piece.harmonic(df=nr,
+                         kind=kind_choice,
+                         directed=directed,
+                         compound=compound,
+                         againstLow=against_low)
+    har_ngrams = piece.ngrams(df=har, n=length_choice, exclude=['Rest'])
+    har_ngrams_duration = piece.durations(df=har, n=length_choice)
+    ng_heatmap = viz.plot_ngrams_heatmap(har_ngrams,
+                                         har_ngrams_duration,
+                                         selected_patterns=[],
+                                         voices=[],
+                                         includeCount=include_count)
+    har_ngrams_detail = piece.detailIndex(har_ngrams, offset=False)
+    return har_ngrams_detail, ng_heatmap
+
 # ngram form
-if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
+if st.sidebar.checkbox("Explore Melodic Ngrams"):
     search_type = "intervals_ngrams"
-    st.subheader("Explore nGrams and Heatmaps")
+    st.subheader("Explore Melodic Ngrams")
     st.write("[Know the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
     if corpus_length == 0:
         st.write("Please select one or more pieces")
@@ -2614,7 +2637,244 @@ if st.sidebar.checkbox("Explore Ngrams and Heatmaps"):
                 file_name = 'corpus_ngram_results.csv',
                 mime='text/csv',
                 key=10,
-                )            
+                )
+
+# harmonic ngram form
+if st.sidebar.checkbox("Explore Harmonic Ngrams"):
+    search_type = "harmonic_ngrams"
+    st.subheader("Explore Harmonic Ngrams")
+    st.write("[Know the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    if corpus_length == 0:
+        st.write("Please select one or more pieces")
+    elif corpus_length == 1:
+        with st.form("Harmonic Ngram Settings"):
+            directed = st.selectbox(
+                "Select Directed Interval Status",
+                [True, False])
+            compound = st.selectbox(
+                "Select Compound Interval Status",
+                [True, False])
+            select_kind = st.selectbox(
+                "Select Interval Kind",
+                ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+            kind_choice = interval_kinds[select_kind]
+            against_low = st.selectbox("Calculate Intervals Only Against Lowest Voice",
+                                       [False, True])
+            length_choice = st.number_input('Select ngram Length', value=3, step=1)
+            include_count = st.selectbox("Include Count of Ngrams", [True, False])
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                key_list = ['har_ngrams3', 'har_heatmap']
+                for key in key_list:
+                    if key in st.session_state.keys():
+                        del st.session_state[key]
+                har_ngrams, har_heatmap = harmonic_ngram_heatmap(piece,
+                                            kind_choice,
+                                            directed,
+                                            compound,
+                                            against_low,
+                                            length_choice,
+                                            include_count)
+                har_ngrams = har_ngrams.map(convertTuple).dropna()
+                har_ngrams2 = har_ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+                cols_to_move = ['Composer', 'Title', 'Date']
+                har_ngrams3 = har_ngrams2[cols_to_move + [col for col in har_ngrams2.columns if col not in cols_to_move]]
+                if "har_ngrams3" not in st.session_state:
+                    st.session_state.har_ngrams3 = har_ngrams3
+                if 'har_heatmap' not in st.session_state:
+                    st.session_state.har_heatmap = har_heatmap
+        if 'har_heatmap' not in st.session_state:
+            pass
+        if "har_ngrams3" not in st.session_state:
+            pass
+        else:
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            if piece.metadata["composer"] is not None:
+                st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+            else:
+                st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
+            st.altair_chart(st.session_state.har_heatmap, use_container_width=True)
+
+            st.write("Filter Results by Contents of Each Column")
+            filtered_har_ngrams = filter_dataframe_ng(st.session_state.har_ngrams3)
+            show_table = st.checkbox('Show Table', key='har_ng_show_table')
+            if show_table:
+                st.table(filtered_har_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+            st.download_button(
+                label="Download Filtered Harmonic Ngram Data as CSV",
+                data=filtered_har_ngrams.data.to_csv(),
+                file_name=piece.metadata['title'] + '_harmonic_ngram_results.csv',
+                mime='text/csv',
+                key='har_ng_dl_1',
+                )
+    # for corpus
+    elif corpus_length > 1:
+        with st.form("Harmonic Ngram Settings"):
+            directed = st.selectbox(
+                "Select Directed Interval Status",
+                [True, False])
+            compound = st.selectbox(
+                "Select Compound Interval Status",
+                [True, False])
+            select_kind = st.selectbox(
+                "Select Interval Kind",
+                ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
+            kind_choice = interval_kinds[select_kind]
+            against_low = st.selectbox("Calculate Intervals Only Against Lowest Voice",
+                                       [False, True])
+            length_choice = st.number_input('Select ngram Length', value=3, step=1)
+            include_count = st.selectbox("Include Count of Ngrams", [True, False])
+            submitted = st.form_submit_button("Submit")
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            if submitted:
+                har_ngram_df_list = []
+                for work in corpus_list:
+                    piece = importScore(work)
+                    har_ngrams, har_heatmap = harmonic_ngram_heatmap(piece,
+                                                kind_choice,
+                                                directed,
+                                                compound,
+                                                against_low,
+                                                length_choice,
+                                                include_count)
+                    har_ngrams = har_ngrams.map(convertTuple).dropna()
+                    har_ngrams2 = har_ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
+                    cols_to_move = ['Composer', 'Title', 'Date']
+                    har_ngrams3 = har_ngrams2[cols_to_move + [col for col in har_ngrams2.columns if col not in cols_to_move]]
+                    har_ngram_df_list.append(har_ngrams3)
+                    if piece.metadata["composer"] is not None:
+                        st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
+                    else:
+                        st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
+                    st.altair_chart(har_heatmap, use_container_width=True)
+                if 'combined_har_ngrams' in st.session_state.keys():
+                    del st.session_state.combined_har_ngrams
+                if len(har_ngram_df_list) > 0:
+                    combined_har_ngrams = pd.concat(har_ngram_df_list)
+                    if "combined_har_ngrams" not in st.session_state:
+                        st.session_state.combined_har_ngrams = combined_har_ngrams
+
+        if "combined_har_ngrams" not in st.session_state:
+            pass
+        else:
+            st.write("Filter Results by Contents of Each Column")
+            st.write("Note that the Filters do NOT change the heatmaps shown above!")
+            filtered_combined_har_ngrams = filter_dataframe_ng(st.session_state.combined_har_ngrams)
+            show_table = st.checkbox('Show Table of all Harmonic Ngrams', key='har_ng_corpus_show_table')
+            if show_table:
+                st.table(filtered_combined_har_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+            st.download_button(
+                label="Download Filtered Corpus Harmonic Ngram Data as CSV",
+                data=filtered_combined_har_ngrams.data.to_csv(),
+                file_name='corpus_harmonic_ngram_results.csv',
+                mime='text/csv',
+                key='har_ng_dl_2',
+                )
+
+# sonority ngram form
+if st.sidebar.checkbox("Explore Sonority Ngrams"):
+    search_type = "sonority_ngrams"
+    st.subheader("Explore Sonority Ngrams")
+    st.write("[Know the code! Read more about CRIM Intervals sonority ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    if corpus_length == 0:
+        st.write("Please select one or more pieces")
+    else:
+        with st.form("Sonority Ngram Settings"):
+            ngram_length = st.number_input('Select ngram Length', value=4, step=1)
+            compound = st.selectbox(
+                "Select Compound Interval Status",
+                [True, False])
+            sort = st.selectbox(
+                "Sort Intervals within Sonority",
+                [False, True])
+            minimum_beat_strength = st.number_input(
+                'Minimum Beat Strength (0.0 = all beats, 0.5 = strong beats, 1.0 = downbeats only)',
+                value=0.0, min_value=0.0, max_value=1.0, step=0.25)
+            metadata_choice = st.selectbox(
+                "Include Metadata (Composer, Title, Date)",
+                [True, False])
+            include_offset = st.selectbox(
+                "Include Offset Column",
+                [False, True])
+            include_progress = st.selectbox(
+                "Include Progress Column",
+                [True, False])
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                if 'sonority_ngrams' in st.session_state:
+                    del st.session_state.sonority_ngrams
+                if corpus_length == 1:
+                    son_corpus = CorpusBase([st.session_state.piece])
+                else:
+                    son_corpus = st.session_state.corpus
+                son_ng = corpus_sonority_ngrams(
+                    son_corpus,
+                    ngram_length=int(ngram_length),
+                    metadata_choice=metadata_choice,
+                    include_offset=include_offset,
+                    include_progress=include_progress,
+                    compound=compound,
+                    sort=sort,
+                    minimum_beat_strength=minimum_beat_strength)
+                son_ng = son_ng.dropna(how='all')
+                if "sonority_ngrams" not in st.session_state:
+                    st.session_state.sonority_ngrams = son_ng
+
+        if "sonority_ngrams" not in st.session_state:
+            pass
+        else:
+            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
+            st.write("Filter Results by Contents of Each Column")
+            filtered_son_ngrams = filter_dataframe_ng(st.session_state.sonority_ngrams)
+
+            # bar chart of ngram pattern counts
+            son_data = filtered_son_ngrams.data.copy()
+            meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset', 'Progress', 'Low_Sonority']
+            ngram_cols = [col for col in son_data.columns if col not in meta_cols]
+            if ngram_cols:
+                son_data['Pattern'] = son_data[ngram_cols].apply(
+                    lambda row: ' | '.join(str(v) for v in row if pd.notna(v) and str(v) != ''), axis=1)
+                piece_col = 'Title' if 'Title' in son_data.columns else None
+                if piece_col:
+                    pattern_counts = son_data.groupby(['Pattern', piece_col]).size().reset_index(name='Count')
+                    top_patterns = pattern_counts.groupby('Pattern')['Count'].sum().nlargest(30).index
+                    pattern_counts = pattern_counts[pattern_counts['Pattern'].isin(top_patterns)]
+                    bar_chart = alt.Chart(pattern_counts).mark_bar().encode(
+                        x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
+                        y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
+                        color=alt.Color(f'{piece_col}:N', title='Piece'),
+                        tooltip=['Pattern', piece_col, 'Count']
+                    ).properties(title='Sonority Ngram Frequency (Top 30)')
+                else:
+                    pattern_counts = son_data['Pattern'].value_counts().reset_index()
+                    pattern_counts.columns = ['Pattern', 'Count']
+                    bar_chart = alt.Chart(pattern_counts.head(30)).mark_bar().encode(
+                        x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
+                        y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
+                        tooltip=['Pattern', 'Count']
+                    ).properties(title='Sonority Ngram Frequency (Top 30)')
+                st.altair_chart(bar_chart, use_container_width=True)
+
+            show_table = st.checkbox('Show Table', key='son_ng_show_table')
+            if show_table:
+                display_df = son_data.drop(columns=['Pattern'], errors='ignore')
+                # flatten any list/tuple values (e.g. Low Line across multiple pieces)
+                for col in display_df.columns:
+                    display_df[col] = display_df[col].apply(
+                        lambda v: ', '.join(str(x) for x in v) if isinstance(v, (list, tuple)) else v)
+                if 'Measure' in display_df.columns:
+                    display_df['Measure'] = pd.to_numeric(display_df['Measure'], errors='coerce').round(0).astype('Int64')
+                if 'Beat' in display_df.columns:
+                    display_df['Beat'] = pd.to_numeric(display_df['Beat'], errors='coerce').round(2)
+                st.table(display_df.style.format({'Beat': '{:.2f}'}, na_rep=''))
+            st.download_button(
+                label="Download Filtered Sonority Ngram Data as CSV",
+                data=filtered_son_ngrams.data.to_csv(),
+                file_name='sonority_ngram_results.csv',
+                mime='text/csv',
+                key='son_ng_dl',
+                )
+
 # hr functions
 # one piece
 @st.cache_data
