@@ -7,8 +7,11 @@ import requests
 import crim_intervals
 from crim_intervals import * 
 from crim_intervals import main_objs
-from crim_intervals.corpus_tools import corpus_sonority_ngrams
-from crim_intervals.main_objs import CorpusBase
+try:
+    from crim_intervals.corpus_tools import corpus_sonority_ngrams
+    from crim_intervals.main_objs import CorpusBase
+except ImportError:
+    pass  # already available via `from crim_intervals import *`
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
