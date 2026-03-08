@@ -11,7 +11,8 @@ try:
     from crim_intervals.corpus_tools import corpus_sonority_ngrams
     from crim_intervals.main_objs import CorpusBase
 except ImportError:
-    pass  # already available via `from crim_intervals import *`
+    pass  # may already be available via `from crim_intervals import *`
+_has_sonority_ngrams = 'corpus_sonority_ngrams' in dir()
 import crim_intervals.visualizations as viz
 import pandas as pd
 import altair as alt 
@@ -2779,7 +2780,9 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
     search_type = "sonority_ngrams"
     st.subheader("Explore Sonority Ngrams")
     st.write("[Know the code! Read more about CRIM Intervals sonority ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
-    if corpus_length == 0:
+    if not _has_sonority_ngrams:
+        st.error("This feature requires a newer version of crim_intervals. Please run: `pip install --upgrade crim_intervals`")
+    elif corpus_length == 0:
         st.write("Please select one or more pieces")
     else:
         with st.form("Sonority Ngram Settings"):
