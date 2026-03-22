@@ -1536,8 +1536,11 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                     [counted_notes_sorted[color_grouping].unique(), active_pcs],
                                     names=[color_grouping, 'pitch_class']
                                 )
+                                # Aggregate first so that duplicate (group, pitch_class) pairs
+                                # (e.g. same composer across multiple titles) don't break reindex
                                 counted_notes_polar = (
                                     counted_notes_sorted
+                                    .groupby([color_grouping, 'pitch_class'], as_index=False)['scaled'].sum()
                                     .set_index([color_grouping, 'pitch_class'])['scaled']
                                     .reindex(full_index, fill_value=0)
                                     .reset_index()
