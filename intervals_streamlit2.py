@@ -259,9 +259,9 @@ pitch_class_order = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F-', 'E#', 'F', 'F#
 
 # Named note orderings for weighted-notes radar — kept separate from cadence orderings
 NOTE_PC_CHROMATIC = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F', 'F#', 'G-', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'F-', 'E#', 'F##', 'B#', 'Rest']
-NOTE_PC_FIFTHS    = ['B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'A-', 'D#', 'E-', 'A#', 'D-', 'G-', 'F-', 'E#', 'B#', 'F##', 'Rest']
-NOTE_PC_THIRDS    = ['C', 'E', 'G#', 'A-', 'C#', 'D-', 'F', 'A', 'D', 'F#', 'G-', 'B-', 'D#', 'E-', 'G', 'B', 'A#', 'F-', 'E#', 'F##', 'B#', 'Rest']
-NOTE_PC_ORDERS    = {'Chromatic': NOTE_PC_CHROMATIC, 'Fifths': NOTE_PC_FIFTHS, 'Thirds': NOTE_PC_THIRDS}
+NOTE_PC_FIFTHS    = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'A-', 'E-', 'B-', 'F', 'G#', 'D#', 'A#', 'D-', 'G-', 'F-', 'E#', 'B#', 'F##', 'Rest']
+NOTE_PC_DIATONIC  = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'B-', 'E-', 'A-', 'D-', 'C#', 'F#', 'G#', 'D#', 'A#', 'G-', 'F-', 'E#', 'F##', 'B#', 'Rest']
+NOTE_PC_ORDERS    = {'Chromatic': NOTE_PC_CHROMATIC, 'Fifths': NOTE_PC_FIFTHS, 'Diatonic': NOTE_PC_DIATONIC}
 
 contrasting_colors = [
         '#636EFA',  # Blue
@@ -1460,8 +1460,9 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
         submitted = st.button("Update and Run Search", key="weighted_notes_search")
         if submitted:
             # Clear previous results if they exist
-            if 'corpus_notes_weights' in st.session_state:
-                del st.session_state.corpus_notes_weights
+            for _key in ['corpus_notes_weights', 'weighted_notes_multi_fig', 'weighted_notes_multi_key',
+                         'weighted_notes_single_fig', 'weighted_notes_single_key']:
+                st.session_state.pop(_key, None)
             
             # For one piece
             if corpus_length == 1:
@@ -1508,78 +1509,80 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                     if 'Title' in counted_notes_sorted.columns and counted_notes_sorted['Title'].nunique() > 1:
                         note_ordering = st.radio(
                             "Pitch Class Order",
-                            ['Chromatic', 'Fifths', 'Thirds'],
+                            ['Diatonic', 'Fifths', 'Chromatic'],
                             horizontal=True,
                             key='weighted_notes_pc_ordering'
                         )
+                        limit_to_active = st.checkbox("Limit to pitch classes present in data", value=True, key='weighted_notes_limit_active')
                         container = st.container()
                         col1, col2 = container.columns([10, 2])
                         with col1:
                             # Multiple pieces plot
-                            # make plot
                             color_grouping = st.radio(
                                 "Select Color Grouping",
                                 ['Composer', 'Title'],
-                                index=0,  # Pre-select the first option (default)
-                                horizontal=True,  # Display options horizontally
+                                index=0,
+                                horizontal=True,
                                 captions=["Color by Composer", "Color by Title", "Color by Voice"],
                                 key='weighted_color_grouping'
                             )
-        
-                            titles = counted_notes_sorted['Title'].unique()
 
-                            # Restrict canonical order to pitch classes actually present in the data
-                            active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
-                                        if pc in counted_notes_sorted['pitch_class'].values]
+                            _chart_key = (note_ordering, limit_to_active, color_grouping)
+                            if st.session_state.get('weighted_notes_multi_key') != _chart_key:
+                                active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
+                                            if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
 
-                            # Ensure every group has every active pitch class in canonical order, filled with 0
-                            full_index = pd.MultiIndex.from_product(
-                                [counted_notes_sorted[color_grouping].unique(), active_pcs],
-                                names=[color_grouping, 'pitch_class']
-                            )
+                                full_index = pd.MultiIndex.from_product(
+                                    [counted_notes_sorted[color_grouping].unique(), active_pcs],
+                                    names=[color_grouping, 'pitch_class']
+                                )
+                                counted_notes_polar = (
+                                    counted_notes_sorted
+                                    .set_index([color_grouping, 'pitch_class'])['scaled']
+                                    .reindex(full_index, fill_value=0)
+                                    .reset_index()
+                                )
+                                if limit_to_active:
+                                    counted_notes_polar = counted_notes_polar[counted_notes_polar['scaled'] > 0]
+                                pc_rank = {pc: i for i, pc in enumerate(active_pcs)}
+                                counted_notes_polar = (
+                                    counted_notes_polar
+                                    .assign(_sort=counted_notes_polar['pitch_class'].map(pc_rank))
+                                    .sort_values([color_grouping, '_sort'])
+                                    .drop(columns='_sort')
+                                    .reset_index(drop=True)
+                                )
+                                counted_notes_polar['pitch_class'] = pd.Categorical(
+                                    counted_notes_polar['pitch_class'], categories=active_pcs, ordered=True
+                                )
+                                fig = px.line_polar(
+                                    counted_notes_polar,
+                                    r='scaled',
+                                    theta='pitch_class',
+                                    color=color_grouping,
+                                    line_close=True,
+                                    range_r=[0, counted_notes_polar['scaled'].max() * 1.1],
+                                    markers=True,
+                                    category_orders=dict(color_grouping=list(counted_notes_polar[color_grouping].unique())),
+                                    color_discrete_sequence=contrasting_colors[:len(counted_notes_polar[color_grouping].unique())]
+                                )
+                                fig.update_traces(fill='toself', mode='markers+lines', opacity=.7)
+                                fig.update_layout(
+                                    showlegend=True,
+                                    legend=dict(
+                                        title=color_grouping,
+                                        orientation="h",
+                                        yanchor="bottom",
+                                        y=-0.5,
+                                        xanchor="right",
+                                        x=1
+                                    ),
+                                    title='Weighted Note Distribution in Corpus')
+                                st.session_state.weighted_notes_multi_fig = fig
+                                st.session_state.weighted_notes_multi_key = _chart_key
+                            else:
+                                fig = st.session_state.weighted_notes_multi_fig
 
-                            counted_notes_polar = (
-                                counted_notes_sorted
-                                .set_index([color_grouping, 'pitch_class'])['scaled']
-                                .reindex(full_index, fill_value=0)
-                                .reset_index()
-                            )
-
-                            # Sort by group, then by canonical pitch class order
-                            pc_rank = {pc: i for i, pc in enumerate(active_pcs)}
-                            counted_notes_polar = (
-                                counted_notes_polar
-                                .assign(_sort=counted_notes_polar['pitch_class'].map(pc_rank))
-                                .sort_values([color_grouping, '_sort'])
-                                .drop(columns='_sort')
-                                .reset_index(drop=True)
-                            )
-                            fig = px.line_polar(
-                                counted_notes_polar,
-                                r='scaled',
-                                theta='pitch_class',
-                                color=color_grouping,
-                                line_close=True,
-                                range_r=[0, counted_notes_polar['scaled'].max() * 1.1],
-                                markers=True,
-                                category_orders=dict(color_grouping=list(counted_notes_polar[color_grouping].unique())),
-                                color_discrete_sequence=contrasting_colors[:len(counted_notes_polar[color_grouping].unique())]
-                            )
-                            fig.update_traces(fill='toself', 
-                                            mode='markers+lines',
-                                            opacity=.7)
-                            fig.update_layout(
-                                showlegend=True,
-                                legend=dict(
-                                    title=color_grouping,
-                                    orientation="h",
-                                    yanchor="bottom",
-                                    y=-0.5,
-                                    xanchor="right",
-                                    x=1
-                                ),
-                                title = 'Weighted Note Distribution in Corpus')
-                            
                             st.plotly_chart(fig, use_container_width=True)
                         with col2:
                             @st.cache_data(ttl=3600)
@@ -1633,37 +1636,38 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                         # Single piece plot
                         note_ordering = st.radio(
                             "Pitch Class Order",
-                            ['Chromatic', 'Fifths', 'Thirds'],
+                            ['Diatonic', 'Fifths', 'Chromatic'],
                             horizontal=True,
                             key='weighted_notes_pc_ordering_single'
                         )
+                        limit_to_active = st.checkbox("Limit to pitch classes present in data", value=True, key='weighted_notes_limit_active_single')
                         container = st.container()
                         col1, col2 = container.columns([10, 2])
                         if corpus_length == 1:
                             composer = piece.metadata['composer']
                             title = piece.metadata['title']
 
-                            # Restrict canonical order to pitch classes actually present in the data
-                            active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
-                                        if pc in counted_notes_sorted['pitch_class'].values]
-
-                            pc_rank = {pc: i for i, pc in enumerate(active_pcs)}
-                            counted_notes_polar = (
-                                counted_notes_sorted
-                                .set_index('pitch_class')
-                                .reindex(active_pcs, fill_value=0)
-                                .reset_index()
-                                .assign(_sort=lambda df: df['pitch_class'].map(pc_rank))
-                                .sort_values('_sort')
-                                .drop(columns='_sort')
-                                .reset_index(drop=True)
-                            )
-
-                            # Drop pitch classes with zero scaled value, then rebuild active_pcs from result
-                            counted_notes_polar = counted_notes_polar[counted_notes_polar['scaled'] > 0]
-                            active_pcs = [pc for pc in active_pcs if pc in counted_notes_polar['pitch_class'].values]
-
-                            with col1:
+                            _chart_key = (note_ordering, limit_to_active)
+                            if st.session_state.get('weighted_notes_single_key') != _chart_key:
+                                active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
+                                            if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
+                                pc_rank = {pc: i for i, pc in enumerate(active_pcs)}
+                                counted_notes_polar = (
+                                    counted_notes_sorted
+                                    .set_index('pitch_class')
+                                    .reindex(active_pcs, fill_value=0)
+                                    .reset_index()
+                                    .assign(_sort=lambda df: df['pitch_class'].map(pc_rank))
+                                    .sort_values('_sort')
+                                    .drop(columns='_sort')
+                                    .reset_index(drop=True)
+                                )
+                                if limit_to_active:
+                                    counted_notes_polar = counted_notes_polar[counted_notes_polar['scaled'] > 0]
+                                active_pcs = [pc for pc in active_pcs if pc in counted_notes_polar['pitch_class'].values]
+                                counted_notes_polar['pitch_class'] = pd.Categorical(
+                                    counted_notes_polar['pitch_class'], categories=active_pcs, ordered=True
+                                )
                                 fig = px.line_polar(
                                     counted_notes_polar,
                                     r='scaled',
@@ -1671,27 +1675,25 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                     line_close=True,
                                     range_r=[0, counted_notes_polar['scaled'].max() * 1.1],
                                     markers=True,
-                                    category_orders={'pitch_class': active_pcs}  # updated list
+                                    category_orders={'pitch_class': active_pcs}
                                 )
-                            
-
                                 fig.update_traces(
                                     fill='toself',
                                     fillcolor='rgba(31, 119, 180, 0.3)',
                                     line=dict(width=2)
                                 )
-
                                 fig.update_layout(
                                     title=f"{composer}, {title}",
-                                    polar=dict(
-                                        radialaxis=dict(
-                                            visible=True,
-                                            range=[0, counted_notes_polar['scaled'].max() * 1.1]
-                                        )
-                                    ),
+                                    polar=dict(radialaxis=dict(visible=True,
+                                                               range=[0, counted_notes_polar['scaled'].max() * 1.1])),
                                     showlegend=False
                                 )
-                            
+                                st.session_state.weighted_notes_single_fig = fig
+                                st.session_state.weighted_notes_single_key = _chart_key
+                            else:
+                                fig = st.session_state.weighted_notes_single_fig
+
+                            with col1:
                                 st.plotly_chart(fig, use_container_width=True)
                             # Add download button in second column
                             with col2:
@@ -3266,10 +3268,10 @@ if st.sidebar.checkbox("Explore Presentation Types"):
 #         )
 #     )
 #     return fig
-def cadence_radar(cadences, tone_ordering='Fifths'):
+def cadence_radar(cadences, tone_ordering='Thirds', limit_to_active=False):
     FIFTHS = {
-        'A-': 0, 'E-': 1, 'B-': 2, 'F': 3, 'C': 4,
-        'G': 5, 'D': 6, 'A': 7, 'E': 8, 'B': 9, 'F#': 10, 'C#': 11
+        'C': 0, 'G': 1, 'D': 2, 'A': 3, 'E': 4, 'B': 5,
+        'F#': 6, 'C#': 7, 'A-': 8, 'E-': 9, 'B-': 10, 'F': 11
     }
 
     THIRDS = {
@@ -3294,7 +3296,7 @@ def cadence_radar(cadences, tone_ordering='Fifths'):
 
     # Canonical tone order for sorting
     tone_order = sorted(CATEGORY_ORDER.keys(), key=lambda x: CATEGORY_ORDER[x])
-    active_tones = [t for t in tone_order if t in grouped['Tone'].values]
+    active_tones = [t for t in tone_order if t in grouped['Tone'].values] if limit_to_active else tone_order
 
     # Ensure every title has every active tone (fill missing with 0), then sort
     full_index = pd.MultiIndex.from_product(
@@ -3307,6 +3309,8 @@ def cadence_radar(cadences, tone_ordering='Fifths'):
         .reindex(full_index, fill_value=0)
         .reset_index()
     )
+    if limit_to_active:
+        grouped = grouped[grouped['count'] > 0]
     tone_rank = {t: i for i, t in enumerate(active_tones)}
     grouped = (
         grouped
@@ -3315,6 +3319,9 @@ def cadence_radar(cadences, tone_ordering='Fifths'):
         .drop(columns='_sort')
         .reset_index(drop=True)
     )
+
+    # Force Plotly to respect the canonical tone order on the theta axis
+    grouped['Tone'] = pd.Categorical(grouped['Tone'], categories=active_tones, ordered=True)
 
     # Create radar plot
     fig = px.line_polar(
@@ -3500,15 +3507,26 @@ if st.sidebar.checkbox("Explore Cadences"):
     elif corpus_length == 1:
         title = piece.metadata['title']
         composer = piece.metadata['composer']
-        cadences = piece.cadences()
-        cadences['Title'] = title
-        cadences['Composer'] = composer
-        grouped_cadences = cadences.groupby(['Tone', 'CadType', 'CVFs'])['Title'].count()
-        grouped_cadences = pd.DataFrame(grouped_cadences).reset_index()
-        grouped_cadences = grouped_cadences.rename(columns={'Title': 'Count'})
-        total_cads = grouped_cadences['Count'].sum()
-        grouped_cadences = grouped_cadences[grouped_cadences['Count'] != 0]
-        grouped_cadences.reset_index(drop=True, inplace=True)
+        _cad_single_piece_key = f"{composer}|{title}"
+        if st.session_state.get('cad_single_piece_key') != _cad_single_piece_key:
+            cadences = piece.cadences()
+            cadences['Title'] = title
+            cadences['Composer'] = composer
+            grouped_cadences = cadences.groupby(['Tone', 'CadType', 'CVFs'])['Title'].count()
+            grouped_cadences = pd.DataFrame(grouped_cadences).reset_index()
+            grouped_cadences = grouped_cadences.rename(columns={'Title': 'Count'})
+            total_cads = grouped_cadences['Count'].sum()
+            grouped_cadences = grouped_cadences[grouped_cadences['Count'] != 0]
+            grouped_cadences.reset_index(drop=True, inplace=True)
+            st.session_state.cad_single_cadences = cadences
+            st.session_state.cad_single_grouped = grouped_cadences
+            st.session_state.cad_single_piece_key = _cad_single_piece_key
+            for _k in ['cad_single_radar_fig', 'cad_single_radar_key']:
+                st.session_state.pop(_k, None)
+        else:
+            cadences = st.session_state.cad_single_cadences
+            grouped_cadences = st.session_state.cad_single_grouped
+            total_cads = grouped_cadences['Count'].sum()
     
         # the full table of cad
         if st.checkbox("Show Full Cadence Table"):
@@ -3671,6 +3689,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                 horizontal=True,
                 key='radar_tone_ordering'
             )
+            limit_to_active = st.checkbox("Limit to tones present in data", value=True, key='radar_limit_active')
 
             # Create container for chart and button
             container = st.container()
@@ -3678,34 +3697,34 @@ if st.sidebar.checkbox("Explore Cadences"):
 
             # Plot chart in first column
             with col1:
-                radar_new = cadence_radar(cadences, tone_ordering=tone_ordering)
-                
-                # Explicitly set colors for each trace
-                for i, trace in enumerate(radar_new.data):
-                    trace.update(
-                        marker=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)]),
-                        line=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)])
-                    )
-                
-                radar_new.update_layout(
-                    template="plotly_white",
-                    showlegend=True,
-                    legend=dict(orientation="v",  # Changed from 'h' to 'v' for vertical layout
-                                yanchor="bottom",  # Changed from 'bottom' to 'middle'
-                                y=0.5,  # Changed from -0.7 to 0.5
-                                xanchor="right",  # Keep right alignment
-                                x=1.05,  # Keep right offset
-                                title={'text': 'Titles',
-                                    'side': 'top',
-                                    'font_size': 12},
+                _radar_key = (tone_ordering, limit_to_active)
+                if st.session_state.get('cad_single_radar_key') != _radar_key:
+                    radar_new = cadence_radar(cadences, tone_ordering=tone_ordering, limit_to_active=limit_to_active)
+                    for i, trace in enumerate(radar_new.data):
+                        trace.update(
+                            marker=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)]),
+                            line=dict(color=px.colors.qualitative.Alphabet[i % len(px.colors.qualitative.Alphabet)])
+                        )
+                    radar_new.update_layout(
+                        template="plotly_white",
+                        showlegend=True,
+                        legend=dict(orientation="v",
+                                    yanchor="bottom",
+                                    y=0.5,
+                                    xanchor="right",
+                                    x=1.05,
+                                    title={'text': 'Titles', 'side': 'top', 'font_size': 12},
                                     itemsizing='constant',
                                     itemwidth=30,
-                                        bordercolor="black",
-                                        borderwidth=1,
-                                        bgcolor="rgba(255,255,255,0.8)"
-                                )
-                )
-                # st.plotly_chart(radar_new, use_container_width=True)
+                                    bordercolor="black",
+                                    borderwidth=1,
+                                    bgcolor="rgba(255,255,255,0.8)"
+                                    )
+                    )
+                    st.session_state.cad_single_radar_fig = radar_new
+                    st.session_state.cad_single_radar_key = _radar_key
+                else:
+                    radar_new = st.session_state.cad_single_radar_fig
                 st.container().plotly_chart(radar_new, use_container_width=True)
 
                 
@@ -3833,12 +3852,21 @@ if st.sidebar.checkbox("Explore Cadences"):
                     )
     # corpus
     elif corpus_length >= 2:
-        func = ImportedPiece.cadences
-        list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
-        
-        cadences_metadata = pd.concat(list_of_dfs, ignore_index=False)   
-        cols_to_move = ['Composer', 'Title', 'Date']
-        cadences = cadences_metadata[cols_to_move + [col for col in cadences_metadata.columns if col not in cols_to_move]] 
+        _cad_corpus_key = str(sorted(crim_piece_selections))
+        if st.session_state.get('cad_corpus_key') != _cad_corpus_key:
+            func = ImportedPiece.cadences
+            list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+            cadences_metadata = pd.concat(list_of_dfs, ignore_index=False)
+            cols_to_move = ['Composer', 'Title', 'Date']
+            cadences = cadences_metadata[cols_to_move + [col for col in cadences_metadata.columns if col not in cols_to_move]]
+            st.session_state.cad_corpus_cadences = cadences
+            st.session_state.cad_corpus_metadata = cadences_metadata
+            st.session_state.cad_corpus_key = _cad_corpus_key
+            for _k in ['cad_corpus_radar_fig', 'cad_corpus_radar_key']:
+                st.session_state.pop(_k, None)
+        else:
+            cadences = st.session_state.cad_corpus_cadences
+            cadences_metadata = st.session_state.cad_corpus_metadata
         if st.checkbox("Show Full Cadence Table"):
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
@@ -3998,6 +4026,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                 horizontal=True,
                 key='corpus_radar_tone_ordering'
             )
+            limit_to_active = st.checkbox("Limit to tones present in data", value=False, key='corpus_radar_limit_active')
 
             # Create container for chart and button
             container = st.container()
@@ -4005,7 +4034,7 @@ if st.sidebar.checkbox("Explore Cadences"):
 
             # Plot chart in first column
             with col1:
-                radar_new = cadence_radar(cadences, tone_ordering=tone_ordering)
+                radar_new = cadence_radar(cadences, tone_ordering=tone_ordering, limit_to_active=limit_to_active)
                 
                 # Explicitly set colors for each trace
                 for i, trace in enumerate(radar_new.data):
