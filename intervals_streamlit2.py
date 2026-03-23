@@ -1597,7 +1597,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 <html>
                                 <head>
                                     <meta charset="utf-8">
-                                    <title>Corpus Cadence Radar Plot</title>
+                                    <title>Corpus Weighted Note Distribution</title>
                                     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
                                     <style>
                                         body {{
