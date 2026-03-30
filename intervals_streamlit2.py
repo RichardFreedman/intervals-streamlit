@@ -604,6 +604,23 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
             df = df.style
     return df
 
+def filter_ngrams_by_pattern(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Shows a list of unique ngram patterns found across all voice columns,
+    lets the user select which ones to keep, and returns the filtered dataframe.
+    """
+    df = df.copy()
+    meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+    voice_cols = [c for c in df.columns if c not in meta_cols]
+    # Collect all unique ngram patterns across voice columns
+    all_patterns = pd.unique(df[voice_cols].values.ravel())
+    all_patterns = sorted([p for p in all_patterns if p and not pd.isnull(p)])
+    selected = st.multiselect("Select Ngram Patterns to Display", all_patterns, default=all_patterns)
+    if selected:
+        mask = df[voice_cols].apply(lambda col: col.isin(selected)).any(axis=1)
+        df = df[mask].reset_index(drop=True)
+    return df
+
 #for hr
 # st.cache_data(experimental_allow_widgets=True)
 def filter_dataframe_hr(df: pd.DataFrame) -> pd.DataFrame:
@@ -2502,10 +2519,11 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
                         directed = directed,
                         compound = compound,
                         end = False)
+    mel_detail = piece.detailIndex(mel)
     # this is for entries only
-    if entries_only == True:    
+    if entries_only == True:
         # pass the following ngrams to the plot below as first df
-        entry_ngrams = piece.entries(df = mel, 
+        entry_ngrams = piece.entries(df = mel,
                                     n = length_choice, 
                                     thematic = True, 
                                     anywhere = True,
@@ -2604,9 +2622,10 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                             compound, 
                             length_choice,
                             include_count)
-                ngrams = ngrams.map(convertTuple).dropna()
+                ngrams = ngrams.map(convertTuple).dropna().reset_index()
                 ngrams2 = ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-                cols_to_move = ['Composer', 'Title', 'Date']
+                cols_to_move = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+                cols_to_move = [c for c in cols_to_move if c in ngrams2.columns]
                 ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
                 # st.write(ngrams3)
                 if "ngrams3" not in st.session_state:
@@ -2625,23 +2644,81 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                 st.subheader("Ngram Heatmap: " + piece.metadata["title"])
             st.altair_chart(st.session_state.heatmap, use_container_width=True)
 
-            st.write("Filter Results by Contents of Each Column") 
-            filtered_ngrams = filter_dataframe_ng(st.session_state.ngrams3)
-            # update
+            st.write("Select Ngram Patterns to Filter")
+            filtered_ngrams = filter_ngrams_by_pattern(st.session_state.ngrams3)
             show_table = st.checkbox('Show Table')
             if show_table:
-                st.table(filtered_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+                st.dataframe(filtered_ngrams, use_container_width=True)
 
-            
-            # csv = convert_df(filtered_ngrams.data)
-            # filtered_ngrams = filtered_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Ngram Data as CSV",
-                data=filtered_ngrams.data.to_csv(),
+                data=filtered_ngrams.to_csv(index=False),
                 file_name = piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 key=9,
                 )
+
+            # Verovio rendering for melodic ngrams
+            st.markdown("#### View Filtered Ngrams with Verovio")
+            st.warning("⚠️ Verovio rendering uses the **filtered** ngram results only. Please filter to a meaningful subset before rendering.")
+            n_ng = len(filtered_ngrams)
+            if n_ng > 20:
+                st.warning(f"There are {n_ng} ngrams in the filtered list. Consider filtering to 20 or fewer before rendering.")
+            if st.button("Render Ngrams with Verovio", key="verovio_ngrams_render"):
+                import os, base64, re
+                mei_source = st.session_state.get('mei_source', '')
+                if not mei_source:
+                    st.warning("MEI source not available for rendering.")
+                else:
+                    if mei_source.startswith('http'):
+                        mei_content = requests.get(mei_source).text
+                    elif mei_source.startswith('/') or mei_source.startswith('Music_Files/'):
+                        with open(mei_source, 'r') as _f:
+                            mei_content = _f.read()
+                    else:
+                        mei_content = mei_source
+                    tk = verovio.toolkit(False)
+                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
+                    tk.setResourcePath(resource_path)
+                    tk.loadData(mei_content)
+                    tk.setScale(35)
+                    tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
+                    rendered = []
+                    ng_composer = piece.metadata['composer']
+                    ng_title = piece.metadata['title']
+                    meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+                    voice_cols = [c for c in filtered_ngrams.columns if c not in meta_cols]
+                    ng_pad = 2 if length_choice <= 3 else 3 if length_choice <= 5 else 5
+                    for _, row in filtered_ngrams.iterrows():
+                        c_meas = int(row["Measure"])
+                        mr = str(c_meas) + "-" + str(c_meas + ng_pad)
+                        # Find voices and their ngram patterns for this row
+                        voice_patterns = {v: row[v] for v in voice_cols if pd.notna(row[v]) and row[v] != ''}
+                        voices_str = ", ".join(f"{v}: {p}" for v, p in voice_patterns.items())
+                        tk.select({"measureRange": mr})
+                        tk.redoLayout()
+                        count = tk.getPageCount()
+                        for page in range(1, count + 1):
+                            music = tk.renderToSVG(page)
+                            c_beat = row["Beat"] if "Beat" in row.index else ""
+                            label = (
+                                f"**Composer:** {ng_composer} | **Title:** {ng_title} | "
+                                f"**Measure:** {c_meas} | **Beat:** {c_beat} | **Voices/Ngrams:** {voices_str}"
+                            )
+                            rendered.append((label, music))
+                    st.session_state.verovio_ngrams_rendered = rendered
+            if st.session_state.get('verovio_ngrams_rendered'):
+                import base64, re
+                st.subheader("Ngram Excerpts")
+                st.write(f"Showing {len(st.session_state.verovio_ngrams_rendered)} excerpt(s)")
+                for label, music in st.session_state.verovio_ngrams_rendered:
+                    st.divider()
+                    svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
+                    svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
+                    st.markdown(
+                        f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
+                        unsafe_allow_html=True
+                    )
     # for corpus
     elif corpus_length > 1:
         form_col, _ = st.columns([1, 2])
@@ -2680,9 +2757,10 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                                 compound,
                                 length_choice,
                                 include_count)
-                    ngrams = ngrams.map(convertTuple).dropna()
+                    ngrams = ngrams.map(convertTuple).dropna().reset_index()
                     ngrams2 = ngrams.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'], Date=piece.metadata['date'])
-                    cols_to_move = ['Composer', 'Title', 'Date']
+                    cols_to_move = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+                    cols_to_move = [c for c in cols_to_move if c in ngrams2.columns]
                     ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
                     ngram_df_list.append(ngrams3)
                     heatmap_list.append((piece.metadata['composer'], piece.metadata['title'], heatmap))
@@ -2708,24 +2786,82 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
         if "combined_ngrams" not in st.session_state:
             pass
         else:
-            st.write("Filter Results by Contents of Each Column")
+            st.write("Select Ngram Patterns to Filter")
             st.write("Note that the Filters do NOT change the heatmaps shown above!")
-            filtered_combined_ngrams = filter_dataframe_ng(st.session_state.combined_ngrams)
-            # update
+            filtered_combined_ngrams = filter_ngrams_by_pattern(st.session_state.combined_ngrams)
             show_table = st.checkbox('Show Table of all Ngrams')
             if show_table:
-                st.table(filtered_combined_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+                st.dataframe(filtered_combined_ngrams, use_container_width=True)
 
-            
-            # csv = convert_df(filtered_combined_ngrams.data)
-            # filtered_combined_ngrams = filtered_combined_ngrams.to_csv().encode('utf-8')
             st.download_button(
                 label="Download Filtered Corpus Ngram Data as CSV",
-                data=filtered_combined_ngrams.data.to_csv(),
-                file_name = 'corpus_ngram_results.csv',
+                data=filtered_combined_ngrams.to_csv(index=False),
+                file_name='corpus_ngram_results.csv',
                 mime='text/csv',
                 key=10,
                 )
+
+            # Verovio rendering for corpus melodic ngrams
+            st.markdown("#### View Filtered Ngrams with Verovio")
+            st.warning("⚠️ Verovio rendering uses the **filtered** ngram results only. Please filter to a meaningful subset before rendering.")
+            n_ng_corpus = len(filtered_combined_ngrams)
+            if n_ng_corpus > 20:
+                st.warning(f"There are {n_ng_corpus} ngrams in the filtered list. Consider filtering to 20 or fewer before rendering.")
+            if st.button("Render Ngrams with Verovio", key="verovio_corpus_ngrams_render"):
+                import os, base64, re
+                piece_by_title = {p.metadata['title']: p for p in st.session_state.corpus.scores}
+                meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+                voice_cols = [c for c in filtered_combined_ngrams.columns if c not in meta_cols]
+                rendered = []
+                for _, row in filtered_combined_ngrams.iterrows():
+                    ng_title = row["Title"]
+                    ng_composer = row["Composer"]
+                    c_meas = int(row["Measure"])
+                    c_beat = row["Beat"] if "Beat" in row.index else ""
+                    voice_patterns = {v: row[v] for v in voice_cols if pd.notna(row[v]) and row[v] != ''}
+                    voices_str = ", ".join(f"{v}: {p}" for v, p in voice_patterns.items())
+                    cad_piece = piece_by_title.get(ng_title)
+                    if cad_piece is None:
+                        continue
+                    mei_src = cad_piece.path
+                    if mei_src.startswith('http'):
+                        mei_content = requests.get(mei_src).text
+                    elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
+                        with open(mei_src, 'r') as _f:
+                            mei_content = _f.read()
+                    else:
+                        mei_content = mei_src
+                    tk = verovio.toolkit(False)
+                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
+                    tk.setResourcePath(resource_path)
+                    tk.loadData(mei_content)
+                    tk.setScale(35)
+                    tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
+                    ng_pad = 2 if length_choice <= 3 else 3 if length_choice <= 5 else 5
+                    mr = str(c_meas) + "-" + str(c_meas + ng_pad)
+                    tk.select({"measureRange": mr})
+                    tk.redoLayout()
+                    count = tk.getPageCount()
+                    for page in range(1, count + 1):
+                        music = tk.renderToSVG(page)
+                        label = (
+                            f"**Composer:** {ng_composer} | **Title:** {ng_title} | "
+                            f"**Measure:** {c_meas} | **Beat:** {c_beat} | **Voices/Ngrams:** {voices_str}"
+                        )
+                        rendered.append((label, music))
+                st.session_state.verovio_corpus_ngrams_rendered = rendered
+            if st.session_state.get('verovio_corpus_ngrams_rendered'):
+                import base64, re
+                st.subheader("Ngram Excerpts")
+                st.write(f"Showing {len(st.session_state.verovio_corpus_ngrams_rendered)} excerpt(s)")
+                for label, music in st.session_state.verovio_corpus_ngrams_rendered:
+                    st.divider()
+                    svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
+                    svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
+                    st.markdown(
+                        f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
+                        unsafe_allow_html=True
+                    )
 
 # harmonic ngram form
 if st.sidebar.checkbox("Explore Harmonic Ngrams"):
