@@ -906,7 +906,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(nr_chart, width='stretch')
+                        st.plotly_chart(nr_chart, use_container_width=True)
                         
                     # Add download button in second column
                     with col2:
@@ -961,7 +961,7 @@ if st.sidebar.checkbox("Explore Notes"):
                             )
                     
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, width='stretch')
+                        st.dataframe(sorted_nr, use_container_width=True)
                         
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1007,7 +1007,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(nr_chart, width='stretch', )
+                        st.plotly_chart(nr_chart, use_container_width=True, )
                         # st.plotly_chart(fig, theme=None)
 
                         
@@ -1063,7 +1063,7 @@ if st.sidebar.checkbox("Explore Notes"):
                             )
                     
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, width='stretch')
+                        st.dataframe(sorted_nr, use_container_width=True)
                     
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1213,7 +1213,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(dur_chart, width='stretch', )
+                        st.plotly_chart(dur_chart, use_container_width=True, )
                         # st.plotly_chart(fig, theme=None)
 
                         
@@ -1269,7 +1269,7 @@ if st.sidebar.checkbox("Explore Durations"):
                             )
 
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), width='stretch')
+                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
 
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1312,7 +1312,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(dur_chart, width='stretch', )
+                        st.plotly_chart(dur_chart, use_container_width=True, )
                         
                     # Add download button in second column
                     with col2:
@@ -1365,7 +1365,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                 mime="text/html"
                             )                    
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), width='stretch')
+                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
 
                     
                         # Download option
@@ -1589,7 +1589,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             else:
                                 fig = st.session_state.weighted_notes_multi_fig
 
-                            st.plotly_chart(fig, width='stretch')
+                            st.plotly_chart(fig, use_container_width=True)
                         with col2:
                             @st.cache_data(ttl=3600)
                             def get_radar_html():
@@ -1700,7 +1700,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 fig = st.session_state.weighted_notes_single_fig
 
                             with col1:
-                                st.plotly_chart(fig, width='stretch')
+                                st.plotly_chart(fig, use_container_width=True)
                             # Add download button in second column
                             with col2:
                                 @st.cache_data(ttl=3600)
@@ -1945,7 +1945,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(mel_chart, width='stretch')
+                        st.plotly_chart(mel_chart, use_container_width=True)
                         
                     # Add download button in second column
                     with col2:
@@ -2001,7 +2001,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
 
 
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, width='stretch')
+                        st.dataframe(sorted_mel, use_container_width=True)
                         composer = mel.iloc[0]['Composer']
                         title = mel.iloc[0]['Title']
 
@@ -2058,7 +2058,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(mel_chart, width='stretch')
+                        st.plotly_chart(mel_chart, use_container_width=True)
                         
                     # Add download button in second column
                     with col2:
@@ -2111,7 +2111,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             )
 
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, width='stretch')
+                        st.dataframe(sorted_mel, use_container_width=True)
                         
                         st.download_button(
                             label="Download Filtered Melodic Data as CSV",
@@ -2305,7 +2305,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(har_chart, width='stretch')
+                        st.plotly_chart(har_chart, use_container_width=True)
                         
                     # Add download button in second column
                     with col2:
@@ -2363,7 +2363,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     if st.checkbox("Show Table of Harmonic Intervals"):
                         sorted_har = sorted_har.dropna(subset=['Interval'])
                         sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, width='stretch')
+                        st.dataframe(sorted_har, use_container_width=True)
                         composer = har.iloc[0]['Composer']
                         title = har.iloc[0]['Title']
 
@@ -2418,7 +2418,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(har_chart, width='stretch')
+                        st.plotly_chart(har_chart, use_container_width=True)
                         
                     # Add download button in second column
                     with col2:
@@ -2473,7 +2473,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     if st.checkbox("Show Table of Harmonic Intervals"):
                         sorted_har = sorted_har.dropna(subset=['Interval'])
                         sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, width='stretch')
+                        st.dataframe(sorted_har, use_container_width=True)
                         
                         st.download_button(
                             label="Download Filtered Harmonic Data as CSV",
@@ -2615,7 +2615,7 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                 st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
                 st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-            st.altair_chart(st.session_state.heatmap, width='stretch')
+            st.altair_chart(st.session_state.heatmap, use_container_width=True)
 
             st.write("Filter Results by Contents of Each Column") 
             filtered_ngrams = filter_dataframe_ng(st.session_state.ngrams3)
@@ -2678,7 +2678,7 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                         st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
                     else:
                         st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(heatmap, width='stretch')
+                    st.altair_chart(heatmap, use_container_width=True)
                 if 'combined_ngrams' in st.session_state.keys():
                     del st.session_state.combined_ngrams
                 if len(ngram_df_list) > 0:
@@ -2762,7 +2762,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                 st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
                 st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
-            st.altair_chart(st.session_state.har_heatmap, width='stretch')
+            st.altair_chart(st.session_state.har_heatmap, use_container_width=True)
 
             st.write("Filter Results by Contents of Each Column")
             filtered_har_ngrams = filter_dataframe_ng(st.session_state.har_ngrams3)
@@ -2815,7 +2815,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                         st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
                     else:
                         st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(har_heatmap, width='stretch')
+                    st.altair_chart(har_heatmap, use_container_width=True)
                 if 'combined_har_ngrams' in st.session_state.keys():
                     del st.session_state.combined_har_ngrams
                 if len(har_ngram_df_list) > 0:
@@ -2924,7 +2924,7 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
                         y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
                         tooltip=['Pattern', 'Count']
                     ).properties(title='Sonority Ngram Frequency (Top 30)')
-                st.altair_chart(bar_chart, width='stretch')
+                st.altair_chart(bar_chart, use_container_width=True)
 
             show_table = st.checkbox('Show Table', key='son_ng_show_table')
             if show_table:
@@ -3033,7 +3033,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-        st.dataframe(filtered_hr, width='stretch')
+        st.dataframe(filtered_hr, use_container_width=True)
         # csv = convert_df(filtered_hr)
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
@@ -3167,7 +3167,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
-        st.dataframe(filtered_p_types, width='stretch')
+        st.dataframe(filtered_p_types, use_container_width=True)
         # csv = convert_df(filtered_p_types)
         
         if corpus_length == 1:
@@ -3630,7 +3630,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                         'SinceLast', 'ToNext']
             filtered_cadences = filtered_cadences[sel_cols]
-            st.dataframe(filtered_cadences, width='stretch')
+            st.dataframe(filtered_cadences, use_container_width=True)
             # to download csv
             download_name = piece.metadata['title'] + '_cadence_results.csv'
             st.download_button(
@@ -3742,7 +3742,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             
             # Plot chart in first column
             with col1:
-                st.plotly_chart(cad_chart, width='stretch')
+                st.plotly_chart(cad_chart, use_container_width=True)
                 
             # Add download button in second column
             with col2:
@@ -3803,7 +3803,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             container = st.container()
             col1, col2 = container.columns([10, 2])
             with col1:
-                st.plotly_chart(cad_chart_by_type, width='stretch')
+                st.plotly_chart(cad_chart_by_type, use_container_width=True)
             with col2:
                 @st.cache_data(ttl=3600)
                 def get_html_content_by_type():
@@ -3875,7 +3875,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                     st.session_state.cad_single_radar_key = _radar_key
                 else:
                     radar_new = st.session_state.cad_single_radar_fig
-                st.container().plotly_chart(radar_new, width='stretch')
+                st.container().plotly_chart(radar_new, use_container_width=True)
 
                 
             # Add download button in second column
@@ -3950,7 +3950,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         x=0.5
                     )
                 )
-                st.plotly_chart(progress_plot, width='stretch')
+                st.plotly_chart(progress_plot, use_container_width=True)
                 
             # Add download button in second column
             with col2:
@@ -4024,7 +4024,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                         'SinceLast', 'ToNext']
             filtered_cadences = filtered_cadences[sel_cols] 
-            st.dataframe(filtered_cadences, width='stretch')
+            st.dataframe(filtered_cadences, use_container_width=True)
             download_name = "corpus_cadence_results.csv"
             # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
             st.download_button(
@@ -4141,7 +4141,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             
             # Plot chart in first column
             with col1:
-                st.plotly_chart(cad_chart, width='stretch')
+                st.plotly_chart(cad_chart, use_container_width=True)
                 
             # Add download button in second column
             with col2:
@@ -4202,7 +4202,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             container = st.container()
             col1, col2 = container.columns([10, 2])
             with col1:
-                st.plotly_chart(cad_chart_by_type, width='stretch')
+                st.plotly_chart(cad_chart_by_type, use_container_width=True)
             with col2:
                 @st.cache_data(ttl=3600)
                 def get_html_content_by_type():
@@ -4278,8 +4278,8 @@ if st.sidebar.checkbox("Explore Cadences"):
                             font=dict(size=20)  # Maintains title size),
                             )
                 )
-                # st.plotly_chart(radar_new, width='stretch')
-                st.container().plotly_chart(radar_new, width='stretch')
+                # st.plotly_chart(radar_new, use_container_width=True)
+                st.container().plotly_chart(radar_new, use_container_width=True)
 
                 
             # Add download button in second column
@@ -4332,17 +4332,17 @@ if st.sidebar.checkbox("Explore Cadences"):
                     )
             # old code
             # radar_new = cadence_radar(cadences)
-            # st.plotly_chart(radar_new, width='stretch')
+            # st.plotly_chart(radar_new, use_container_width=True)
         # old radar from Intervals
         # if st.checkbox("Show Basic Radar Plot"):
         #     st.subheader("Radar Plot of Cadences") 
         #     # radar = st.session_state.cadence_radar(cadences)
         #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
-        #     st.plotly_chart(radar, width='stretch')
+        #     st.plotly_chart(radar, use_container_width=True)
         # if st.checkbox("Show Advanced Radar Plot"):
         #     st.subheader("Advanced Radar Plot")    
         #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
-        #     st.plotly_chart(radar, width='stretch')
+        #     st.plotly_chart(radar, use_container_width=True)
         if st.checkbox("Show Progress Charts"):
             st.subheader("Progress Plot of Cadences for each Piece in Corpus")
             titles = cadences_metadata["Title"].unique()
@@ -4369,7 +4369,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                             x=0.5
                         )
                     )
-                    st.plotly_chart(progress_plot, width='stretch')
+                    st.plotly_chart(progress_plot, use_container_width=True)
                 
                 # Add download button in second column
                 with col2:
@@ -4423,16 +4423,16 @@ if st.sidebar.checkbox("Explore Cadences"):
                             )
                                 
                 # cadence_progress(filtered_cadences, composer, title)
-                # st.plotly_chart(cadence_progress(filtered_cadences, composer, title), width='stretch')
+                # st.plotly_chart(cadence_progress(filtered_cadences, composer, title), use_container_width=True)
         # old progress from intervals
         # if st.checkbox("Basic Progress Chart"):    
         #     st.subheader("Basic Progress Chart")
         #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-        #     st.pyplot(progress, width='stretch')
+        #     st.pyplot(progress, use_container_width=True)
         # if st.checkbox("Show Advanced Progress Chart"):
         #     st.subheader("Advanced Progress Chart")    
         #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-        #     st.pyplot(progress, width='stretch')
+        #     st.pyplot(progress, use_container_width=True)
 
 if st.sidebar.checkbox("Explore Model Finder"):
     st.subheader("Model Finder")
