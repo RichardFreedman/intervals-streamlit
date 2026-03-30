@@ -4178,8 +4178,24 @@ if st.sidebar.checkbox("Explore Cadences"):
     elif corpus_length >= 2:
         _cad_corpus_key = str(sorted(crim_piece_selections))
         if st.session_state.get('cad_corpus_key') != _cad_corpus_key:
-            func = ImportedPiece.cadences
-            list_of_dfs = st.session_state.corpus.batch(func=func, kwargs={'keep_keys': True}, metadata=True)
+            list_of_dfs = []
+            failed_pieces = []
+            for piece in st.session_state.corpus.scores:
+                try:
+                    df = piece.cadences(keep_keys=True)
+                    df = df.assign(
+                        Composer=piece.metadata['composer'],
+                        Title=piece.metadata['title'],
+                        Date=piece.metadata['date']
+                    )
+                    list_of_dfs.append(df)
+                except Exception as _e:
+                    failed_pieces.append(f"{piece.metadata.get('composer', '?')}: {piece.metadata.get('title', '?')} ({_e})")
+            if failed_pieces:
+                st.warning("The cadence tool is designed to work only with Renaissance counterpoint.  Please check your corpus.")
+            if not list_of_dfs:
+                st.warning("The cadence tool is designed to work only with Renaissance counterpoint.  Please check your corpus.")
+                st.stop()
             cadences_metadata = pd.concat(list_of_dfs, ignore_index=False)
             cols_to_move = ['Composer', 'Title', 'Date']
             cadences = cadences_metadata[cols_to_move + [col for col in cadences_metadata.columns if col not in cols_to_move]]
