@@ -3622,7 +3622,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             total_cads = grouped_cadences['Count'].sum()
     
         # the full table of cad
-        if st.checkbox("Show Full Cadence Table"):
+        if st.checkbox("Show Full Cadence Table and Render with Verovio"):
             # cadences = piece.cadences()
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
@@ -4017,7 +4017,7 @@ if st.sidebar.checkbox("Explore Cadences"):
         else:
             cadences = st.session_state.cad_corpus_cadences
             cadences_metadata = st.session_state.cad_corpus_metadata
-        if st.checkbox("Show Full Cadence Table"):
+        if st.checkbox("Show Full Cadence Table and Render with Verovio"):
             st.subheader("Detailed View of Cadences")
             filtered_cadences = filter_dataframe_cads(cadences)
             sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
