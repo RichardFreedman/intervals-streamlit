@@ -34,6 +34,7 @@ import time
 from collections import deque
 from collections import Counter
 import seaborn as sns
+import verovio
 
 
 from pandas.api.types import (
@@ -112,6 +113,7 @@ elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
         st.session_state.piece = piece
     if "metadata" not in st.session_state:
         st.session_state.metadata = piece.metadata
+    st.session_state.mei_source = filepath
     st.session_state.metadata['CRIM View'] = crim_view_url
     st.dataframe(st.session_state.metadata)  
 
@@ -131,11 +133,12 @@ elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
         #     piece = importScore(f.name)
         byte_str = file.read()
         text_obj = byte_str.decode('UTF-8')
-        piece = importScore(text_obj) 
+        piece = importScore(text_obj)
         if "piece" not in st.session_state:
             st.session_state.piece = piece
         if "metadata" not in st.session_state:
             st.session_state.metadata = piece.metadata
+        st.session_state.mei_source = text_obj
         st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
         st.dataframe(st.session_state.metadata)  
 
@@ -903,7 +906,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(nr_chart, use_container_width=True)
+                        st.plotly_chart(nr_chart, width='stretch')
                         
                     # Add download button in second column
                     with col2:
@@ -958,7 +961,7 @@ if st.sidebar.checkbox("Explore Notes"):
                             )
                     
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, use_container_width=True)
+                        st.dataframe(sorted_nr, width='stretch')
                         
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1004,7 +1007,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(nr_chart, use_container_width=True, )
+                        st.plotly_chart(nr_chart, width='stretch', )
                         # st.plotly_chart(fig, theme=None)
 
                         
@@ -1060,7 +1063,7 @@ if st.sidebar.checkbox("Explore Notes"):
                             )
                     
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, use_container_width=True)
+                        st.dataframe(sorted_nr, width='stretch')
                     
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1210,7 +1213,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(dur_chart, use_container_width=True, )
+                        st.plotly_chart(dur_chart, width='stretch', )
                         # st.plotly_chart(fig, theme=None)
 
                         
@@ -1266,7 +1269,7 @@ if st.sidebar.checkbox("Explore Durations"):
                             )
 
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
+                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), width='stretch')
 
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
@@ -1309,7 +1312,7 @@ if st.sidebar.checkbox("Explore Durations"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(dur_chart, use_container_width=True, )
+                        st.plotly_chart(dur_chart, width='stretch', )
                         
                     # Add download button in second column
                     with col2:
@@ -1362,7 +1365,7 @@ if st.sidebar.checkbox("Explore Durations"):
                                 mime="text/html"
                             )                    
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
+                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), width='stretch')
 
                     
                         # Download option
@@ -1586,7 +1589,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             else:
                                 fig = st.session_state.weighted_notes_multi_fig
 
-                            st.plotly_chart(fig, use_container_width=True)
+                            st.plotly_chart(fig, width='stretch')
                         with col2:
                             @st.cache_data(ttl=3600)
                             def get_radar_html():
@@ -1697,7 +1700,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 fig = st.session_state.weighted_notes_single_fig
 
                             with col1:
-                                st.plotly_chart(fig, use_container_width=True)
+                                st.plotly_chart(fig, width='stretch')
                             # Add download button in second column
                             with col2:
                                 @st.cache_data(ttl=3600)
@@ -1942,7 +1945,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(mel_chart, use_container_width=True)
+                        st.plotly_chart(mel_chart, width='stretch')
                         
                     # Add download button in second column
                     with col2:
@@ -1998,7 +2001,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
 
 
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, use_container_width=True)
+                        st.dataframe(sorted_mel, width='stretch')
                         composer = mel.iloc[0]['Composer']
                         title = mel.iloc[0]['Title']
 
@@ -2055,7 +2058,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(mel_chart, use_container_width=True)
+                        st.plotly_chart(mel_chart, width='stretch')
                         
                     # Add download button in second column
                     with col2:
@@ -2108,7 +2111,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             )
 
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, use_container_width=True)
+                        st.dataframe(sorted_mel, width='stretch')
                         
                         st.download_button(
                             label="Download Filtered Melodic Data as CSV",
@@ -2302,7 +2305,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(har_chart, use_container_width=True)
+                        st.plotly_chart(har_chart, width='stretch')
                         
                     # Add download button in second column
                     with col2:
@@ -2360,7 +2363,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     if st.checkbox("Show Table of Harmonic Intervals"):
                         sorted_har = sorted_har.dropna(subset=['Interval'])
                         sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, use_container_width=True)
+                        st.dataframe(sorted_har, width='stretch')
                         composer = har.iloc[0]['Composer']
                         title = har.iloc[0]['Title']
 
@@ -2415,7 +2418,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(har_chart, use_container_width=True)
+                        st.plotly_chart(har_chart, width='stretch')
                         
                     # Add download button in second column
                     with col2:
@@ -2470,7 +2473,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                     if st.checkbox("Show Table of Harmonic Intervals"):
                         sorted_har = sorted_har.dropna(subset=['Interval'])
                         sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, use_container_width=True)
+                        st.dataframe(sorted_har, width='stretch')
                         
                         st.download_button(
                             label="Download Filtered Harmonic Data as CSV",
@@ -2612,7 +2615,7 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                 st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
                 st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-            st.altair_chart(st.session_state.heatmap, use_container_width=True)
+            st.altair_chart(st.session_state.heatmap, width='stretch')
 
             st.write("Filter Results by Contents of Each Column") 
             filtered_ngrams = filter_dataframe_ng(st.session_state.ngrams3)
@@ -2675,7 +2678,7 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                         st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
                     else:
                         st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(heatmap, use_container_width=True)
+                    st.altair_chart(heatmap, width='stretch')
                 if 'combined_ngrams' in st.session_state.keys():
                     del st.session_state.combined_ngrams
                 if len(ngram_df_list) > 0:
@@ -2759,7 +2762,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                 st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
                 st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
-            st.altair_chart(st.session_state.har_heatmap, use_container_width=True)
+            st.altair_chart(st.session_state.har_heatmap, width='stretch')
 
             st.write("Filter Results by Contents of Each Column")
             filtered_har_ngrams = filter_dataframe_ng(st.session_state.har_ngrams3)
@@ -2812,7 +2815,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                         st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
                     else:
                         st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(har_heatmap, use_container_width=True)
+                    st.altair_chart(har_heatmap, width='stretch')
                 if 'combined_har_ngrams' in st.session_state.keys():
                     del st.session_state.combined_har_ngrams
                 if len(har_ngram_df_list) > 0:
@@ -2921,7 +2924,7 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
                         y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
                         tooltip=['Pattern', 'Count']
                     ).properties(title='Sonority Ngram Frequency (Top 30)')
-                st.altair_chart(bar_chart, use_container_width=True)
+                st.altair_chart(bar_chart, width='stretch')
 
             show_table = st.checkbox('Show Table', key='son_ng_show_table')
             if show_table:
@@ -3030,7 +3033,7 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
-        st.dataframe(filtered_hr, use_container_width=True)
+        st.dataframe(filtered_hr, width='stretch')
         # csv = convert_df(filtered_hr)
         if corpus_length == 1:
             download_name = piece.metadata['title'] + '_homorhythm_results.csv'
@@ -3164,7 +3167,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
-        st.dataframe(filtered_p_types, use_container_width=True)
+        st.dataframe(filtered_p_types, width='stretch')
         # csv = convert_df(filtered_p_types)
         
         if corpus_length == 1:
@@ -3189,6 +3192,93 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     mime='text/csv',
                     key=13,
                     )
+        # Verovio presentation type rendering
+        st.markdown("#### View Filtered Presentation Types with Verovio")
+        n_ptypes = len(filtered_p_types)
+        if n_ptypes > 20:
+            st.warning(f"There are {n_ptypes} presentation types in the filtered list. Consider filtering to 20 or fewer.")
+        if st.button("Render Presentation Types", key="verovio_ptypes_render"):
+            import os, base64, re
+            # Build piece lookup: for corpus use corpus.scores; for single piece use mei_source
+            if corpus_length > 1:
+                piece_by_title = {
+                    p.metadata['title']: p
+                    for p in st.session_state.corpus.scores
+                }
+            rendered = []
+            for _, row in filtered_p_types.iterrows():
+                pt_title = row["Title"]
+                pt_composer = row["Composer"]
+                this_p_type = row["Presentation_Type"]
+                p_voices = row["Voices"]
+                n_voices = row["Number_Entries"]
+                soggetti = row["Soggetti"]
+                mint = row["Melodic_Entry_Intervals"]
+                tint = row["Time_Entry_Intervals"]
+                flexed = row["Flexed_Entries"]
+                parallel = row["Parallel_Voice"]
+                non_overlaps = row["Count_Non_Overlaps"]
+                ml = row["Measures_Beats"]
+                # Measures_Beats is a list in single-piece but a comma-separated string in corpus
+                if isinstance(ml, list):
+                    ml_items = ml
+                else:
+                    ml_items = [item.strip() for item in str(ml).split(',')]
+                first_part_first = int(float(ml_items[0].split('/')[0]))
+                first_part_last = int(float(ml_items[-1].split('/')[0]))
+                mr = str(first_part_first) + "-" + str(first_part_last + 3)
+                # Get MEI content
+                if corpus_length > 1:
+                    cad_piece = piece_by_title.get(pt_title)
+                    if cad_piece is None:
+                        continue
+                    mei_src = cad_piece.path
+                else:
+                    mei_src = st.session_state.get('mei_source', '')
+                if not mei_src:
+                    continue
+                if mei_src.startswith('http'):
+                    mei_content = requests.get(mei_src).text
+                elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
+                    with open(mei_src, 'r') as _f:
+                        mei_content = _f.read()
+                else:
+                    mei_content = mei_src
+                tk = verovio.toolkit(False)
+                resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
+                tk.setResourcePath(resource_path)
+                tk.loadData(mei_content)
+                tk.setScale(40)
+                tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
+                tk.select({"measureRange": mr})
+                tk.redoLayout()
+                count = tk.getPageCount()
+                for page in range(1, count + 1):
+                    music = tk.renderToSVG(page)
+                    label = (
+                        f"**Composer:** {pt_composer} | **Title:** {pt_title} | "
+                        f"**Measures:** {mr} | **Type:** {this_p_type} | "
+                        f"**Voices:** {p_voices} | **Entries:** {n_voices} | "
+                        f"**Soggetti:** {soggetti} | **Melodic Intervals:** {mint} | "
+                        f"**Time Intervals:** {tint} | **Flexed:** {flexed} | "
+                        f"**Parallel:** {parallel} | **Non-Overlaps:** {non_overlaps}"
+                    )
+                    rendered.append((label, music))
+            st.session_state.verovio_ptypes_rendered = rendered
+        # Display stored renders (persists across reruns)
+        if 'verovio_ptypes_rendered' in st.session_state:
+            import base64, re
+            st.subheader("Presentation Type Excerpts")
+            st.write(f"Showing {len(st.session_state.verovio_ptypes_rendered)} excerpt(s)")
+            for label, music in st.session_state.verovio_ptypes_rendered:
+                st.divider()
+                st.markdown(label)
+                svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
+                svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
+                st.markdown(
+                    f'<img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;"/>',
+                    unsafe_allow_html=True
+                )
 # def cadence_radar(cadences):
 #     # Define the category order for cad tones
 #     category_order = {
@@ -3540,7 +3630,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                         'SinceLast', 'ToNext']
             filtered_cadences = filtered_cadences[sel_cols]
-            st.dataframe(filtered_cadences, use_container_width=True)
+            st.dataframe(filtered_cadences, width='stretch')
             # to download csv
             download_name = piece.metadata['title'] + '_cadence_results.csv'
             st.download_button(
@@ -3549,10 +3639,67 @@ if st.sidebar.checkbox("Explore Cadences"):
                 file_name = download_name,
                 key=14,
                 mime='text/csv')
-            # possible Verovio Cadences use.  Needs to adapt renderer?
-            # if st.button("Print Filtered Cadences with Verovio"):
-            #     output = piece.verovioCadences(df = filtered_cadences)
-            #     components.html(output)
+            # Verovio cadence rendering
+            st.markdown("#### View Filtered Cadences with Verovio")
+            mei_source = st.session_state.get('mei_source', '')
+            if not mei_source:
+                st.warning("MEI source not available for rendering.")
+            else:
+                n_cads = len(filtered_cadences)
+                if n_cads > 20:
+                    st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many cadences may be slow. Consider filtering to 20 or fewer.")
+                if st.button("Render Cadences", key="verovio_cads_render"):
+                    import os, base64, re
+                    # Load MEI content from URL, local file path, or uploaded content
+                    if mei_source.startswith('http'):
+                        response = requests.get(mei_source)
+                        mei_content = response.text
+                    elif mei_source.startswith('/') or mei_source.startswith('Music_Files/'):
+                        with open(mei_source, 'r') as _f:
+                            mei_content = _f.read()
+                    else:
+                        mei_content = mei_source
+                    tk = verovio.toolkit(False)
+                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
+                    tk.setResourcePath(resource_path)
+                    tk.loadData(mei_content)
+                    tk.setScale(53)
+                    tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
+                    rendered = []
+                    for cad in filtered_cadences.index:
+                        c_meas = filtered_cadences.loc[cad]["Measure"]
+                        c_tone = filtered_cadences.loc[cad]["Tone"]
+                        c_type = filtered_cadences.loc[cad]["CadType"]
+                        c_beat = filtered_cadences.loc[cad]["Beat"]
+                        cvfs = filtered_cadences.loc[cad]["CVFs"]
+                        low = int(c_meas - 1)
+                        high = int(c_meas)
+                        mr = str(low) + "-" + str(high)
+                        tk.select({"measureRange": mr})
+                        tk.redoLayout()
+                        count = tk.getPageCount()
+                        for page in range(1, count + 1):
+                            music = tk.renderToSVG(page)
+                            label = (
+                                f"**Composer:** {composer} | **Title:** {title} | "
+                                f"**Measure:** {c_meas} | **Beat:** {c_beat} | "
+                                f"**Tone:** {c_tone} | **Type:** {c_type} | **CVFs:** {cvfs}"
+                            )
+                            rendered.append((label, music))
+                    st.session_state.verovio_rendered = rendered
+                # Display stored renders (persists across reruns)
+                if st.session_state.get('verovio_rendered'):
+                    import base64, re
+                    st.subheader("Cadence Excerpts")
+                    st.write(f"Showing {len(st.session_state.verovio_rendered)} excerpt(s)")
+                    for label, music in st.session_state.verovio_rendered:
+                        st.divider()
+                        svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
+                        svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
+                        st.markdown(
+                            f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
+                            unsafe_allow_html=True
+                        )
         # summary of tone and type
         # Your existing chart creation code remains unchanged
         if st.checkbox("Chart of Cadences by Tone and Type"):
@@ -3595,7 +3742,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             
             # Plot chart in first column
             with col1:
-                st.plotly_chart(cad_chart, use_container_width=True)
+                st.plotly_chart(cad_chart, width='stretch')
                 
             # Add download button in second column
             with col2:
@@ -3656,7 +3803,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             container = st.container()
             col1, col2 = container.columns([10, 2])
             with col1:
-                st.plotly_chart(cad_chart_by_type, use_container_width=True)
+                st.plotly_chart(cad_chart_by_type, width='stretch')
             with col2:
                 @st.cache_data(ttl=3600)
                 def get_html_content_by_type():
@@ -3728,7 +3875,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                     st.session_state.cad_single_radar_key = _radar_key
                 else:
                     radar_new = st.session_state.cad_single_radar_fig
-                st.container().plotly_chart(radar_new, use_container_width=True)
+                st.container().plotly_chart(radar_new, width='stretch')
 
                 
             # Add download button in second column
@@ -3803,7 +3950,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         x=0.5
                     )
                 )
-                st.plotly_chart(progress_plot, use_container_width=True)
+                st.plotly_chart(progress_plot, width='stretch')
                 
             # Add download button in second column
             with col2:
@@ -3877,7 +4024,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                         'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                         'SinceLast', 'ToNext']
             filtered_cadences = filtered_cadences[sel_cols] 
-            st.dataframe(filtered_cadences, use_container_width=True)
+            st.dataframe(filtered_cadences, width='stretch')
             download_name = "corpus_cadence_results.csv"
             # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
             st.download_button(
@@ -3887,10 +4034,72 @@ if st.sidebar.checkbox("Explore Cadences"):
                 mime='text/csv',
                 key=15,
                 )
-            # possible Verovio Cadences use.  Needs to adapt renderer?
-            # if st.button("Print Filtered Cadences with Verovio"):
-            #     output = piece.verovioCadences(df = filtered_cadences)
-            #     components.html(output)
+            # Verovio cadence rendering (corpus)
+            st.markdown("#### View Filtered Cadences with Verovio")
+            n_cads = len(filtered_cadences)
+            if n_cads > 20:
+                st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many cadences may be slow. Consider filtering to 20 or fewer.")
+            if st.button("Render Cadences", key="verovio_corpus_cads_render"):
+                import os, base64, re
+                # Build a title -> piece lookup from the corpus
+                piece_by_title = {
+                    p.metadata['title']: p
+                    for p in st.session_state.corpus.scores
+                }
+                rendered = []
+                for _, row in filtered_cadences.iterrows():
+                    cad_title = row["Title"]
+                    cad_composer = row["Composer"]
+                    c_meas = row["Measure"]
+                    c_tone = row["Tone"]
+                    c_type = row["CadType"]
+                    c_beat = row["Beat"]
+                    cvfs = row["CVFs"]
+                    cad_piece = piece_by_title.get(cad_title)
+                    if cad_piece is None:
+                        continue
+                    mei_src = cad_piece.path
+                    if mei_src.startswith('http'):
+                        mei_content = requests.get(mei_src).text
+                    elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
+                        with open(mei_src, 'r') as _f:
+                            mei_content = _f.read()
+                    else:
+                        mei_content = mei_src
+                    tk = verovio.toolkit(False)
+                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
+                    tk.setResourcePath(resource_path)
+                    tk.loadData(mei_content)
+                    tk.setScale(53)
+                    tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
+                    low = int(c_meas - 1)
+                    high = int(c_meas)
+                    mr = str(low) + "-" + str(high)
+                    tk.select({"measureRange": mr})
+                    tk.redoLayout()
+                    count = tk.getPageCount()
+                    for page in range(1, count + 1):
+                        music = tk.renderToSVG(page)
+                        label = (
+                            f"**Composer:** {cad_composer} | **Title:** {cad_title} | "
+                            f"**Measure:** {c_meas} | **Beat:** {c_beat} | "
+                            f"**Tone:** {c_tone} | **Type:** {c_type} | **CVFs:** {cvfs}"
+                        )
+                        rendered.append((label, music))
+                st.session_state.verovio_corpus_rendered = rendered
+            # Display stored renders (persists across reruns)
+            if 'verovio_corpus_rendered' in st.session_state:
+                import base64, re
+                st.subheader("Cadence Excerpts")
+                st.write(f"Showing {len(st.session_state.verovio_corpus_rendered)} excerpt(s)")
+                for label, music in st.session_state.verovio_corpus_rendered:
+                    st.divider()
+                    svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
+                    svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
+                    st.markdown(
+                        f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
+                        unsafe_allow_html=True
+                    )
         # summary of tone and type
         if st.checkbox("Chart of Cadences by Tone and Type"):
             st.subheader("Chart of Cadence Tones and Types") 
@@ -3932,7 +4141,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             
             # Plot chart in first column
             with col1:
-                st.plotly_chart(cad_chart, use_container_width=True)
+                st.plotly_chart(cad_chart, width='stretch')
                 
             # Add download button in second column
             with col2:
@@ -3993,7 +4202,7 @@ if st.sidebar.checkbox("Explore Cadences"):
             container = st.container()
             col1, col2 = container.columns([10, 2])
             with col1:
-                st.plotly_chart(cad_chart_by_type, use_container_width=True)
+                st.plotly_chart(cad_chart_by_type, width='stretch')
             with col2:
                 @st.cache_data(ttl=3600)
                 def get_html_content_by_type():
@@ -4069,8 +4278,8 @@ if st.sidebar.checkbox("Explore Cadences"):
                             font=dict(size=20)  # Maintains title size),
                             )
                 )
-                # st.plotly_chart(radar_new, use_container_width=True)
-                st.container().plotly_chart(radar_new, use_container_width=True)
+                # st.plotly_chart(radar_new, width='stretch')
+                st.container().plotly_chart(radar_new, width='stretch')
 
                 
             # Add download button in second column
@@ -4123,17 +4332,17 @@ if st.sidebar.checkbox("Explore Cadences"):
                     )
             # old code
             # radar_new = cadence_radar(cadences)
-            # st.plotly_chart(radar_new, use_container_width=True)
+            # st.plotly_chart(radar_new, width='stretch')
         # old radar from Intervals
         # if st.checkbox("Show Basic Radar Plot"):
         #     st.subheader("Radar Plot of Cadences") 
         #     # radar = st.session_state.cadence_radar(cadences)
         #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=False, displayAll=False, renderer='streamlit')
-        #     st.plotly_chart(radar, use_container_width=True)
+        #     st.plotly_chart(radar, width='stretch')
         # if st.checkbox("Show Advanced Radar Plot"):
         #     st.subheader("Advanced Radar Plot")    
         #     radar = st.session_state.corpus.compareCadenceRadarPlots(combinedType=True, displayAll=True, renderer='streamlit')
-        #     st.plotly_chart(radar, use_container_width=True)
+        #     st.plotly_chart(radar, width='stretch')
         if st.checkbox("Show Progress Charts"):
             st.subheader("Progress Plot of Cadences for each Piece in Corpus")
             titles = cadences_metadata["Title"].unique()
@@ -4160,7 +4369,7 @@ if st.sidebar.checkbox("Explore Cadences"):
                             x=0.5
                         )
                     )
-                    st.plotly_chart(progress_plot, use_container_width=True)
+                    st.plotly_chart(progress_plot, width='stretch')
                 
                 # Add download button in second column
                 with col2:
@@ -4214,16 +4423,16 @@ if st.sidebar.checkbox("Explore Cadences"):
                             )
                                 
                 # cadence_progress(filtered_cadences, composer, title)
-                # st.plotly_chart(cadence_progress(filtered_cadences, composer, title), use_container_width=True)
+                # st.plotly_chart(cadence_progress(filtered_cadences, composer, title), width='stretch')
         # old progress from intervals
         # if st.checkbox("Basic Progress Chart"):    
         #     st.subheader("Basic Progress Chart")
         #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=False, renderer='streamlit')
-        #     st.pyplot(progress, use_container_width=True)
+        #     st.pyplot(progress, width='stretch')
         # if st.checkbox("Show Advanced Progress Chart"):
         #     st.subheader("Advanced Progress Chart")    
         #     progress = st.session_state.corpus.compareCadenceProgressPlots(includeType=True, renderer='streamlit')
-        #     st.pyplot(progress, use_container_width=True)
+        #     st.pyplot(progress, width='stretch')
 
 if st.sidebar.checkbox("Explore Model Finder"):
     st.subheader("Model Finder")
