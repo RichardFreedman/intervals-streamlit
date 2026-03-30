@@ -261,8 +261,8 @@ category_order = {
 pitch_class_order = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F-', 'E#', 'F', 'F#', 'G-', 'F##', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'B#', 'Rest']
 
 # Named note orderings for weighted-notes radar — kept separate from cadence orderings
-NOTE_PC_CHROMATIC = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F', 'F#', 'G-', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'F-', 'E#', 'F##', 'B#', 'Rest']
-NOTE_PC_FIFTHS    = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'A-', 'E-', 'B-', 'F', 'G#', 'D#', 'A#', 'D-', 'G-', 'F-', 'E#', 'B#', 'F##', 'Rest']
+NOTE_PC_CHROMATIC = ['C', 'C#', 'D-', 'D', 'D#', 'E-', 'E', 'F-','F', 'F#', 'F##', 'G-', 'G', 'G#', 'A-', 'A', 'A#', 'B-', 'B', 'B#', 'Rest']
+NOTE_PC_FIFTHS    = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'G-', 'C#', 'D-','G#','A-', 'D#', 'E-', 'A#','B-', 'E#', 'F', 'B#', 'Rest']
 NOTE_PC_DIATONIC  = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'B-', 'E-', 'A-', 'D-', 'C#', 'F#', 'G#', 'D#', 'A#', 'G-', 'F-', 'E#', 'F##', 'B#', 'Rest']
 NOTE_PC_ORDERS    = {'Chromatic': NOTE_PC_CHROMATIC, 'Fifths': NOTE_PC_FIFTHS, 'Diatonic': NOTE_PC_DIATONIC}
 
