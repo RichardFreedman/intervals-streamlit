@@ -842,7 +842,9 @@ if st.sidebar.checkbox("Explore Notes"):
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
-        with st.form("Note Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Note Settings"):
             combine_unisons_choice = st.selectbox(
                 "Combine Unisons", [False, True])
             combine_rests_choice = st.selectbox(
@@ -1530,7 +1532,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 key='weighted_color_grouping'
                             )
 
-                            _chart_key = (note_ordering, limit_to_active, color_grouping)
+                            _chart_key = (note_ordering, limit_to_active, color_grouping, exclude_rests)
                             if st.session_state.get('weighted_notes_multi_key') != _chart_key:
                                 active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
                                             if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
@@ -1852,7 +1854,9 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
-        with st.form("Melodic Interval Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Melodic Interval Settings"):
             combine_unisons_choice = st.selectbox(
                 "Combine Unisons", [False, True])
             combine_rests_choice = st.selectbox(
@@ -2216,7 +2220,9 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
         st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")    
-        with st.form("Harmonic Interval Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Harmonic Interval Settings"):
             directed = st.selectbox(
                 "Select Directed Interval Status",
                 [True, False])
@@ -2560,7 +2566,9 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
-        with st.form("Ngram Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Ngram Settings"):
             combine_unisons_choice = st.selectbox(
                 "Combine Unisons", [False, True])
             directed = st.selectbox(
@@ -2636,7 +2644,9 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                 )
     # for corpus
     elif corpus_length > 1:
-        with st.form("Ngram Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Ngram Settings"):
             combine_unisons_choice = st.selectbox(
                 "Combine Unisons", [False, True])
             directed = st.selectbox(
@@ -2660,13 +2670,14 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
 
             if submitted:
                 ngram_df_list = []
+                heatmap_list = []
                 for work in corpus_list:
                     piece = importScore(work)
-                    ngrams, heatmap = ngram_heatmap(piece, 
-                                combine_unisons_choice, 
-                                kind_choice, 
-                                directed, 
-                                compound, 
+                    ngrams, heatmap = ngram_heatmap(piece,
+                                combine_unisons_choice,
+                                kind_choice,
+                                directed,
+                                compound,
                                 length_choice,
                                 include_count)
                     ngrams = ngrams.map(convertTuple).dropna()
@@ -2674,17 +2685,25 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                     cols_to_move = ['Composer', 'Title', 'Date']
                     ngrams3 = ngrams2[cols_to_move + [col for col in ngrams2.columns if col not in cols_to_move]]
                     ngram_df_list.append(ngrams3)
-                    if piece.metadata["composer"] is not None:
-                        st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
-                    else:
-                        st.subheader("Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(heatmap, use_container_width=True)
+                    heatmap_list.append((piece.metadata['composer'], piece.metadata['title'], heatmap))
                 if 'combined_ngrams' in st.session_state.keys():
                     del st.session_state.combined_ngrams
+                if 'ngram_heatmaps' in st.session_state.keys():
+                    del st.session_state.ngram_heatmaps
                 if len(ngram_df_list) > 0:
                     combined_ngrams = pd.concat(ngram_df_list)
                     if "combined_ngrams" not in st.session_state:
                         st.session_state.combined_ngrams = combined_ngrams
+                if len(heatmap_list) > 0:
+                    st.session_state.ngram_heatmaps = heatmap_list
+
+        if st.session_state.get('ngram_heatmaps'):
+            for composer, title, heatmap in st.session_state.ngram_heatmaps:
+                if composer is not None:
+                    st.subheader("Ngram Heatmap: " + composer + ", " + title)
+                else:
+                    st.subheader("Ngram Heatmap: " + title)
+                st.altair_chart(heatmap, use_container_width=True)
 
         if "combined_ngrams" not in st.session_state:
             pass
@@ -2716,7 +2735,9 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
-        with st.form("Harmonic Ngram Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Harmonic Ngram Settings"):
             directed = st.selectbox(
                 "Select Directed Interval Status",
                 [True, False])
@@ -2778,7 +2799,9 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                 )
     # for corpus
     elif corpus_length > 1:
-        with st.form("Harmonic Ngram Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Harmonic Ngram Settings"):
             directed = st.selectbox(
                 "Select Directed Interval Status",
                 [True, False])
@@ -2797,6 +2820,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
             st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             if submitted:
                 har_ngram_df_list = []
+                har_heatmap_list = []
                 for work in corpus_list:
                     piece = importScore(work)
                     har_ngrams, har_heatmap = harmonic_ngram_heatmap(piece,
@@ -2811,17 +2835,25 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
                     cols_to_move = ['Composer', 'Title', 'Date']
                     har_ngrams3 = har_ngrams2[cols_to_move + [col for col in har_ngrams2.columns if col not in cols_to_move]]
                     har_ngram_df_list.append(har_ngrams3)
-                    if piece.metadata["composer"] is not None:
-                        st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
-                    else:
-                        st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["title"])
-                    st.altair_chart(har_heatmap, use_container_width=True)
+                    har_heatmap_list.append((piece.metadata['composer'], piece.metadata['title'], har_heatmap))
                 if 'combined_har_ngrams' in st.session_state.keys():
                     del st.session_state.combined_har_ngrams
+                if 'har_ngram_heatmaps' in st.session_state.keys():
+                    del st.session_state.har_ngram_heatmaps
                 if len(har_ngram_df_list) > 0:
                     combined_har_ngrams = pd.concat(har_ngram_df_list)
                     if "combined_har_ngrams" not in st.session_state:
                         st.session_state.combined_har_ngrams = combined_har_ngrams
+                if len(har_heatmap_list) > 0:
+                    st.session_state.har_ngram_heatmaps = har_heatmap_list
+
+        if st.session_state.get('har_ngram_heatmaps'):
+            for composer, title, har_heatmap in st.session_state.har_ngram_heatmaps:
+                if composer is not None:
+                    st.subheader("Harmonic Ngram Heatmap: " + composer + ", " + title)
+                else:
+                    st.subheader("Harmonic Ngram Heatmap: " + title)
+                st.altair_chart(har_heatmap, use_container_width=True)
 
         if "combined_har_ngrams" not in st.session_state:
             pass
@@ -2850,7 +2882,9 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
     elif corpus_length == 0:
         st.write("Please select one or more pieces")
     else:
-        with st.form("Sonority Ngram Settings"):
+        form_col, _ = st.columns([1, 2])
+        with form_col:
+         with st.form("Sonority Ngram Settings"):
             ngram_length = st.number_input('Select ngram Length', value=4, step=1)
             compound = st.selectbox(
                 "Select Compound Interval Status",
@@ -3009,7 +3043,9 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     st.subheader("Explore Homorhythm")
     st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
 
-    with st.form("Homorhythm Settings"):
+    form_col, _ = st.columns([1, 2])
+    with form_col:
+     with st.form("Homorhythm Settings"):
         full_hr_choice = st.selectbox(
             "Select HR Full Status",
             [True, False])
@@ -3110,12 +3146,14 @@ if st.sidebar.checkbox("Explore Presentation Types"):
     search_type = "other"
     st.subheader("Explore Presentation Types")
     st.write("[Know the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)", unsafe_allow_html=True)
-    with st.form("Presentation Type Settings"):
+    form_col, _ = st.columns([1, 2])
+    with form_col:
+     with st.form("Presentation Type Settings"):
         combine_unisons_choice = st.selectbox(
             "Combine Unisons", [False, True])
-        length_choice = st.number_input('Select ngram Length', value=4, step=1) 
-        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1) 
-        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1) 
+        length_choice = st.number_input('Select ngram Length', value=4, step=1)
+        head_flex_choice = st.number_input('Select Head Flex', value=1, step=1)
+        body_flex_choice = st.number_input('Select Body Flex', value=0, step=1)
         limit_entries_choice = st.selectbox(
             "Limit to Melodic Entries", [True, False])
         hidden_types_choice = st.selectbox(
@@ -3197,7 +3235,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
         n_ptypes = len(filtered_p_types)
         if n_ptypes > 20:
             st.warning(f"There are {n_ptypes} presentation types in the filtered list. Consider filtering to 20 or fewer.")
-        if st.button("Render Presentation Types", key="verovio_ptypes_render"):
+        if st.button("Render Presentation Types with Verovio", key="verovio_ptypes_render"):
             import os, base64, re
             # Build piece lookup: for corpus use corpus.scores; for single piece use mei_source
             if corpus_length > 1:
@@ -4446,7 +4484,9 @@ if st.sidebar.checkbox("Explore Model Finder"):
 #     st.session_state.ready_to_download = False
 
 # Main form for settings
-    with st.form("Model Finder Settings"):
+    form_col, _ = st.columns([1, 2])
+    with form_col:
+     with st.form("Model Finder Settings"):
         length_choice = st.number_input('Select ngram Length', value=4, step=1)
         
         # Plot section
