@@ -1598,7 +1598,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                         title=color_grouping,
                                         orientation="h",
                                         yanchor="bottom",
-                                        y=-0.5,
+                                        y=-1,
                                         xanchor="right",
                                         x=1
                                     ),
