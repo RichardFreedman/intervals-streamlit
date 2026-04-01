@@ -1235,34 +1235,51 @@ if st.sidebar.checkbox("Explore Durations"):
                 if corpus_length == 1:
                     composer = dur.iloc[0]["Composer"]
                     title = dur.iloc[0]["Title"]
-                    dur_counts = dur.groupby(['Composer', 'Title','Voice', 'Duration']).size().reset_index(name='Count')
+                    dur_counts = dur.groupby(['Composer', 'Title', 'Voice', 'Duration']).size().reset_index(name='Count')
                     sorted_dur = dur_counts.sort_values('Duration').reset_index(drop=True)
-                    titles = sorted_dur["Title"].unique()
-                    dur_chart = px.bar(sorted_dur, 
-                                    x='Duration', 
-                                    y='Count',
-                                    color="Voice",
-                                    title=f"Distribution of Durations in {composer}, {title}")
-                    dur_chart.update_layout(xaxis_title="Duration", 
-                                            yaxis_title="Count",
-                                            legend_title="Voice")
+
+                    # view by voice toggle
+                    view_by_voice_dur = st.checkbox("View by Voice", value=True, key='dur_single_view_by_voice')
+
+                    if view_by_voice_dur:
+                        chart_data_dur = sorted_dur
+                        table_data_dur = sorted_dur
+                        dur_chart = px.bar(chart_data_dur,
+                                        x='Duration',
+                                        y='Count',
+                                        color='Voice',
+                                        title=f"Distribution of Durations in {composer}, {title}")
+                        dur_chart.update_layout(xaxis_title="Duration",
+                                                yaxis_title="Count",
+                                                legend_title="Voice")
+                    else:
+                        chart_data_dur = (
+                            sorted_dur.groupby('Duration', as_index=False)['Count']
+                            .sum()
+                            .sort_values('Duration')
+                            .reset_index(drop=True)
+                        )
+                        table_data_dur = chart_data_dur
+                        dur_chart = px.bar(chart_data_dur,
+                                        x='Duration',
+                                        y='Count',
+                                        title=f"Distribution of Durations in {composer}, {title}")
+                        dur_chart.update_layout(xaxis_title="Duration",
+                                                yaxis_title="Count")
+
                     # and show results
                     pio.templates.default = 'plotly'
                     container = st.container()
                     col1, col2 = container.columns([10, 2])
-                    
+
                     # Plot chart in first column
                     with col1:
-                        st.plotly_chart(dur_chart, use_container_width=True, )
-                        # st.plotly_chart(fig, theme=None)
+                        st.plotly_chart(dur_chart, use_container_width=True)
 
-                        
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
                         def get_nr_html():
                             """Convert dur plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
                             <html>
@@ -1296,9 +1313,8 @@ if st.sidebar.checkbox("Explore Durations"):
                             </html>
                             """
                             return html_content
-                    
-                
-                        st.markdown("")     
+
+                        st.markdown("")
                         if st.button('📥 Prepare Durations Chart for Download', key='dur_corpus_download'):
                             html_content = get_nr_html()
                             st.download_button(
@@ -1309,12 +1325,12 @@ if st.sidebar.checkbox("Explore Durations"):
                             )
 
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
+                        st.dataframe(table_data_dur, use_container_width=True)
 
                         st.download_button(
-                            label="Download Filtered Notes Data as CSV",
-                            data=sorted_dur.to_csv(index=False),
-                            file_name = piece.metadata['title'] + '_notes_results.csv',
+                            label="Download Filtered Durations Data as CSV",
+                            data=table_data_dur.to_csv(index=False),
+                            file_name=piece.metadata['title'] + '_durations_results.csv',
                             mime='text/csv',
                             key=3,
                             )
@@ -1405,13 +1421,18 @@ if st.sidebar.checkbox("Explore Durations"):
                                 mime="text/html"
                             )                    
                     if st.checkbox('Show Table of Durations'):
-                        st.dataframe(filtered_dur.format({'Duration': '{:.2f}'}), use_container_width=True)
+                        table_dur = (
+                            sorted_dur.groupby([color_grouping, 'Duration'], as_index=False)['Count']
+                            .sum()
+                            .sort_values([color_grouping, 'Duration'])
+                            .reset_index(drop=True)
+                        )
+                        st.dataframe(table_dur, use_container_width=True)
 
-                    
                         # Download option
                         st.download_button(
                             label="Download Filtered Corpus Durations Data as CSV",
-                            data=filtered_dur.data.to_csv(),
+                            data=table_dur.to_csv(index=False),
                             file_name='corpus_durations_results.csv',
                             mime='text/csv',
                             key=4,
