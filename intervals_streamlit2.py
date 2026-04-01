@@ -1649,8 +1649,10 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                     title='Weighted Note Distribution in Corpus')
                                 st.session_state.weighted_notes_multi_fig = fig
                                 st.session_state.weighted_notes_multi_key = _chart_key
+                                st.session_state.weighted_notes_multi_data = counted_notes_polar
                             else:
                                 fig = st.session_state.weighted_notes_multi_fig
+                                counted_notes_polar = st.session_state.get('weighted_notes_multi_data', pd.DataFrame())
 
                             st.plotly_chart(fig, use_container_width=True)
                         with col2:
@@ -1700,7 +1702,23 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                     file_name=f"corpus_weighted_note_plot.html",
                                     mime="text/html"
                                 )
-                            
+
+                        if st.checkbox("Show Table of Weighted Notes", key='weighted_notes_multi_table'):
+                            if not counted_notes_polar.empty:
+                                table_weighted = (
+                                    counted_notes_polar[[color_grouping, 'pitch_class', 'scaled']]
+                                    .sort_values([color_grouping, 'pitch_class'])
+                                    .reset_index(drop=True)
+                                )
+                                st.dataframe(table_weighted, use_container_width=True)
+                                st.download_button(
+                                    label="Download Weighted Notes Data as CSV",
+                                    data=table_weighted.to_csv(index=False),
+                                    file_name='corpus_weighted_notes.csv',
+                                    mime='text/csv',
+                                    key='weighted_notes_multi_csv',
+                                )
+
                     else:
                         # Single piece plot
                         note_ordering = st.radio(
@@ -1759,8 +1777,10 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 )
                                 st.session_state.weighted_notes_single_fig = fig
                                 st.session_state.weighted_notes_single_key = _chart_key
+                                st.session_state.weighted_notes_single_data = counted_notes_polar
                             else:
                                 fig = st.session_state.weighted_notes_single_fig
+                                counted_notes_polar = st.session_state.get('weighted_notes_single_data', pd.DataFrame())
 
                             with col1:
                                 st.plotly_chart(fig, use_container_width=True)
@@ -1812,7 +1832,22 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                         file_name=f"{composer}_{title}_weighted_note_plot.html",
                                         mime="text/html"
                                     )
-                            # Add download button in second column
+
+                            if st.checkbox("Show Table of Weighted Notes", key='weighted_notes_single_table'):
+                                if not counted_notes_polar.empty:
+                                    table_weighted = (
+                                        counted_notes_polar[['pitch_class', 'scaled']]
+                                        .sort_values('pitch_class')
+                                        .reset_index(drop=True)
+                                    )
+                                    st.dataframe(table_weighted, use_container_width=True)
+                                    st.download_button(
+                                        label="Download Weighted Notes Data as CSV",
+                                        data=table_weighted.to_csv(index=False),
+                                        file_name=f"{composer}_{title}_weighted_notes.csv",
+                                        mime='text/csv',
+                                        key='weighted_notes_single_csv',
+                                    )
                 
                 
                 except Exception as e:
