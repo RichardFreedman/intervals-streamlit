@@ -3092,12 +3092,39 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
 
             st.write("Filter Results by Contents of Each Column")
             filtered_har_ngrams = filter_dataframe_ng(st.session_state.har_ngrams3)
+            har_ng_table_mode = st.radio(
+                "Table View",
+                ["Ngrams by Voice Pair", "Counts of Ngrams"],
+                horizontal=True,
+                key='har_ng_single_table_mode'
+            )
             show_table = st.checkbox('Show Table', key='har_ng_show_table')
+            id_vars_har = [c for c in ['Composer', 'Title', 'Date'] if c in filtered_har_ngrams.data.columns]
+            voice_cols_har = [c for c in filtered_har_ngrams.data.columns if c not in id_vars_har]
+            if har_ng_table_mode == "Ngrams by Voice Pair":
+                mask = filtered_har_ngrams.data[voice_cols_har].apply(
+                    lambda col: col.notna() & (col.astype(str).str.strip() != '')
+                ).any(axis=1)
+                table_har_ng = filtered_har_ngrams.data[mask].reset_index(drop=True)
+            else:
+                melted_har_ng = (
+                    filtered_har_ngrams.data
+                    .melt(id_vars=id_vars_har, value_vars=voice_cols_har, var_name='Voice Pair', value_name='Ngram')
+                    .dropna(subset=['Ngram'])
+                )
+                melted_har_ng = melted_har_ng[melted_har_ng['Ngram'].astype(str).str.strip() != '']
+                table_har_ng = (
+                    melted_har_ng.groupby('Ngram')
+                    .size()
+                    .reset_index(name='Count')
+                    .sort_values('Count', ascending=False)
+                    .reset_index(drop=True)
+                )
             if show_table:
-                st.table(filtered_har_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+                st.dataframe(table_har_ng, use_container_width=True)
             st.download_button(
                 label="Download Filtered Harmonic Ngram Data as CSV",
-                data=filtered_har_ngrams.data.to_csv(),
+                data=table_har_ng.to_csv(index=False),
                 file_name=piece.metadata['title'] + '_harmonic_ngram_results.csv',
                 mime='text/csv',
                 key='har_ng_dl_1',
@@ -3166,12 +3193,39 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
             st.write("Filter Results by Contents of Each Column")
             st.write("Note that the Filters do NOT change the heatmaps shown above!")
             filtered_combined_har_ngrams = filter_dataframe_ng(st.session_state.combined_har_ngrams)
+            har_ng_corpus_table_mode = st.radio(
+                "Table View",
+                ["Ngrams by Voice Pair", "Counts of Ngrams by Composer and Title"],
+                horizontal=True,
+                key='har_ng_corpus_table_mode'
+            )
             show_table = st.checkbox('Show Table of all Harmonic Ngrams', key='har_ng_corpus_show_table')
+            id_vars_har = [c for c in ['Composer', 'Title', 'Date'] if c in filtered_combined_har_ngrams.data.columns]
+            voice_cols_har = [c for c in filtered_combined_har_ngrams.data.columns if c not in id_vars_har]
+            if har_ng_corpus_table_mode == "Ngrams by Voice Pair":
+                mask = filtered_combined_har_ngrams.data[voice_cols_har].apply(
+                    lambda col: col.notna() & (col.astype(str).str.strip() != '')
+                ).any(axis=1)
+                table_har_ng = filtered_combined_har_ngrams.data[mask].reset_index(drop=True)
+            else:
+                melted_har_ng = (
+                    filtered_combined_har_ngrams.data
+                    .melt(id_vars=id_vars_har, value_vars=voice_cols_har, var_name='Voice Pair', value_name='Ngram')
+                    .dropna(subset=['Ngram'])
+                )
+                melted_har_ng = melted_har_ng[melted_har_ng['Ngram'].astype(str).str.strip() != '']
+                table_har_ng = (
+                    melted_har_ng.groupby(['Composer', 'Title', 'Ngram'])
+                    .size()
+                    .reset_index(name='Count')
+                    .sort_values(['Composer', 'Title', 'Count'], ascending=[True, True, False])
+                    .reset_index(drop=True)
+                )
             if show_table:
-                st.table(filtered_combined_har_ngrams.format({'Measure': '{:.0f}', 'Beat': '{:.2f}'}))
+                st.dataframe(table_har_ng, use_container_width=True)
             st.download_button(
                 label="Download Filtered Corpus Harmonic Ngram Data as CSV",
-                data=filtered_combined_har_ngrams.data.to_csv(),
+                data=table_har_ng.to_csv(index=False),
                 file_name='corpus_harmonic_ngram_results.csv',
                 mime='text/csv',
                 key='har_ng_dl_2',
@@ -3245,45 +3299,101 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
                 son_data['Pattern'] = son_data[ngram_cols].apply(
                     lambda row: ' | '.join(str(v) for v in row if pd.notna(v) and str(v) != ''), axis=1)
                 piece_col = 'Title' if 'Title' in son_data.columns else None
+
+                # compute full pattern counts (no hard top-N limit)
                 if piece_col:
-                    pattern_counts = son_data.groupby(['Pattern', piece_col]).size().reset_index(name='Count')
-                    top_patterns = pattern_counts.groupby('Pattern')['Count'].sum().nlargest(30).index
-                    pattern_counts = pattern_counts[pattern_counts['Pattern'].isin(top_patterns)]
+                    pattern_counts_all = son_data.groupby(['Pattern', piece_col]).size().reset_index(name='Count')
+                    pattern_totals = pattern_counts_all.groupby('Pattern')['Count'].sum()
+                else:
+                    pattern_counts_all = son_data['Pattern'].value_counts().reset_index()
+                    pattern_counts_all.columns = ['Pattern', 'Count']
+                    pattern_totals = pattern_counts_all.set_index('Pattern')['Count']
+
+                max_count = int(pattern_totals.max()) if not pattern_totals.empty else 1
+                count_range = st.slider(
+                    "Filter by pattern count",
+                    min_value=1,
+                    max_value=max(max_count, 2),
+                    value=(1, max(max_count, 2)),
+                    key='son_ng_count_range'
+                )
+                min_count, max_count_sel = count_range
+
+                kept_patterns = pattern_totals[
+                    (pattern_totals >= min_count) & (pattern_totals <= max_count_sel)
+                ].index
+                pattern_counts = pattern_counts_all[pattern_counts_all['Pattern'].isin(kept_patterns)].copy()
+
+                if piece_col:
                     bar_chart = alt.Chart(pattern_counts).mark_bar().encode(
                         x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
                         y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
                         color=alt.Color(f'{piece_col}:N', title='Piece'),
                         tooltip=['Pattern', piece_col, 'Count']
-                    ).properties(title='Sonority Ngram Frequency (Top 30)')
+                    ).properties(title=f'Sonority Ngram Frequency (count: {min_count}–{max_count_sel})')
                 else:
-                    pattern_counts = son_data['Pattern'].value_counts().reset_index()
-                    pattern_counts.columns = ['Pattern', 'Count']
-                    bar_chart = alt.Chart(pattern_counts.head(30)).mark_bar().encode(
+                    bar_chart = alt.Chart(pattern_counts).mark_bar().encode(
                         x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
                         y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
                         tooltip=['Pattern', 'Count']
-                    ).properties(title='Sonority Ngram Frequency (Top 30)')
+                    ).properties(title=f'Sonority Ngram Frequency (count: {min_count}–{max_count_sel})')
                 st.altair_chart(bar_chart, use_container_width=True)
 
-            show_table = st.checkbox('Show Table', key='son_ng_show_table')
-            if show_table:
-                display_df = son_data.drop(columns=['Pattern'], errors='ignore')
-                # flatten any list/tuple values (e.g. Low Line across multiple pieces)
-                for col in display_df.columns:
-                    display_df[col] = display_df[col].apply(
-                        lambda v: ', '.join(str(x) for x in v) if isinstance(v, (list, tuple)) else v)
-                if 'Measure' in display_df.columns:
-                    display_df['Measure'] = pd.to_numeric(display_df['Measure'], errors='coerce').round(0).astype('Int64')
-                if 'Beat' in display_df.columns:
-                    display_df['Beat'] = pd.to_numeric(display_df['Beat'], errors='coerce').round(2)
-                st.table(display_df.style.format({'Beat': '{:.2f}'}, na_rep=''))
-            st.download_button(
-                label="Download Filtered Sonority Ngram Data as CSV",
-                data=filtered_son_ngrams.data.to_csv(),
-                file_name='sonority_ngram_results.csv',
-                mime='text/csv',
-                key='son_ng_dl',
+                # table and CSV reflect the same count filter
+                son_data_filtered = son_data[son_data['Pattern'].isin(kept_patterns)].copy()
+
+                son_table_mode = st.radio(
+                    "Table View",
+                    [
+                        "Sonority Ngrams by Composer, Title, Measure and Beat",
+                        "Sonority Ngrams with Corpus Count",
+                        "Sonority Count by Composer and Title",
+                    ],
+                    horizontal=True,
+                    key='son_ng_table_mode'
                 )
+
+                if son_table_mode == "Sonority Ngrams by Composer, Title, Measure and Beat":
+                    display_df = son_data_filtered.drop(columns=['Pattern'], errors='ignore').copy()
+                    for col in display_df.columns:
+                        display_df[col] = display_df[col].apply(
+                            lambda v: ', '.join(str(x) for x in v) if isinstance(v, (list, tuple)) else v)
+                    if 'Measure' in display_df.columns:
+                        display_df['Measure'] = pd.to_numeric(display_df['Measure'], errors='coerce').round(0).astype('Int64')
+                    if 'Beat' in display_df.columns:
+                        display_df['Beat'] = pd.to_numeric(display_df['Beat'], errors='coerce').round(2)
+                    table_son = display_df
+
+                elif son_table_mode == "Sonority Ngrams with Corpus Count":
+                    table_son = (
+                        son_data_filtered.groupby('Pattern')
+                        .size()
+                        .reset_index(name='Count')
+                        .sort_values('Count', ascending=False)
+                        .reset_index(drop=True)
+                    )
+
+                else:  # Sonority Count by Composer and Title
+                    group_cols = [c for c in ['Composer', 'Title', 'Pattern'] if c in son_data_filtered.columns]
+                    table_son = (
+                        son_data_filtered.groupby(group_cols)
+                        .size()
+                        .reset_index(name='Count')
+                        .sort_values(['Composer', 'Title', 'Count'] if 'Composer' in group_cols else ['Title', 'Count'],
+                                     ascending=[True, True, False] if 'Composer' in group_cols else [True, False])
+                        .reset_index(drop=True)
+                    )
+
+                show_table = st.checkbox('Show Table', key='son_ng_show_table')
+                if show_table:
+                    st.dataframe(table_son, use_container_width=True)
+                st.download_button(
+                    label="Download Filtered Sonority Ngram Data as CSV",
+                    data=table_son.to_csv(index=False),
+                    file_name='sonority_ngram_results.csv',
+                    mime='text/csv',
+                    key='son_ng_dl',
+                    )
 
 # hr functions
 # one piece
