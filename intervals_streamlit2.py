@@ -907,32 +907,49 @@ if st.sidebar.checkbox("Explore Notes"):
                     nr_counts['Note'] = pd.CategoricalIndex(nr_counts['Note'], categories=pitch_order, ordered=True)
                     sorted_nr = nr_counts.sort_values('Note').reset_index(drop=True)
 
-                    # make plot
-                    titles = sorted_nr['Title'].unique()
-                    nr_chart = px.bar(sorted_nr, 
-                                    x='Note', 
-                                    y='Count',
-                                    color="Voice",
-                                    title=f"Distribution of Notes in {composer}, {title}")
-                    nr_chart.update_layout(xaxis_title="Note", 
-                                            yaxis_title="Count",
-                                            legend_title="Voice")
+                    # view by voice toggle
+                    view_by_voice = st.checkbox("View by Voice", value=True, key='notes_single_view_by_voice')
+
+                    if view_by_voice:
+                        chart_data = sorted_nr
+                        table_data = sorted_nr
+                        nr_chart = px.bar(chart_data,
+                                        x='Note',
+                                        y='Count',
+                                        color='Voice',
+                                        title=f"Distribution of Notes in {composer}, {title}")
+                        nr_chart.update_layout(xaxis_title="Note",
+                                                yaxis_title="Count",
+                                                legend_title="Voice")
+                    else:
+                        chart_data = (
+                            sorted_nr.groupby('Note', as_index=False)['Count']
+                            .sum()
+                            .sort_values('Note')
+                            .reset_index(drop=True)
+                        )
+                        table_data = chart_data
+                        nr_chart = px.bar(chart_data,
+                                        x='Note',
+                                        y='Count',
+                                        title=f"Distribution of Notes in {composer}, {title}")
+                        nr_chart.update_layout(xaxis_title="Note",
+                                                yaxis_title="Count")
+
                     # and show results
                     pio.templates.default = 'plotly'
 
                     container = st.container()
                     col1, col2 = container.columns([10, 2])
-                    
+
                     # Plot chart in first column
                     with col1:
                         st.plotly_chart(nr_chart, use_container_width=True)
-                        
+
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
                         def get_nr_html():
                             """Convert progress plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
                             <html>
@@ -966,10 +983,8 @@ if st.sidebar.checkbox("Explore Notes"):
                             </html>
                             """
                             return html_content
-                    
-                
-                
-                        st.markdown("")     
+
+                        st.markdown("")
                         if st.button('📥 Prepare Notes Chart for Download', key='notes_corpus_download'):
                             html_content = get_nr_html()
                             st.download_button(
@@ -978,13 +993,13 @@ if st.sidebar.checkbox("Explore Notes"):
                                 file_name=f"{composer}_{title}_notes_chart.html",
                                 mime="text/html"
                             )
-                    
+
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, use_container_width=True)
-                        
+                        st.dataframe(table_data, use_container_width=True)
+
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
-                            data=filtered_nr.data.to_csv(),
+                            data=table_data.to_csv(index=False),
                             file_name = piece.metadata['title'] + '_notes_results.csv',
                             mime='text/csv',
                             key=1,
@@ -1082,11 +1097,17 @@ if st.sidebar.checkbox("Explore Notes"):
                             )
                     
                     if st.checkbox("Show Table of Notes"):
-                        st.dataframe(sorted_nr, use_container_width=True)
-                    
+                        table_nr = (
+                            sorted_nr.groupby([color_grouping, 'Note'], as_index=False)['Count']
+                            .sum()
+                            .sort_values([color_grouping, 'Note'])
+                            .reset_index(drop=True)
+                        )
+                        st.dataframe(table_nr, use_container_width=True)
+
                         st.download_button(
                             label="Download Filtered Notes Data as CSV",
-                            data=filtered_nr.data.to_csv(),
+                            data=table_nr.to_csv(index=False),
                             file_name = 'corpus_notes_results.csv',
                             mime='text/csv',
                             key=2,
