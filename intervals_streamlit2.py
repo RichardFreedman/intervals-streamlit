@@ -2027,32 +2027,49 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         # sorting
                         sorted_mel = mel_int_counts_no_rest.sort_values(by='Interval', ascending=True)
                         
-                    # make plot
-                    titles = sorted_mel['Title'].unique()
-                    mel_chart = px.bar(sorted_mel, 
-                                    x='Interval', 
-                                    y='Count',
-                                    color="Voice",
-                                    title=f"Distribution of Intervals in {composer}, {title}")
-                    mel_chart.update_layout(xaxis_title="Interval", 
-                                            yaxis_title="Count",
-                                            legend_title="Voice")
+                    # view by voice toggle
+                    view_by_voice_mel = st.checkbox("View by Voice", value=True, key='mel_single_view_by_voice')
+
+                    if view_by_voice_mel:
+                        chart_data_mel = sorted_mel
+                        table_data_mel = sorted_mel
+                        mel_chart = px.bar(chart_data_mel,
+                                        x='Interval',
+                                        y='Count',
+                                        color='Voice',
+                                        title=f"Distribution of Intervals in {composer}, {title}")
+                        mel_chart.update_layout(xaxis_title="Interval",
+                                                yaxis_title="Count",
+                                                legend_title="Voice")
+                    else:
+                        chart_data_mel = (
+                            sorted_mel.groupby('Interval', as_index=False)['Count']
+                            .sum()
+                            .sort_values('Interval')
+                            .reset_index(drop=True)
+                        )
+                        table_data_mel = chart_data_mel
+                        mel_chart = px.bar(chart_data_mel,
+                                        x='Interval',
+                                        y='Count',
+                                        title=f"Distribution of Intervals in {composer}, {title}")
+                        mel_chart.update_layout(xaxis_title="Interval",
+                                                yaxis_title="Count")
+
                     # and show results
                     pio.templates.default = 'plotly'
 
                     container = st.container()
                     col1, col2 = container.columns([10, 2])
-                    
+
                     # Plot chart in first column
                     with col1:
                         st.plotly_chart(mel_chart, use_container_width=True)
-                        
+
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
                         def get_mel_html():
-                            """Convert dur plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
+                            """Convert mel plot to HTML with preserved colors and interactivity"""
                             html_content = f"""
                             <!DOCTYPE html>
                             <html>
@@ -2086,10 +2103,8 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             </html>
                             """
                             return html_content
-                    
-                
-                
-                        st.markdown("")     
+
+                        st.markdown("")
                         if st.button('📥 Prepare Melodic Chart for Download', key='mel_corpus_download'):
                             html_content = get_mel_html()
                             st.download_button(
@@ -2099,16 +2114,13 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                                 mime="text/html"
                             )
 
-
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, use_container_width=True)
-                        composer = mel.iloc[0]['Composer']
-                        title = mel.iloc[0]['Title']
+                        st.dataframe(table_data_mel, use_container_width=True)
 
                         st.download_button(
                             label="Download Filtered Melodic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = f'{composer}_{title}_melodic_intervals.csv',
+                            data=table_data_mel.to_csv(index=False),
+                            file_name=f'{composer}_{title}_melodic_intervals.csv',
                             mime='text/csv',
                             key=5,
                             )
@@ -2211,12 +2223,18 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             )
 
                     if st.checkbox("Show Table of Melodic Intervals"):
-                        st.dataframe(sorted_mel, use_container_width=True)
-                        
+                        table_mel = (
+                            sorted_mel.groupby([color_grouping, 'Interval'], as_index=False)['Count']
+                            .sum()
+                            .sort_values([color_grouping, 'Interval'])
+                            .reset_index(drop=True)
+                        )
+                        st.dataframe(table_mel, use_container_width=True)
+
                         st.download_button(
                             label="Download Filtered Melodic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = f'corpus_melodic_intervals.csv',
+                            data=table_mel.to_csv(index=False),
+                            file_name='corpus_melodic_intervals.csv',
                             mime='text/csv',
                             key=6,
                             )
@@ -2386,35 +2404,52 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         # sorting
                         sorted_har = har_int_counts_no_rest.sort_values(by='Interval', ascending=True)
                         
-                    # make plot
-                    titles = sorted_har['Title'].unique()
-                    har_chart = px.bar(sorted_har, 
-                                    x='Interval', 
-                                    y='Count',
-                                    color="Voices",
-                                    title="Distribution of Intervals in Corpus")
-                    har_chart.update_layout(xaxis_title="Interval", 
-                                            yaxis_title="Count",
-                                            legend_title="Voices")
-                    # and show results
+                    composer = har.iloc[0]['Composer']
+                    title = har.iloc[0]['Title']
+
+                    # view by voices toggle
+                    view_by_voices_har = st.checkbox("View by Voices", value=True, key='har_single_view_by_voices')
+
+                    if view_by_voices_har:
+                        chart_data_har = sorted_har
+                        table_data_har = sorted_har
+                        har_chart = px.bar(chart_data_har,
+                                        x='Interval',
+                                        y='Count',
+                                        color='Voices',
+                                        title=f"Distribution of Intervals in {composer}, {title}")
+                        har_chart.update_layout(xaxis_title="Interval",
+                                                yaxis_title="Count",
+                                                legend_title="Voices")
+                    else:
+                        chart_data_har = (
+                            sorted_har.groupby('Interval', as_index=False)['Count']
+                            .sum()
+                            .sort_values('Interval')
+                            .reset_index(drop=True)
+                        )
+                        table_data_har = chart_data_har
+                        har_chart = px.bar(chart_data_har,
+                                        x='Interval',
+                                        y='Count',
+                                        title=f"Distribution of Intervals in {composer}, {title}")
+                        har_chart.update_layout(xaxis_title="Interval",
+                                                yaxis_title="Count")
+
                     # and show results
                     pio.templates.default = 'plotly'
 
                     container = st.container()
                     col1, col2 = container.columns([10, 2])
-                    composer = har.iloc[0]['Composer']
-                    title = har.iloc[0]['Title']
-                    
+
                     # Plot chart in first column
                     with col1:
                         st.plotly_chart(har_chart, use_container_width=True)
-                        
+
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
                         def get_har_html():
                             """Convert har plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
                             html_content = f"""
                             <!DOCTYPE html>
                             <html>
@@ -2448,10 +2483,8 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                             </html>
                             """
                             return html_content
-                    
-                
-                
-                        st.markdown("")     
+
+                        st.markdown("")
                         if st.button('📥 Prepare Harmonic Chart for Download', key='har_corpus_download'):
                             html_content = get_har_html()
                             st.download_button(
@@ -2461,31 +2494,26 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                                 mime="text/html"
                             )
 
-
                     if st.checkbox("Show Table of Harmonic Intervals"):
-                        sorted_har = sorted_har.dropna(subset=['Interval'])
-                        sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, use_container_width=True)
-                        composer = har.iloc[0]['Composer']
-                        title = har.iloc[0]['Title']
+                        st.dataframe(table_data_har, use_container_width=True)
 
                         st.download_button(
                             label="Download Filtered Harmonic Data as CSV",
-                            data=sorted_har.to_csv(index=False),
-                            file_name = f'{composer}_{title}_harmonic_intervals.csv',
+                            data=table_data_har.to_csv(index=False),
+                            file_name=f'{composer}_{title}_harmonic_intervals.csv',
                             mime='text/csv',
                             key=7,
                             )
                 # # for corpus
                 elif corpus_length > 1:
-                    har = filtered_har.data.copy()  
+                    har = filtered_har.data.copy()
                     if interval_kinds[select_kind] == 'q':
                         # remove rests
                         har_interval_counts = har.groupby(['Composer', 'Title', 'Voices', 'Interval']).size().reset_index(name='Count')
                         har_int_counts_no_rest = har_interval_counts[har_interval_counts['Interval'] != 'Rest']
                         # apply the categorical list and sort.
                         har_int_counts_no_rest['Interval'] = pd.CategoricalIndex(har_int_counts_no_rest['Interval'], categories=interval_order_quality, ordered=True)
-                        sorted_mel = har_int_counts_no_rest.sort_values('Interval').reset_index(drop=True)
+                        sorted_har = har_int_counts_no_rest.sort_values('Interval').reset_index(drop=True)
                     else:
                         har_interval_counts = har.groupby(['Composer', 'Title', 'Voices', 'Interval']).size().reset_index(name='Count')
                         # remove rests
@@ -2573,14 +2601,18 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                             )
 
                     if st.checkbox("Show Table of Harmonic Intervals"):
-                        sorted_har = sorted_har.dropna(subset=['Interval'])
-                        sorted_har = sorted_har[sorted_har['Interval'] != ''].copy()
-                        st.dataframe(sorted_har, use_container_width=True)
-                        
+                        table_har = (
+                            sorted_har.groupby([color_grouping, 'Interval'], as_index=False)['Count']
+                            .sum()
+                            .sort_values([color_grouping, 'Interval'])
+                            .reset_index(drop=True)
+                        )
+                        st.dataframe(table_har, use_container_width=True)
+
                         st.download_button(
                             label="Download Filtered Harmonic Data as CSV",
-                            data=filtered_mel.data.to_csv(),
-                            file_name = f'corpus_harmonic_intervals.csv',
+                            data=table_har.to_csv(index=False),
+                            file_name='corpus_harmonic_intervals.csv',
                             mime='text/csv',
                             key=8,
                             ) 
