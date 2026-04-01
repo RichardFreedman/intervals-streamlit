@@ -1396,7 +1396,9 @@ if st.sidebar.checkbox("Explore Durations"):
                             key=4,
                         )
 
-# weighted notes function
+# weighted notes function updated
+
+# helper 
 
 # this function gets all the notes, but also calculates the 'proportion' of notes in each piece, so that we have a normalized view of the distributions
 def piece_note_weight(piece):
