@@ -2757,14 +2757,43 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
 
             st.write("Select Ngram Patterns to Filter")
             filtered_ngrams = filter_ngrams_by_pattern(st.session_state.ngrams3)
-            show_table = st.checkbox('Show Table')
+            ng_table_mode = st.radio(
+                "Table View",
+                ["Ngrams by Voice, Measure and Beat", "Counts of Ngrams"],
+                horizontal=True,
+                key='mel_ng_single_table_mode'
+            )
+            show_table = st.checkbox('Show Table', key='mel_ng_single_show_table')
+            if ng_table_mode == "Ngrams by Voice, Measure and Beat":
+                meta_cols_present = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered_ngrams.columns]
+                voice_cols = [c for c in filtered_ngrams.columns if c not in meta_cols_present]
+                mask = filtered_ngrams[voice_cols].apply(
+                    lambda col: col.notna() & (col.astype(str).str.strip() != '')
+                ).any(axis=1)
+                table_ng = filtered_ngrams[mask].reset_index(drop=True)
+            else:
+                meta_cols_present = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered_ngrams.columns]
+                voice_cols = [c for c in filtered_ngrams.columns if c not in meta_cols_present]
+                melted_ng = (
+                    filtered_ngrams
+                    .melt(id_vars=meta_cols_present, value_vars=voice_cols, var_name='Voice', value_name='Ngram')
+                    .dropna(subset=['Ngram'])
+                )
+                melted_ng = melted_ng[melted_ng['Ngram'].astype(str).str.strip() != '']
+                table_ng = (
+                    melted_ng.groupby('Ngram')
+                    .size()
+                    .reset_index(name='Count')
+                    .sort_values('Count', ascending=False)
+                    .reset_index(drop=True)
+                )
             if show_table:
-                st.dataframe(filtered_ngrams, use_container_width=True)
+                st.dataframe(table_ng, use_container_width=True)
 
             st.download_button(
                 label="Download Filtered Ngram Data as CSV",
-                data=filtered_ngrams.to_csv(index=False),
-                file_name = piece.metadata['title'] + '_ngram_results.csv',
+                data=table_ng.to_csv(index=False),
+                file_name=piece.metadata['title'] + '_ngram_results.csv',
                 mime='text/csv',
                 key=9,
                 )
@@ -2900,13 +2929,42 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
             st.write("Select Ngram Patterns to Filter")
             st.write("Note that the Filters do NOT change the heatmaps shown above!")
             filtered_combined_ngrams = filter_ngrams_by_pattern(st.session_state.combined_ngrams)
-            show_table = st.checkbox('Show Table of all Ngrams')
+            ng_table_mode = st.radio(
+                "Table View",
+                ["Ngrams by Voice, Measure and Beat", "Counts of Ngrams by Composer and Title"],
+                horizontal=True,
+                key='mel_ng_corpus_table_mode'
+            )
+            show_table = st.checkbox('Show Table of all Ngrams', key='mel_ng_corpus_show_table')
+            if ng_table_mode == "Ngrams by Voice, Measure and Beat":
+                meta_cols_present = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered_combined_ngrams.columns]
+                voice_cols = [c for c in filtered_combined_ngrams.columns if c not in meta_cols_present]
+                mask = filtered_combined_ngrams[voice_cols].apply(
+                    lambda col: col.notna() & (col.astype(str).str.strip() != '')
+                ).any(axis=1)
+                table_ng = filtered_combined_ngrams[mask].reset_index(drop=True)
+            else:
+                meta_cols_present = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered_combined_ngrams.columns]
+                voice_cols = [c for c in filtered_combined_ngrams.columns if c not in meta_cols_present]
+                melted_ng = (
+                    filtered_combined_ngrams
+                    .melt(id_vars=meta_cols_present, value_vars=voice_cols, var_name='Voice', value_name='Ngram')
+                    .dropna(subset=['Ngram'])
+                )
+                melted_ng = melted_ng[melted_ng['Ngram'].astype(str).str.strip() != '']
+                table_ng = (
+                    melted_ng.groupby(['Composer', 'Title', 'Ngram'])
+                    .size()
+                    .reset_index(name='Count')
+                    .sort_values(['Composer', 'Title', 'Count'], ascending=[True, True, False])
+                    .reset_index(drop=True)
+                )
             if show_table:
-                st.dataframe(filtered_combined_ngrams, use_container_width=True)
+                st.dataframe(table_ng, use_container_width=True)
 
             st.download_button(
                 label="Download Filtered Corpus Ngram Data as CSV",
-                data=filtered_combined_ngrams.to_csv(index=False),
+                data=table_ng.to_csv(index=False),
                 file_name='corpus_ngram_results.csv',
                 mime='text/csv',
                 key=10,
