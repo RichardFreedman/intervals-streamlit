@@ -3732,88 +3732,7 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     f'<img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;"/>',
                     unsafe_allow_html=True
                 )
-# def cadence_radar(cadences):
-#     # Define the category order for cad tones
-#     category_order = {
-#         'C': 0, 'D': 1, 'E-': 2, 'E': 3, 'F': 4, 'G': 5, 'A': 6, 'B-': 7
-#     }
-#     # Get all unique titles for this final
-#     titles = cadences['Title'].unique()
-#     # Create a list to store our count data
-#     count_data = []
-#     # For each title, count the occurrences of each tone
-#     for title in titles:
-#         title_data = cadences[cadences['Title'] == title]
-#         # Count occurrences of each Tone for this Title
-#         for tone in category_order.keys():
-#             count = len(title_data[title_data['Tone'] == tone])
-#             count_data.append({
-#                 'Title': title,
-#                 'Tone': tone,
-#                 'count': count
-#             })
-#     # Convert to DataFrame
-#     count_df = pd.DataFrame(count_data)
-#     count_df = count_df[count_df['count'] > 0]
-#     # calculate % for each cadence vs total number of cadences for each piece
-#     title_sums = count_df.groupby('Title')['count'].sum().reset_index()
-#     title_sums.rename(columns={'count': 'TitleSum'}, inplace=True)
-#     # Merge the sums back to the original DataFrame
-#     count_df = count_df.merge(title_sums, on='Title', how='left')
-#     # Calculate percentage
-#     count_df['Percentage'] = np.round((count_df['count'] / count_df['TitleSum']) * 100)
-#     # Create the radar plot with Plotly Express
-#     fig = px.line_polar(
-#         count_df, 
-#         r='Percentage',       
-#         theta='Tone', 
-#         line_close=True,
-#         color='Title',
-#         markers=True,
-#         category_orders={'Tone': sorted(category_order.keys(), key=lambda x: category_order[x])}
-#     )
-#     # Update traces to fill the area
-#     fig.update_traces(
-#         fill='toself',
-#         line=dict(width=2)
-#     )
-#     # Update layout with size control and legend positioning
-#     fig.update_layout(
-#         # Control the size of the plot
-#         width=800,  # Width in pixels
-#         height=600,  # Height in pixels
-#         # Position the legend
-#         legend=dict(
-#         orientation="v",  # Vertical layout
-#         yanchor="top",  # Vertical centering
-#         y=0.5,  # Vertical position
-#         xanchor="center",  # Right alignment
-#         # x=1,  # Offset from right edge
-#         title={
-#             'text': 'Titles',
-#             'side': 'top',
-#             'font_size': 12
-#         },
-#         itemsizing='constant',
-#         itemwidth=30,
-#         bordercolor="black",
-#         borderwidth=1,
-#         bgcolor="rgba(255,255,255,0.8)"
-#     ),
-#     # Add right margin to accommodate legend
-    
-#         # Add title
-#         title_text="Relative Distribution of Cadence Tones in Corpus",
-#         title_x=0.5,  # Center the title
-#         # Adjust margins if needed
-#         polar=dict(
-#             radialaxis=dict(
-#                 visible=True,
-#                 title='Percentage'
-#             )
-#         )
-#     )
-#     return fig
+# cadence radar function
 def cadence_radar(cadences, tone_ordering='Thirds', limit_to_active=False):
     FIFTHS = {
         'C': 0, 'G': 1, 'D': 2, 'A': 3, 'E': 4, 'B': 5,
@@ -3916,10 +3835,13 @@ def cadence_radar(cadences, tone_ordering='Thirds', limit_to_active=False):
     return fig
 # progress
 
-custom_tone_order = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']  
+TONE_ORDER_FIFTHS = ['E-', 'B-', 'F', 'C', 'G', 'D', 'A', 'E', 'B']
+TONE_ORDER_THIRDS = ['A-', 'C', 'E-', 'G', 'B-', 'D', 'F', 'A']
 
 
-def cadence_progress(cadences, composer, title):
+def cadence_progress(cadences, composer, title, tone_order=None):
+    if tone_order is None:
+        tone_order = TONE_ORDER_FIFTHS
     # Define custom ordering for CadTypes
     custom_order = [
         'Authentic', 'Evaded Authentic', 
@@ -3965,7 +3887,7 @@ def cadence_progress(cadences, composer, title):
     # Ensure the Tone column is categorical with correct ordering
     cadences['Tone'] = pd.Categorical(
         cadences['Tone'],
-        categories=custom_tone_order,
+        categories=tone_order,
         ordered=True
     )
     
@@ -3976,14 +3898,14 @@ def cadence_progress(cadences, composer, title):
         y='Tone',
         color='CadType',
         color_discrete_map=color_mapping,
-        category_orders={'Tone': custom_tone_order}
+        category_orders={'Tone': tone_order}
     )
     
     # Configure Y-axis to show E- at bottom
     fig.update_layout(
         yaxis=dict(
             categoryorder='array',
-            categoryarray=custom_tone_order,
+            categoryarray=tone_order,
             autorange=True,
             fixedrange=True,
             scaleanchor='y',
@@ -4018,7 +3940,7 @@ def cadence_progress(cadences, composer, title):
     #     y='Tone',
     #     color='CadType',
     #     color_discrete_map=color_mapping,
-    #     category_orders={'Tone': custom_tone_order}
+    #     category_orders={'Tone': tone_order}
     # )
     
     # # Update marker properties
@@ -4383,14 +4305,21 @@ if st.sidebar.checkbox("Explore Cadences"):
         # Progress plot
         if st.checkbox("Show Progress Plot"):
             st.subheader("Progress Plot of Cadences")
-            
+            tone_ordering = st.radio(
+                "Y-Axis Tone Order",
+                ["Fifths", "Thirds"],
+                horizontal=True,
+                key='cad_progress_single_tone_order'
+            )
+            tone_order = TONE_ORDER_FIFTHS if tone_ordering == "Fifths" else TONE_ORDER_THIRDS
+
             # Create container for chart and button
             container = st.container()
             col1, col2 = container.columns([10, 2])
-            
+
             # Plot chart in first column
             with col1:
-                progress_plot = cadence_progress(cadences, composer, title)
+                progress_plot = cadence_progress(cadences, composer, title, tone_order=tone_order)
                 
                 progress_plot.update_layout(
                     # template="plotly_white",
@@ -4814,18 +4743,25 @@ if st.sidebar.checkbox("Explore Cadences"):
         #     st.plotly_chart(radar, use_container_width=True)
         if st.checkbox("Show Progress Charts"):
             st.subheader("Progress Plot of Cadences for each Piece in Corpus")
+            tone_ordering = st.radio(
+                "Y-Axis Tone Order",
+                ["Fifths", "Thirds"],
+                horizontal=True,
+                key='cad_progress_corpus_tone_order'
+            )
+            tone_order = TONE_ORDER_FIFTHS if tone_ordering == "Fifths" else TONE_ORDER_THIRDS
             titles = cadences_metadata["Title"].unique()
             for idx, title in enumerate(titles):
                 filtered_cadences = cadences_metadata[cadences_metadata['Title'] == title]
                 composer = filtered_cadences.iloc[1]['Composer']
-                
+
                 # Create container for chart and button
                 container = st.container()
                 col1, col2 = container.columns([10, 2])
-                
+
                 # Plot chart in first column
                 with col1:
-                    progress_plot = cadence_progress(filtered_cadences, composer, title)
+                    progress_plot = cadence_progress(filtered_cadences, composer, title, tone_order=tone_order)
                     
                     progress_plot.update_layout(
                         template="plotly_white",
