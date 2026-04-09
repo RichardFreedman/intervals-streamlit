@@ -853,7 +853,31 @@ def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
 if st.sidebar.checkbox("Explore Notes"):
     # search_type = "ngram"
     st.subheader("Explore Notes")
-    st.write("[Know the code! Read more about CRIM Intervals notes and rests methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool creates a table of all notes and rests in the selected piece(s), ordered chronologically.
+        Each row represents a moment where any voice changes its note. The offset index is measured in
+        quarter-note units from the start of the piece.
+
+        **Key settings**
+        - **Combine Unisons** — if True, consecutive repetitions of the same pitch in a voice are treated as
+          one continuous note rather than separate entries.
+        - **Combine Rests** — if True, consecutive rests in a voice are merged into a single extended rest
+          rather than appearing as individual entries.
+
+        **Reading the results**
+        - The results table shows a **count of each note** (identified by pitch class and octave) for each
+          voice part or staff, along with Composer and Title.
+        - Use this to compare which pitches are most or least common across voices, or across pieces in a corpus.
+        - The **bar chart** displays the count of each pitch and octave combination in ascending order.
+          By default, voices are shown in different colors. You can combine them into a single distribution
+          using the chart settings.
+        - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
+          refresh the table with the updated view.
+
+        [Know the code — CRIM Intervals notes and rests documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md)
+        """)
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
@@ -928,7 +952,14 @@ if st.sidebar.checkbox("Explore Notes"):
                             .sort_values('Note')
                             .reset_index(drop=True)
                         )
-                        table_data = chart_data
+                        _tbl = sorted_nr.copy()
+                        _tbl['Note'] = _tbl['Note'].astype(str)
+                        table_data = (
+                            _tbl.groupby(['Composer', 'Title', 'Note'], as_index=False)['Count']
+                            .sum()
+                            .sort_values(['Composer', 'Title', 'Note'])
+                            .reset_index(drop=True)
+                        )
                         nr_chart = px.bar(chart_data,
                                         x='Note',
                                         y='Count',
@@ -1196,7 +1227,30 @@ def corpus_durs(corpus):
 if st.sidebar.checkbox("Explore Durations"):
     # Move the main content outside of the sidebar
     st.subheader("Explore Durations")
-    st.write("[Know the code! Read more about CRIM Intervals durations methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/03_Durations.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool analyzes the lengths of notes and rests in the selected piece(s), showing how often
+        each duration value appears across voices. Durations are expressed as float values in
+        quarter-note units (e.g., 1.0 = quarter note, 2.0 = half note, 0.5 = eighth note).
+
+        **Key settings**
+        There are no configuration options for this tool — just select your piece(s) and click
+        **Update and Run Search**.
+        - **View by Voice** — when checked, the chart and table break down durations separately for
+          each voice. When unchecked, all voices are combined into a single distribution.
+
+        **Reading the results**
+        - The **bar chart** shows how often each duration value appears, ordered from shortest to longest.
+          Voices are shown in different colors when "View by Voice" is checked.
+        - The **table** shows Composer, Title, Voice (if by voice), Duration, and Count.
+        - Common values: 0.5 = eighth note, 1.0 = quarter note, 1.5 = dotted quarter,
+          2.0 = half note, 3.0 = dotted half, 4.0 = whole note.
+        - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
+          refresh the table with the updated view.
+
+        [Know the code — CRIM Intervals durations documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/03_Durations.md)
+        """)
     
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
@@ -1259,7 +1313,12 @@ if st.sidebar.checkbox("Explore Durations"):
                             .sort_values('Duration')
                             .reset_index(drop=True)
                         )
-                        table_data_dur = chart_data_dur
+                        table_data_dur = (
+                            sorted_dur.groupby(['Composer', 'Title', 'Duration'], as_index=False)['Count']
+                            .sum()
+                            .sort_values(['Composer', 'Title', 'Duration'])
+                            .reset_index(drop=True)
+                        )
                         dur_chart = px.bar(chart_data_dur,
                                         x='Duration',
                                         y='Count',
@@ -1516,7 +1575,34 @@ def corpus_note_weights(corpus):
 # Your existing code for the sidebar checkbox
 if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
     st.subheader("Explore Weighted Notes")
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool calculates the relative importance of each pitch class in a piece or corpus by
+        weighting notes according to their total duration. Rather than simply counting how many times
+        a pitch appears, it measures how long each pitch class sounds, then scales the result as a
+        proportion of the total duration. This gives a more musically meaningful picture of pitch
+        emphasis than raw note counts.
 
+        **Key settings**
+        There are no interval configuration options — just select your piece(s) and click
+        **Update and Run Search**.
+        - **Exclude Rests** — removes rests from the calculation so only pitched notes contribute.
+        - **Pitch Class Order** — sets the order of pitch classes around the radar plot:
+          *Diatonic* (C D E F G A B), *Fifths* (circle of fifths), or *Chromatic* (by semitone).
+        - **Limit to pitch classes present in data** — when checked, removes pitch classes with zero
+          weight from the chart for a cleaner view.
+        - **Color Grouping** — colors the radar plot by Composer or by Title.
+
+        **Reading the results**
+        - The **radar plot** shows the scaled proportion of each pitch class, with each spoke
+          representing one pitch class. Larger values indicate pitches that sound for a greater
+          share of the total duration.
+        - Comparing the shape of radar plots across pieces or composers reveals differences in
+          pitch emphasis — for example, modal profiles or tonal centers.
+        - The **table** shows pitch class, duration count, and scaled proportion alongside
+          Composer and Title.
+        """)
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
@@ -1945,7 +2031,36 @@ def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice
 if st.sidebar.checkbox("Explore Melodic Intervals"):
     search_type = "mel"
     st.subheader("Explore Melodic Intervals")
-    st.write("[Know the code! Read more about CRIM Intervals melodic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool analyzes the intervallic distance between consecutive notes within each voice part,
+        revealing patterns of melodic motion. Results show how pitches move step by step through the piece.
+
+        **Key settings**
+        - **Combine Unisons** — if True, consecutive repeated pitches in a voice are treated as one
+          sustained note, so no unison interval is recorded between them.
+        - **Combine Rests** — if True, consecutive rests are merged, reducing clutter in the interval data.
+        - **Interval Kind** — how intervals are represented:
+          - *Diatonic* — scale-step distance only, e.g. "3" for any third
+          - *With Quality* — diatonic with quality, e.g. "M3" or "m3"
+          - *Chromatic* — distance in semitones, e.g. "4" for a major third
+          - *Zero-based Diatonic* — like diatonic but unisons are "0" rather than "1"
+        - **Directed** — if True, ascending intervals are positive and descending are negative.
+          If False, only the absolute size is reported.
+        - **Compound** — if True, intervals larger than an octave are kept as-is (e.g. a tenth stays "10").
+          If False, they are reduced to their simple equivalent within an octave.
+
+        **Reading the results**
+        - The chart shows the distribution of melodic intervals in the piece or corpus, according to
+          the settings selected above.
+        - Color grouping options allow you to view the distribution by Composer, Title, or Voice.
+          The table automatically follows the same grouping.
+        - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
+          refresh the table with the updated view.
+
+        [Know the code — CRIM Intervals melodic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md)
+        """)
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
@@ -2329,7 +2444,35 @@ def corpus_har(corpus, kind_choice, directed, compound, against_low):
 if st.sidebar.checkbox("Explore Harmonic Intervals"):
     search_type = "har"
     st.subheader("Explore Harmonic Intervals")
-    st.write("[Know the code! Read more about CRIM Intervals harmonic interval methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool examines the intervals between simultaneously sounding voices, revealing the vertical
+        harmony of a piece or corpus. Rather than melodic motion within a single part, harmonic intervals
+        describe the relationships between pairs of voices at each moment.
+
+        **Key settings**
+        - **Interval Kind** — how intervals are represented:
+          - *Diatonic* — scale-step distance only, e.g. "3" for any third
+          - *With Quality* — diatonic with quality, e.g. "M3" or "m3"
+          - *Chromatic* — distance in semitones, e.g. "4" for a major third
+          - *Zero-based Diatonic* — like diatonic but unisons are "0" rather than "1"
+        - **Directed** — if True, intervals above the reference voice are positive and below are negative.
+          If False, only absolute size is reported.
+        - **Compound** — if True, intervals larger than an octave are kept as-is (e.g. a tenth stays "10").
+          If False, they are reduced to their simple equivalent within an octave.
+        - **Calculate Intervals Only Against Lowest Voice** — if True, each voice is measured only against
+          the lowest sounding voice, giving a figured-bass style view. If False, all possible voice pairs
+          are calculated.
+
+        **Reading the results**
+        - The chart shows the distribution of harmonic intervals in the piece or corpus, according to
+          the settings selected above.
+        - Color grouping options allow you to view the distribution by Composer, Title, or Voice pair.
+          The table automatically follows the same grouping.
+
+        [Know the code — CRIM Intervals harmonic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals.md)
+        """)
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
@@ -2691,7 +2834,40 @@ def harmonic_ngram_heatmap(piece, kind_choice, directed, compound, against_low, 
 if st.sidebar.checkbox("Explore Melodic Ngrams"):
     search_type = "intervals_ngrams"
     st.subheader("Explore Melodic Ngrams")
-    st.write("[Know the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool finds recurring sequences of melodic intervals — called ngrams — of a specified length
+        within a piece or corpus. Each ngram captures a consecutive run of intervals in a single voice,
+        making it possible to identify melodic patterns, motives, and their location in the score.
+
+        **Key settings**
+        - **Ngram Length** — the number of consecutive intervals in each pattern. 3 is a common starting
+          point for motives; longer values find more specific patterns.
+        - **Combine Unisons** — if True, consecutive repeated pitches are treated as sustained, so no
+          unison interval is recorded between them.
+        - **Interval Kind** — how intervals are represented: Diatonic, With Quality, Chromatic, or
+          Zero-based Diatonic (see Melodic Intervals for full descriptions).
+        - **Directed** — if True, ascending and descending intervals are distinguished.
+          If False, only absolute size is reported.
+        - **Compound** — if True, intervals larger than an octave are kept as-is.
+          If False, they are reduced to simple intervals.
+        - **Melodic Entries Only** — if True, only ngrams that follow a significant break (rest, fermata,
+          or section boundary) are returned, focusing on thematic entries. If False, all ngrams are included.
+        - **Include Count** — if True, the heat map shows how many times each pattern occurs.
+
+        **Reading the results**
+        - The **heat map** shows where each ngram pattern appears across the voices and measures of the
+          piece. Each row is a voice; each vertical bar represents an ngram.  
+        - Each piece has its own heat map, so if you select multiple pieces you can compare their patterns visually.
+        - Matching colors indicate matching ngrams.  You can see the 'count' of each ngram above (if selected).  
+        - The chart is interactive:  select one or more patterns to focus on them.         
+        - The **table** can be viewed as individual ngram locations (by voice, measure, and beat) or as
+          a count summary of how often each pattern appears.
+        - Use the pattern filter to focus the table on specific ngrams of interest.
+
+        [Know the code — CRIM Intervals ngram documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)
+        """)
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
@@ -3036,7 +3212,36 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
 if st.sidebar.checkbox("Explore Harmonic Ngrams"):
     search_type = "harmonic_ngrams"
     st.subheader("Explore Harmonic Ngrams")
-    st.write("[Know the code! Read more about CRIM Intervals ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool finds recurring sequences of harmonic intervals — called ngrams — of a specified length
+        within a piece or corpus. Each ngram captures a consecutive run of vertical intervals between
+        voice pairs, making it possible to identify recurring harmonic patterns and their location in
+        the score.
+
+        **Key settings**
+        - **Ngram Length** — the number of consecutive harmonic intervals in each pattern. 3 is a common
+          starting point; longer values find more specific patterns.
+        - **Interval Kind** — how intervals are represented: Diatonic, With Quality, Chromatic, or
+          Zero-based Diatonic (see Harmonic Intervals for full descriptions).
+        - **Directed** — if True, intervals above and below the reference voice are distinguished.
+          If False, only absolute size is reported.
+        - **Compound** — if True, intervals larger than an octave are kept as-is.
+          If False, they are reduced to simple intervals.
+        - **Calculate Intervals Only Against Lowest Voice** — if True, each voice is measured only against
+          the lowest sounding voice, giving a figured-bass style view. If False, all voice pairs are used.
+        - **Include Count** — if True, the heat map shows how many times each pattern occurs.
+
+        **Reading the results**
+        - The **heat map** shows where each harmonic ngram pattern appears across the voices and measures
+          of the piece. Color intensity indicates pattern presence (and count if enabled).
+        - The **table** can be viewed as individual ngram locations (by voice, measure, and beat) or as
+          a count summary of how often each pattern appears across the corpus.
+        - Use the pattern filter to focus the table on specific ngrams of interest.
+
+        [Know the code — CRIM Intervals ngram documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)
+        """)
     if corpus_length == 0:
         st.write("Please select one or more pieces")
     elif corpus_length == 1:
@@ -3235,7 +3440,26 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
 if st.sidebar.checkbox("Explore Sonority Ngrams"):
     search_type = "sonority_ngrams"
     st.subheader("Explore Sonority Ngrams")
-    st.write("[Know the code! Read more about CRIM Intervals sonority ngram methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        Sonority ngrams group consecutive vertical sonorities into patterns of a given length,
+        letting you search for recurring harmonic sequences across one or more pieces.
+
+        **Key settings**
+        - **Ngram Length** — how many consecutive sonorities to include in each pattern. Start with 3–4.
+        - **Sort** — alphabetize intervals within each sonority before forming ngrams. Useful for finding the same chord regardless of voice ordering.
+        - **Minimum Beat Strength** — filters to sonorities on beats of a given metric weight: 0.0 = all beats, 0.25 = moderate beats, 0.5 = strong beats, 1.0 = downbeats only.
+        - **Compound** — if True, intervals larger than an octave are kept as-is; if False, they are reduced to within an octave.
+        - **Include Progress** — adds a 0–1 value showing where in the piece each sonority falls. Required for the scatter plot.
+
+        **Reading the results**
+        - The **scatter plot** shows where in each piece (`Progress`) the lowest-voice sonority (`Low_Sonority`) appears. Clusters suggest recurring harmonic areas.
+        - Use the **Table View** options to explore patterns by location, total corpus count, or breakdown by composer and title.
+        - Use the **count filter slider** to focus on patterns that appear frequently or rarely.
+
+        [Know the code — CRIM Intervals sonority ngram documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)
+        """)
     if 'corpus_sonority_ngrams' not in globals():
         st.error("This feature requires a newer version of crim_intervals. Please run: `pip install --upgrade crim_intervals`")
     elif corpus_length == 0:
@@ -3470,7 +3694,31 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
 # if st.sidebar.checkbox("Explore Homorhythm"):
     search_type = "other"
     st.subheader("Explore Homorhythm")
-    st.write("[Know the code! Read more about the CRIM Intervals homorhythm method](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool identifies passages where two or more voices share the same rhythmic and lyrical
+        patterns simultaneously — a texture known as homorhythm. It works by finding moments where
+        matching durational ngrams and syllable sequences occur across voices at the same offset.
+
+        **Key settings**
+        - **Ngram Length** — the number of consecutive durations and syllables that must align across
+          voices to qualify as homorhythmic. The default of 4 works well for most Renaissance repertoire.
+        - **Full HR** — if True, all active voices must share the matching patterns (strict homorhythm).
+          If False, any two voices sharing the same patterns qualifies, capturing partial homorhythm.
+
+        **Reading the results**
+        Each row in the results table represents a homorhythmic passage, with the following columns:
+        - **active_voices** — total number of voices sounding at this moment
+        - **number_dur_ngrams** — count of matching durational patterns across voices
+        - **hr_voices** — the specific voices participating in the homorhythmic passage
+        - **syllable_set** — the lyric ngrams present in the passage
+        - **count_lyr_ngrams** — number of distinct lyric patterns (1 = all voices sing identical text)
+        - **active_syll_voices** — voices actively singing (i.e. not on a rest)
+        - **voice_match** — confirms the homorhythmic relationship is satisfied
+
+        [Know the code — CRIM Intervals homorhythm documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/10_Lyrics_Homorhythm.md)
+        """)
 
     form_col, _ = st.columns([1, 2])
     with form_col:
@@ -3574,7 +3822,44 @@ def presentation_types_corpus(corpus,
 if st.sidebar.checkbox("Explore Presentation Types"):
     search_type = "other"
     st.subheader("Explore Presentation Types")
-    st.write("[Know the code! Read more about CRIM Intervals presentation type methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool classifies contrapuntal patterns in a piece or corpus according to their presentation
+        type — Fuga, PEN (Periodic Entry Notation), or ID (Imitative Duo) — based on the timing and
+        melodic relationships between successive voice entries. It identifies the soggetti (subjects)
+        and analyzes how they are introduced across voices.
+
+        **Key settings**
+        - **Melodic Ngram Length** — the length of the melodic pattern used to define each soggetto.
+          The default of 4 works well for most Renaissance polyphony.
+        - **Combine Unisons** — if True, consecutive repeated pitches are merged before analysis,
+          which can help reveal commonalities obscured by text-setting repetitions.
+        - **Limit to Entries** — if True, only patterns beginning after a rest or section break are
+          analyzed, focusing on primary imitative entries. If False, all occurrences are included.
+        - **Head Flex / Body Flex** — control how much melodic variation is permitted between matching
+          soggetti. Head flex applies to the opening notes; body flex applies to the rest of the pattern.
+        - **Include Hidden Types** — if True, shorter PEN or ID patterns embedded within longer fugas
+          are also reported.
+
+        **Reading the results**
+        Each row represents one presentation type event, with the following columns:
+        - **Measures_Beats** — the measure and beat positions of each voice entry
+        - **Soggetti** — the melodic ngram patterns involved
+        - **Melodic_Entry_Intervals** — the intervals between successive soggetto entries
+        - **Time_Entry_Intervals** — the time gaps (in offsets) between entries
+        - **Presentation_Type** — the predicted classification (Fuga, PEN, or ID)
+        - **Voices** — the voice names in entry order
+
+        **Rendering Results in Score**
+        There is also an option to render each Presentation Type in your results as musical notation
+        (using Verovio), with a brief summary of the metadata for that item — including composer, title,
+        measures, presentation type, and other relevant information from the table.
+        **Note:** if your results table is large, rendering can be slow. Consider filtering to a
+        meaningful subset before rendering!
+
+        [Know the code — CRIM Intervals presentation type documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)
+        """)
     form_col, _ = st.columns([1, 2])
     with form_col:
      with st.form("Presentation Type Settings"):
@@ -3980,7 +4265,45 @@ if st.sidebar.checkbox("Explore Cadences"):
     
     search_type = "other"
     st.subheader("Explore Cadences")
-    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        This tool detects and classifies cadences in a piece or corpus by identifying combinations of
+        cadential voice functions (CVFs) — the characteristic melodic motions each voice makes at a
+        cadence. It classifies each cadence by type and goal tone, and provides detailed information
+        about voice behavior, timing, and location in the score.
+
+        **Key settings**
+        There are no configuration options — just select your piece(s) and click **Update and Run Search**.
+        Use the filter controls to narrow results by cadence type, tone, voices, or other columns.
+
+        **Reading the results**
+        Each row represents one cadence, with the following key columns:
+        - **Measure / Beat** — location in the score
+        - **CadType** — cadence classification: Clausula Vera, Authentic, Phrygian, Double Leading Tone,
+          Altizans Only, Quince, Evaded, or Abandoned
+        - **Tone** — the goal pitch of the cadence
+        - **CVFs** — the cadential voice functions present, listed top-to-bottom as in the score.
+          Upper-case letters indicate standard resolutions (C = cantizans, T = tenorizans, B = bassizans,
+          A = altizans, etc.); lower-case letters indicate evaded or irregular resolutions
+        - **Leading_Tones** — count of half-step resolution motions at this cadence
+        - **Progress** — position in the piece from 0.0 (start) to 1.0 (end)
+        - **SinceLast / ToNext** — quarter notes elapsed since the previous cadence / until the next
+        - **Sounding** — number of voices sounding at the cadence
+
+        **Visualizations**
+        - The **bar charts** show the distribution of cadence tones and types across the piece or corpus.
+        - The **radar plot** displays the tonal "footprint" — how cadence tones are distributed around
+          the pitch space — making it easy to compare tonal profiles across pieces.
+        - The **progress plot** shows where each cadence falls in the piece, colored by type, revealing
+          structural patterns in cadential planning.
+
+        **Rendering Results in Score**
+        Results can be rendered as musical notation using Verovio. Consider filtering to a meaningful
+        subset before rendering, as large result sets will be slow.
+
+        [Know the code — CRIM Intervals cadence documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)
+        """)
     
     # st.write("Did you **change the piece list**?  If so, please **Click Update Cadence Results**")
     # if st.button("Update Cadence Results"):
@@ -4855,7 +5178,29 @@ if st.sidebar.checkbox("Explore Cadences"):
 
 if st.sidebar.checkbox("Explore Model Finder"):
     st.subheader("Model Finder")
-    st.write("[Know the code! Read more about CRIM Intervals cadence methods](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Model_Finder.md)", unsafe_allow_html=True)
+    with st.expander("How to use this tool"):
+        st.markdown("""
+        **About this tool**
+        The Model Finder compares melodic ngram patterns across all pieces in your corpus, identifying
+        shared soggetti (subjects) between works. It requires at least two pieces. Use this to discover
+        which pieces share melodic material — useful for tracing models, borrowings, or common stylistic
+        patterns across composers or repertoire groups.
+
+        **Key settings**
+        - **Ngram Length** — the number of consecutive melodic intervals in each pattern. 4 is a common
+          starting point; shorter values find more general similarities, longer values find more specific ones.
+
+        **Reading the results**
+        - The **cross-plot heatmap** shows the proportion of shared entry ngrams between each pair of
+          pieces. Values range from 0 (no shared patterns) to 1.0 (100% shared — expected when a piece
+          is compared to itself). Higher values suggest a stronger melodic relationship between two works.
+        - Rows and columns represent pieces; darker cells indicate more shared melodic material.
+        - The **table** shows the raw proportions behind the heatmap.
+        - Use the download button to save the interactive chart as an HTML file.
+        - **Note:** this tool requires at least two pieces to be selected.
+
+        [Know the code — CRIM Intervals Model Finder documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/14_Model_Finder.md)
+        """)
     if corpus_length <= 1:
         st.write("Please select at least two pieces to compare")
     elif corpus_length > 1:
