@@ -3324,20 +3324,34 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
                 ].index
                 pattern_counts = pattern_counts_all[pattern_counts_all['Pattern'].isin(kept_patterns)].copy()
 
-                if piece_col:
-                    bar_chart = alt.Chart(pattern_counts).mark_bar().encode(
-                        x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
-                        y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
-                        color=alt.Color(f'{piece_col}:N', title='Piece'),
-                        tooltip=['Pattern', piece_col, 'Count']
-                    ).properties(title=f'Sonority Ngram Frequency (count: {min_count}–{max_count_sel})')
-                else:
-                    bar_chart = alt.Chart(pattern_counts).mark_bar().encode(
-                        x=alt.X('Count:Q', title='Count', axis=alt.Axis(tickMinStep=1, format='d')),
-                        y=alt.Y('Pattern:N', sort='-x', title='Sonority Ngram'),
-                        tooltip=['Pattern', 'Count']
-                    ).properties(title=f'Sonority Ngram Frequency (count: {min_count}–{max_count_sel})')
-                st.altair_chart(bar_chart, use_container_width=True)
+                scatter_cols = ['Progress', 'Low_Sonority']
+                if all(c in son_data.columns for c in scatter_cols):
+                    hover_cols = [c for c in ['Composer', 'Title', 'Measure', 'Beat', 'Low_Sonority'] if c in son_data.columns]
+                    scatter_fig = px.scatter(
+                        son_data,
+                        x='Progress',
+                        y='Low_Sonority',
+                        color='Title' if 'Title' in son_data.columns else None,
+                        hover_data=hover_cols,
+                        title='Scatter Plot of Sonority vs Progress'
+                    )
+                    scatter_fig.update_layout(
+                        title_font={'size': 12},
+                        xaxis_title='Progress',
+                        yaxis_title='Low Sonority',
+                        legend_title='Title',
+                        height=800,
+                        width=1200,
+                    )
+                    st.plotly_chart(scatter_fig, use_container_width=False)
+                    scatter_html = scatter_fig.to_html(include_plotlyjs='cdn')
+                    st.download_button(
+                        label="Download Scatter Plot as HTML",
+                        data=scatter_html,
+                        file_name='sonority_scatter.html',
+                        mime='text/html',
+                        key='son_scatter_html_dl',
+                    )
 
                 # table and CSV reflect the same count filter
                 son_data_filtered = son_data[son_data['Pattern'].isin(kept_patterns)].copy()
