@@ -856,9 +856,7 @@ if st.sidebar.checkbox("Explore Notes"):
     with st.expander("How to use this tool"):
         st.markdown("""
         **About this tool**
-        This tool creates a table of all notes and rests in the selected piece(s), ordered chronologically.
-        Each row represents a moment where any voice changes its note. The offset index is measured in
-        quarter-note units from the start of the piece.
+        This tool counts all the notes (by pitch class and octave) in the selected piece(s).
 
         **Key settings**
         - **Combine Unisons** — if True, consecutive repetitions of the same pitch in a voice are treated as
