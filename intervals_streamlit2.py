@@ -3443,6 +3443,10 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
         **About this tool**
         Sonority ngrams group consecutive vertical sonorities into patterns of a given length,
         letting you search for recurring harmonic sequences across one or more pieces.
+        In this case we combine these vertical sonorities with the corresponding melodic intervals formed in the lowest sounding voice.  
+        The result is a list of complex ngrams that represent repeating patterns of sonorities (as expressed in *all* voices) as we move through the piece.
+        The scatter plot shows where in the piece each ngram appears, making it possible to identify clusters of recurring harmonic areas.  A piece that traces a single diagonal line is unlikely to feature internal repetition.  But one with gaps (which then seem to appear *lower* on the chart) are sections that have *already been heard*.
+                    
 
         **Key settings**
         - **Ngram Length** — how many consecutive sonorities to include in each pattern. Start with 3–4.
@@ -3452,8 +3456,9 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
         - **Include Progress** — adds a 0–1 value showing where in the piece each sonority falls. Required for the scatter plot.
 
         **Reading the results**
-        - The **scatter plot** shows where in each piece (`Progress`) the lowest-voice sonority (`Low_Sonority`) appears. Clusters suggest recurring harmonic areas.
-        - Use the **Table View** options to explore patterns by location, total corpus count, or breakdown by composer and title.
+        - The **scatter plot** shows where in each combination of sonority ngram and low-line appears along the "progress" of each piece.
+        - Gaps in a diagonal line of ngrams for one piece will appear lower in the chart, and thus are 'echoes' of some series heard before.
+        - If you are viewing a corpus, the order of the pieces in the corpus will be reflected in the order of the colors in the scatter plot.  The first piece is lowest in the plot, and the last piece is highest.  So you can see if certain ngrams appear more in early or late pieces in the corpus.
         - Use the **count filter slider** to focus on patterns that appear frequently or rarely.
 
         [Know the code — CRIM Intervals sonority ngram documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/09_Ngrams_Heat_Maps.md)
