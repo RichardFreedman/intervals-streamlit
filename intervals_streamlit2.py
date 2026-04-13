@@ -1818,7 +1818,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             composer = piece.metadata['composer']
                             title = piece.metadata['title']
 
-                            _chart_key = (note_ordering, limit_to_active)
+                            _chart_key = (note_ordering, limit_to_active, exclude_rests)
                             if st.session_state.get('weighted_notes_single_key') != _chart_key:
                                 active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
                                             if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
