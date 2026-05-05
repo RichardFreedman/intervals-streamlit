@@ -1679,6 +1679,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             if st.session_state.get('weighted_notes_multi_key') != _chart_key:
                                 active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
                                             if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
+                                if exclude_rests:
+                                    active_pcs = [pc for pc in active_pcs if pc != 'Rest']
 
                                 full_index = pd.MultiIndex.from_product(
                                     [counted_notes_sorted[color_grouping].unique(), active_pcs],
@@ -1823,6 +1825,8 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             if st.session_state.get('weighted_notes_single_key') != _chart_key:
                                 active_pcs = [pc for pc in NOTE_PC_ORDERS[note_ordering]
                                             if pc in counted_notes_sorted['pitch_class'].values] if limit_to_active else NOTE_PC_ORDERS[note_ordering]
+                                if exclude_rests:
+                                    active_pcs = [pc for pc in active_pcs if pc != 'Rest']
                                 pc_rank = {pc: i for i, pc in enumerate(active_pcs)}
                                 counted_notes_polar = (
                                     counted_notes_sorted
