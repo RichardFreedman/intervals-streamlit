@@ -1639,11 +1639,6 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
             # Get the data from session state
             counted_notes_sorted = st.session_state.corpus_notes_weights
 
-            # Option to exclude Rests
-            exclude_rests = st.checkbox("Exclude Rests", value=False)
-            if exclude_rests:
-                counted_notes_sorted = counted_notes_sorted[counted_notes_sorted['pitch_class'] != 'Rest']
-
             # Check if we have the required columns for plotting
             required_columns = ['pitch_class', 'scaled']
             missing_columns = [col for col in required_columns if col not in counted_notes_sorted.columns]
@@ -1664,6 +1659,9 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             key='weighted_notes_pc_ordering'
                         )
                         limit_to_active = st.checkbox("Limit to pitch classes present in data", value=True, key='weighted_notes_limit_active')
+                        exclude_rests = st.checkbox("Exclude Rests", value=False, key='weighted_notes_exclude_rests_multi')
+                        if exclude_rests:
+                            counted_notes_sorted = counted_notes_sorted[counted_notes_sorted['pitch_class'] != 'Rest']
                         container = st.container()
                         col1, col2 = container.columns([10, 2])
                         with col1:
@@ -1812,6 +1810,9 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                             key='weighted_notes_pc_ordering_single'
                         )
                         limit_to_active = st.checkbox("Limit to pitch classes present in data", value=True, key='weighted_notes_limit_active_single')
+                        exclude_rests = st.checkbox("Exclude Rests", value=False, key='weighted_notes_exclude_rests_single')
+                        if exclude_rests:
+                            counted_notes_sorted = counted_notes_sorted[counted_notes_sorted['pitch_class'] != 'Rest']
                         container = st.container()
                         col1, col2 = container.columns([10, 2])
                         if corpus_length == 1:
