@@ -98,9 +98,8 @@ def get_mei_content(mei_source: str) -> str:
             return _f.read()
     return mei_source
 
-@st.cache_resource
 def get_verovio_toolkit():
-    """Return a single initialized verovio toolkit instance."""
+    """Return a fresh verovio toolkit instance with resource path set."""
     tk = verovio.toolkit(False)
     tk.setResourcePath(os.path.join(os.path.dirname(verovio.__file__), 'data'))
     return tk
@@ -812,7 +811,7 @@ def _hash_corpus(c):
         for s in c.scores
     )
 
-_PIECE_CACHE = dict(hash_funcs={ImportedPiece: _hash_piece, CorpusBase: _hash_corpus})
+_PIECE_CACHE = dict(hash_funcs={ImportedPiece: _hash_piece, CorpusBase: _hash_corpus}, ttl=3600)
 
 # notes piece
 @st.cache_data(**_PIECE_CACHE)
