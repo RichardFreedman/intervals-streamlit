@@ -105,6 +105,31 @@ def get_verovio_toolkit():
     tk.setResourcePath(os.path.join(os.path.dirname(verovio.__file__), 'data'))
     return tk
 
+@st.cache_data(ttl=3600)
+def plotly_fig_to_html(fig_json: str, title: str) -> str:
+    """Embed a Plotly figure JSON in a self-contained HTML file for download."""
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{title}</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ margin: 0; padding: 20px; font-family: Arial, sans-serif; }}
+        .chart-container {{ width: 100%; height: 600px; }}
+    </style>
+</head>
+<body>
+    <div class="chart-container" id="chart"></div>
+    <script>
+        var figure = {fig_json};
+        Plotly.newPlot('chart', figure.data, figure.layout, {{
+            responsive: true, displayModeBar: true, displaylogo: false
+        }});
+    </script>
+</body>
+</html>"""
+
 # function to make list of pieces
 all_piece_list = make_piece_list(json_objects)
 crim_piece_selections= st.multiselect('**Select Pieces To View from CRIM Django**', 
@@ -989,48 +1014,11 @@ if st.sidebar.checkbox("Explore Notes"):
 
                     # Add download button in second column
                     with col2:
-                        def get_nr_html():
-                            """Convert progress plot to HTML with preserved colors and interactivity"""
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Note Chart - {composer} - {title}</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {nr_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-
                         st.markdown("")
                         if st.button('📥 Prepare Notes Chart for Download', key='notes_corpus_download'):
-                            html_content = get_nr_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
+                                data=plotly_fig_to_html(nr_chart.to_json(), f"Note Chart - {composer} - {title}"),
                                 file_name=f"{composer}_{title}_notes_chart.html",
                                 mime="text/html"
                             )
@@ -1087,52 +1075,12 @@ if st.sidebar.checkbox("Explore Notes"):
                         
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
-                        def get_nr_html():
-                            """Convert notes plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Notes in Corpus</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {nr_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-                    
-                
-                        st.markdown("")     
+                        st.markdown("")
                         if st.button('📥 Prepare Notes Chart for Download', key='notes_single_download'):
-                            html_content = get_nr_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
-                                file_name=f"corpus_notes_chart.html",
+                                data=plotly_fig_to_html(nr_chart.to_json(), "Notes in Corpus"),
+                                file_name="corpus_notes_chart.html",
                                 mime="text/html"
                             )
                     
@@ -1346,48 +1294,11 @@ if st.sidebar.checkbox("Explore Durations"):
 
                     # Add download button in second column
                     with col2:
-                        def get_nr_html():
-                            """Convert dur plot to HTML with preserved colors and interactivity"""
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Note Chart - {composer} - {title}</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {dur_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-
                         st.markdown("")
                         if st.button('📥 Prepare Durations Chart for Download', key='dur_corpus_download'):
-                            html_content = get_nr_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
+                                data=plotly_fig_to_html(dur_chart.to_json(), f"Duration Chart - {composer} - {title}"),
                                 file_name=f"{composer}_{title}_durations_chart.html",
                                 mime="text/html"
                             )
@@ -1439,52 +1350,12 @@ if st.sidebar.checkbox("Explore Durations"):
                         
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
-                        def get_nr_html():
-                            """Convert nr plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Durations in Corpus</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {dur_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-                    
-                
-                        st.markdown("")     
+                        st.markdown("")
                         if st.button('📥 Prepare Durations Chart for Download', key='dur_single_download'):
-                            html_content = get_nr_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
-                                file_name=f"corpus_notes_chart.html",
+                                data=plotly_fig_to_html(dur_chart.to_json(), "Durations in Corpus"),
+                                file_name="corpus_durations_chart.html",
                                 mime="text/html"
                             )                    
                     if st.checkbox('Show Table of Durations'):
@@ -1751,50 +1622,11 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
 
                             st.plotly_chart(fig, use_container_width=True)
                         with col2:
-                            @st.cache_data(ttl=3600)
-                            def get_radar_html():
-                                """Convert radar plot to HTML with preserved colors and interactivity"""
-                                # Create a complete HTML file with embedded styles
-                                html_content = f"""
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Corpus Weighted Note Distribution</title>
-                                    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                    <style>
-                                        body {{
-                                            margin: 0;
-                                            padding: 20px;
-                                            font-family: Arial, sans-serif;
-                                        }}
-                                        .chart-container {{
-                                            width: 100%;
-                                            height: 600px;
-                                        }}
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="chart-container" id="chart"></div>
-                                    <script>
-                                        var figure = {fig.to_json()};
-                                        Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                            responsive: true,
-                                            displayModeBar: true,
-                                            displaylogo: false
-                                        }});
-                                    </script>
-                                </body>
-                                </html>
-                                """
-                                return html_content
-                                
                             if st.button('📥 Prepare Weighted Note Plot for Download', key='weighted_corpus_download'):
-                                radar_html = get_radar_html()
                                 st.download_button(
                                     label="Download Radar Plot",
-                                    data=radar_html,
-                                    file_name=f"corpus_weighted_note_plot.html",
+                                    data=plotly_fig_to_html(fig.to_json(), "Corpus Weighted Note Distribution"),
+                                    file_name="corpus_weighted_note_plot.html",
                                     mime="text/html"
                                 )
 
@@ -1886,49 +1718,10 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                                 st.plotly_chart(fig, use_container_width=True)
                             # Add download button in second column
                             with col2:
-                                @st.cache_data(ttl=3600)
-                                def get_radar_html():
-                                    """Convert radar plot to HTML with preserved colors and interactivity"""
-                                    # Create a complete HTML file with embedded styles
-                                    html_content = f"""
-                                    <!DOCTYPE html>
-                                    <html>
-                                    <head>
-                                        <meta charset="utf-8">
-                                        <title>Weighted Note Distribution</title>
-                                        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                        <style>
-                                            body {{
-                                                margin: 0;
-                                                padding: 20px;
-                                                font-family: Arial, sans-serif;
-                                            }}
-                                            .chart-container {{
-                                                width: 100%;
-                                                height: 600px;
-                                            }}
-                                        </style>
-                                    </head>
-                                    <body>
-                                        <div class="chart-container" id="chart"></div>
-                                        <script>
-                                            var figure = {fig.to_json()};
-                                            Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                                responsive: true,
-                                                displayModeBar: true,
-                                                displaylogo: false
-                                            }});
-                                        </script>
-                                    </body>
-                                    </html>
-                                    """
-                                    return html_content
-                                    
                                 if st.button('📥 Prepare Weighted Note Plot for Download', key='weighted_single_download'):
-                                    radar_html = get_radar_html()
                                     st.download_button(
-                                        label="Download Weighted Note Plot Plot",
-                                        data=radar_html,
+                                        label="Download Weighted Note Plot",
+                                        data=plotly_fig_to_html(fig.to_json(), "Weighted Note Distribution"),
                                         file_name=f"{composer}_{title}_weighted_note_plot.html",
                                         mime="text/html"
                                     )
@@ -2195,48 +1988,11 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
 
                     # Add download button in second column
                     with col2:
-                        def get_mel_html():
-                            """Convert mel plot to HTML with preserved colors and interactivity"""
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Melodic Interval Chart - {composer} - {title}</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {mel_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-
                         st.markdown("")
                         if st.button('📥 Prepare Melodic Chart for Download', key='mel_corpus_download'):
-                            html_content = get_mel_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
+                                data=plotly_fig_to_html(mel_chart.to_json(), f"Melodic Interval Chart - {composer} - {title}"),
                                 file_name=f"{composer}_{title}_mel_chart.html",
                                 mime="text/html"
                             )
@@ -2301,51 +2057,12 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                         
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
-                        def get_mel_html():
-                            """Convert mel plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Corpus Melodic Interval Chart </title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {mel_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-                        
-                        st.markdown("")     
+                        st.markdown("")
                         if st.button('📥 Prepare Melodic Chart for Download', key='mel_single_download'):
-                            html_content = get_mel_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
-                                file_name=f"corpus_mel_chart.html",
+                                data=plotly_fig_to_html(mel_chart.to_json(), "Corpus Melodic Interval Chart"),
+                                file_name="corpus_mel_chart.html",
                                 mime="text/html"
                             )
 
@@ -2601,48 +2318,11 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
 
                     # Add download button in second column
                     with col2:
-                        def get_har_html():
-                            """Convert har plot to HTML with preserved colors and interactivity"""
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Harmonic Interval Chart - {composer} - {title}</title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {har_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-
                         st.markdown("")
                         if st.button('📥 Prepare Harmonic Chart for Download', key='har_corpus_download'):
-                            html_content = get_har_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
+                                data=plotly_fig_to_html(har_chart.to_json(), f"Harmonic Interval Chart - {composer} - {title}"),
                                 file_name=f"{composer}_{title}_har_chart.html",
                                 mime="text/html"
                             )
@@ -2705,51 +2385,12 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                         
                     # Add download button in second column
                     with col2:
-                        # @st.cache_data(ttl=3600)
-                        def get_har_html():
-                            """Convert har plot to HTML with preserved colors and interactivity"""
-                            # Create a complete HTML file with embedded styles
-                            html_content = f"""
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta charset="utf-8">
-                                <title>Corpus Harmonic Interval Chart </title>
-                                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                                <style>
-                                    body {{
-                                        margin: 0;
-                                        padding: 20px;
-                                        font-family: Arial, sans-serif;
-                                    }}
-                                    .chart-container {{
-                                        width: 100%;
-                                        height: 600px;
-                                    }}
-                                </style>
-                            </head>
-                            <body>
-                                <div class="chart-container" id="chart"></div>
-                                <script>
-                                    var figure = {har_chart.to_json()};
-                                    Plotly.newPlot('chart', figure.data, figure.layout, {{
-                                        responsive: true,
-                                        displayModeBar: true,
-                                        displaylogo: false
-                                    }});
-                                </script>
-                            </body>
-                            </html>
-                            """
-                            return html_content
-                        
-                        st.markdown("")     
+                        st.markdown("")
                         if st.button('📥 Prepare Harmonic Chart for Download', key='har_single_download'):
-                            html_content = get_har_html()
                             st.download_button(
                                 label="Download the Chart",
-                                data=html_content,
-                                file_name=f"corpus_har_chart.html",
+                                data=plotly_fig_to_html(har_chart.to_json(), "Corpus Harmonic Interval Chart"),
+                                file_name="corpus_har_chart.html",
                                 mime="text/html"
                             )
 
@@ -3064,8 +2705,7 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
             if submitted:
                 ngram_df_list = []
                 heatmap_list = []
-                for work in corpus_list:
-                    piece = importScore(work)
+                for piece in st.session_state.corpus.scores:
                     ngrams, heatmap = ngram_heatmap(piece,
                                 combine_unisons_choice,
                                 kind_choice,
@@ -3348,8 +2988,7 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
             if submitted:
                 har_ngram_df_list = []
                 har_heatmap_list = []
-                for work in corpus_list:
-                    piece = importScore(work)
+                for piece in st.session_state.corpus.scores:
                     har_ngrams, har_heatmap = harmonic_ngram_heatmap(piece,
                                                 kind_choice,
                                                 directed,
@@ -5169,7 +4808,7 @@ if st.sidebar.checkbox("Explore Model Finder"):
     if corpus_length <= 1:
         st.write("Please select at least two pieces to compare")
     elif corpus_length > 1:
-        corpus = CorpusBase(corpus_list)
+        corpus = st.session_state.corpus
         # Initialize session state
 # if 'ready_to_download' not in st.session_state:
 #     st.session_state.ready_to_download = False
