@@ -22,9 +22,10 @@ import plotly.figure_factory as ff
 from plotly.offline import plot
 import plotly.io as pio
 import numpy as np
-# import base64
 import streamlit.components.v1 as components
-from os import listdir 
+import os
+from os import listdir
+import base64
 import json
 import psutil
 from tempfile import NamedTemporaryFile
@@ -78,10 +79,31 @@ st.markdown("[Learn more about CRIM Intervals](https://github.com/HCDigitalSchol
 st.markdown("Follow detailed explanations of various CRIM Intervals methods via the [Tutorials](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/01_Introduction_and_Corpus.md)", unsafe_allow_html=True)
 st.markdown("Learn more about this web application (and how to contribute or adapt it via the [Github Repository for CRIM Intervals on Streamlit](https://github.com/RichardFreedman/intervals-streamlit/blob/main/README.md)")
 # importing files
-crim_url = 'https://crimproject.org/data/pieces/'
-all_pieces_json = requests.get(crim_url).json()
-json_str = json.dumps(all_pieces_json)
-json_objects = json.loads(json_str)
+@st.cache_data(ttl=3600)
+def fetch_crim_pieces():
+    return requests.get('https://crimproject.org/data/pieces/').json()
+
+json_objects = fetch_crim_pieces()
+
+@st.cache_data(ttl=3600)
+def _fetch_mei_url(url: str) -> str:
+    return requests.get(url).text
+
+def get_mei_content(mei_source: str) -> str:
+    """Return MEI XML text from a URL, local path, or inline string."""
+    if mei_source.startswith('http'):
+        return _fetch_mei_url(mei_source)
+    elif mei_source.startswith('/') or mei_source.startswith('Music_Files/'):
+        with open(mei_source, 'r') as _f:
+            return _f.read()
+    return mei_source
+
+@st.cache_resource
+def get_verovio_toolkit():
+    """Return a single initialized verovio toolkit instance."""
+    tk = verovio.toolkit(False)
+    tk.setResourcePath(os.path.join(os.path.dirname(verovio.__file__), 'data'))
+    return tk
 
 # function to make list of pieces
 all_piece_list = make_piece_list(json_objects)
@@ -99,85 +121,64 @@ if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
 elif len(crim_piece_selections) == 1 and len(uploaded_files_list)== 0:
     piece_name = crim_piece_selections[0]
     crim_view_url = 'https://crimproject.org/pieces/' + piece_name
-    # url_for_verovio = "https://raw.githubusercontent.com/CRIM-Project/CRIM-online/master/crim/static/mei/MEI_4.0/" + piece_name + ".mei"
-
-    # based on selected piece, get the mei file link and import it
     filepath = find_mei_link(piece_name, json_objects)
-    keys = ['piece', 'metadata']
-    for key in keys:
-        if key in st.session_state.keys():
-            del st.session_state[key]
-    # import
-    piece = importScore(filepath)
-    if "piece" not in st.session_state:
+    _piece_key = filepath
+    if st.session_state.get('_piece_load_key') != _piece_key:
+        piece = importScore(filepath)
         st.session_state.piece = piece
-    if "metadata" not in st.session_state:
         st.session_state.metadata = piece.metadata
-    st.session_state.mei_source = filepath
-    st.session_state.metadata['CRIM View'] = crim_view_url
-    st.dataframe(st.session_state.metadata)  
+        st.session_state.mei_source = filepath
+        st.session_state.metadata['CRIM View'] = crim_view_url
+        st.session_state._piece_load_key = _piece_key
+        for _k in ['corpus', 'corpus_metadata', '_corpus_load_key']:
+            st.session_state.pop(_k, None)
+    piece = st.session_state.piece
+    st.dataframe(st.session_state.metadata)
 
 # One upload
 elif len(crim_piece_selections) == 0 and len(uploaded_files_list) == 1:
-    f = ''
     crim_view_url = "Direct Upload; Not from CRIM"
-    keys = ['piece', 'metadata']
-    for key in keys:
-        if key in st.session_state.keys():
-            del st.session_state[key]
-    for file in uploaded_files_list:
-        # KEEP THIS
-        # with NamedTemporaryFile(dir='.', suffix = '.mei') as f:
-        #     f.write(file.getbuffer())
-        #     # f.name is in fact the TEMP PATH!
-        #     piece = importScore(f.name)
+    file = uploaded_files_list[0]
+    _piece_key = f"{file.name}_{file.size}"
+    if st.session_state.get('_piece_load_key') != _piece_key:
         byte_str = file.read()
         text_obj = byte_str.decode('UTF-8')
         piece = importScore(text_obj)
-        if "piece" not in st.session_state:
-            st.session_state.piece = piece
-        if "metadata" not in st.session_state:
-            st.session_state.metadata = piece.metadata
+        st.session_state.piece = piece
+        st.session_state.metadata = piece.metadata
         st.session_state.mei_source = text_obj
         st.session_state.metadata['CRIM View'] = "Direct upload; not available on CRIM"
-        st.dataframe(st.session_state.metadata)  
+        st.session_state._piece_load_key = _piece_key
+        for _k in ['corpus', 'corpus_metadata', '_corpus_load_key']:
+            st.session_state.pop(_k, None)
+    piece = st.session_state.piece
+    st.dataframe(st.session_state.metadata)
 
 # now combine the CRIM and Uploaded Files
-elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(crim_piece_selections) > 1 or  len(uploaded_files_list) > 1:
-    # set empty corpus list, so we can add files to it
-    corpus_list = []
-    metadata_list= []
-    if len(crim_piece_selections) > 0:
-        for crim_piece in crim_piece_selections:
-            filepath = find_mei_link(crim_piece, json_objects)
-            corpus_list.append(filepath)
-    if len(uploaded_files_list) > 0:
-        for file in uploaded_files_list:
-            # KEEP THIS FOR TEMP WRITE METHOD
-            # if file is not None:
-            #     file_details = {"FileName":file.name,"FileType":file.type}
-            #     local_dir = '/tempDir/'
-            #     # this one for use on computer:
-            #     # local_dir = '/Users/rfreedma/Documents/CRIM_Python/intervals-streamlit/'
-            #     file_path = os.path.join(local_dir, file.name)
-            #     with open(file_path,"wb") as f: 
-            #         f.write(file.getbuffer())         
-            #     corpus_list.append(file_path)
-            byte_str = file.read()
-            text_obj = byte_str.decode('UTF-8')
-            corpus_list.append(text_obj)
-    # make corpus and session state version
-    if 'corpus' in st.session_state:
-        del st.session_state.corpus        
-    corpus = CorpusBase(corpus_list)
-    if 'corpus' not in st.session_state:
+elif (len(crim_piece_selections) > 0 and len(uploaded_files_list) > 0) or len(crim_piece_selections) > 1 or len(uploaded_files_list) > 1:
+    crim_keys = sorted(crim_piece_selections)
+    upload_keys = sorted(f"{f.name}_{f.size}" for f in uploaded_files_list)
+    _corpus_key = str(crim_keys + upload_keys)
+    if st.session_state.get('_corpus_load_key') != _corpus_key:
+        corpus_list = []
+        metadata_list = []
+        if len(crim_piece_selections) > 0:
+            for crim_piece in crim_piece_selections:
+                filepath = find_mei_link(crim_piece, json_objects)
+                corpus_list.append(filepath)
+        if len(uploaded_files_list) > 0:
+            for file in uploaded_files_list:
+                byte_str = file.read()
+                text_obj = byte_str.decode('UTF-8')
+                corpus_list.append(text_obj)
+        corpus = CorpusBase(corpus_list)
+        metadata_list = [corpus.scores[i].metadata for i in range(len(corpus.scores))]
         st.session_state.corpus = corpus
-    if 'corpus_metadata' in st.session_state:
-        del st.session_state.corpus_metadata
-    for i in range(len(corpus.scores)):
-        metadata_list.append(corpus.scores[i].metadata)
-    if 'corpus_metadata' not in st.session_state:
         st.session_state.corpus_metadata = metadata_list
+        st.session_state._corpus_load_key = _corpus_key
+        for _k in ['piece', 'metadata', '_piece_load_key']:
+            st.session_state.pop(_k, None)
+    corpus = st.session_state.corpus
     st.dataframe(st.session_state.corpus_metadata)
 
 # get metadata for corpus
@@ -775,8 +776,21 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
 
 # intervals functions and forms
 
+# hash helpers for @st.cache_data — piece/corpus objects aren't natively hashable
+def _hash_piece(p):
+    m = p.metadata
+    return f"{m.get('composer', '')}/{m.get('title', '')}/{m.get('date', '')}"
+
+def _hash_corpus(c):
+    return "|".join(
+        f"{s.metadata.get('composer', '')}/{s.metadata.get('title', '')}"
+        for s in c.scores
+    )
+
+_PIECE_CACHE = dict(hash_funcs={ImportedPiece: _hash_piece, CorpusBase: _hash_corpus})
+
 # notes piece
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                             combineRests = combine_rests_choice)
@@ -809,7 +823,7 @@ def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     return nr_melted
 
 
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_dfs = corpus.batch(func = func, 
@@ -879,7 +893,6 @@ if st.sidebar.checkbox("Explore Notes"):
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
         form_col, _ = st.columns([1, 2])
         with form_col:
@@ -913,7 +926,6 @@ if st.sidebar.checkbox("Explore Notes"):
             pass
         else:
             # filter the nr results
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
             if len(st.session_state.nr.fillna('')) > 100000:
                 print("Results are too large to display; please filter again")
@@ -1037,7 +1049,6 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                 # for corpus:
                 if corpus_length > 1:  
-                    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
                     nr_counts = nr.groupby(['Composer', 'Title', 'Voice', 'Note']).size().reset_index(name='Count')
                     # remove rests
                     nr_counts_counts_no_rest = nr_counts[nr_counts['Note'] != 'Rest']
@@ -1145,6 +1156,7 @@ if st.sidebar.checkbox("Explore Notes"):
                     
                    
 # durations
+@st.cache_data(**_PIECE_CACHE)
 def piece_durs(piece):
     # if exclude_rests:
     #     nr = piece.notes().replace("Rest", np.nan)
@@ -1174,7 +1186,7 @@ def piece_durs(piece):
     return dur_melted   
     1
 
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def corpus_durs(corpus):
     func1 = ImportedPiece.notes  # <- NB there are no parentheses here
     # if exclude_rests:
@@ -1253,7 +1265,6 @@ if st.sidebar.checkbox("Explore Durations"):
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         # exclude_rests = st.checkbox("Exclude Rests", value=False, key="dur_exclude_rests")
         # Form submission button
         submitted = st.button("Update and Run Search", key="durations_search")
@@ -1394,7 +1405,6 @@ if st.sidebar.checkbox("Explore Durations"):
 
                 # For corpus
                 if corpus_length > 1:
-                    st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
                     dur_counts = dur.groupby(['Composer', 'Title', 'Voice', 'Duration']).size().reset_index(name='Count')
                     sorted_dur = dur_counts.sort_values('Duration').reset_index(drop=True)
 
@@ -1500,6 +1510,7 @@ if st.sidebar.checkbox("Explore Durations"):
 # helper 
 
 # this function gets all the notes, but also calculates the 'proportion' of notes in each piece, so that we have a normalized view of the distributions
+@st.cache_data(**_PIECE_CACHE)
 def piece_note_weight(piece):
     metadata = piece.metadata['composer'] + ": " + piece.metadata['title']
     melted_notes = piece.notes().melt()
@@ -1526,6 +1537,7 @@ def piece_note_weight(piece):
 
 
 # Your corpus_note_dfs function
+@st.cache_data(**_PIECE_CACHE)
 def corpus_note_weights(corpus):
     
 
@@ -1604,7 +1616,6 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
     if len(crim_piece_selections) == 0 and len(uploaded_files_list) == 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         
         # Form submission button
         submitted = st.button("Update and Run Search", key="weighted_notes_search")
@@ -1949,7 +1960,7 @@ if st.sidebar.checkbox("Explore Notes Weighted By Durations"):
                     st.code(traceback.format_exc())
 
 # melodic functions
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     nr = piece.notes(combineUnisons = combine_unisons_choice,
                               combineRests = combine_rests_choice)
@@ -1986,7 +1997,7 @@ def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, 
     
     return mel_melted
 
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
     func = ImportedPiece.notes  # <- NB there are no parentheses here
     list_of_dfs = corpus.batch(func = func, 
@@ -2067,7 +2078,6 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         form_col, _ = st.columns([1, 2])
         with form_col:
          with st.form("Melodic Interval Settings"):
@@ -2113,7 +2123,6 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
             pass
         else:
             # show corpus data for mel with filter options
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
             # st.dataframe(st.session_state.mel)
             if len(st.session_state.mel.fillna('')) > 100000:
@@ -2358,7 +2367,7 @@ if st.sidebar.checkbox("Explore Melodic Intervals"):
                             )
         
 # harmonic functions
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def piece_har(piece, kind_choice, directed, compound, against_low):
     nr = piece.notes()
     nr = piece.numberParts(nr)
@@ -2394,7 +2403,7 @@ def piece_har(piece, kind_choice, directed, compound, against_low):
     
     return har_melted
 
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def corpus_har(corpus, kind_choice, directed, compound, against_low):
     
     func = ImportedPiece.notes  # <- NB there are no parentheses here
@@ -2479,7 +2488,6 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
     if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
         st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")    
         form_col, _ = st.columns([1, 2])
         with form_col:
          with st.form("Harmonic Interval Settings"):
@@ -2522,7 +2530,6 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
             pass
         else:
             # count up the values in each item column--sum for each pitch. make a copy 
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
             if len(st.session_state.har.fillna('')) > 100000:
                 print("Results are too large to display; please filter again")
@@ -2764,7 +2771,7 @@ if st.sidebar.checkbox("Explore Harmonic Intervals"):
                             ) 
 
 # function for ngram heatmap
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice, include_count):
     # find entries for model
     nr = piece.notes(combineUnisons = combine_unisons_choice)
@@ -2814,7 +2821,7 @@ def ngram_heatmap(piece, combine_unisons_choice, kind_choice, directed, compound
         return mel_ngrams_detail, ng_heatmap
 
 # function for harmonic ngram heatmap
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def harmonic_ngram_heatmap(piece, kind_choice, directed, compound, against_low, length_choice, include_count):
     nr = piece.notes()
     nr = piece.numberParts(nr)
@@ -2927,7 +2934,6 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
         if "ngrams3" not in st.session_state:
             pass
         else:
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             if piece.metadata["composer"] is not None:
                 st.subheader("Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
@@ -2984,21 +2990,13 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
             if n_ng > 20:
                 st.warning(f"There are {n_ng} ngrams in the filtered list. Consider filtering to 20 or fewer before rendering.")
             if st.button("Render Ngrams with Verovio", key="verovio_ngrams_render"):
-                import os, base64, re
+                import re
                 mei_source = st.session_state.get('mei_source', '')
                 if not mei_source:
                     st.warning("MEI source not available for rendering.")
                 else:
-                    if mei_source.startswith('http'):
-                        mei_content = requests.get(mei_source).text
-                    elif mei_source.startswith('/') or mei_source.startswith('Music_Files/'):
-                        with open(mei_source, 'r') as _f:
-                            mei_content = _f.read()
-                    else:
-                        mei_content = mei_source
-                    tk = verovio.toolkit(False)
-                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
-                    tk.setResourcePath(resource_path)
+                    mei_content = get_mei_content(mei_source)
+                    tk = get_verovio_toolkit()
                     tk.loadData(mei_content)
                     tk.setScale(35)
                     tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
@@ -3062,7 +3060,6 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
             include_count = st.selectbox("Include Count of Ngrams", [True, False])
             # submit ngram form
             submitted = st.form_submit_button("Submit")
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
 
             if submitted:
                 ngram_df_list = []
@@ -3172,16 +3169,8 @@ if st.sidebar.checkbox("Explore Melodic Ngrams"):
                     if cad_piece is None:
                         continue
                     mei_src = cad_piece.path
-                    if mei_src.startswith('http'):
-                        mei_content = requests.get(mei_src).text
-                    elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
-                        with open(mei_src, 'r') as _f:
-                            mei_content = _f.read()
-                    else:
-                        mei_content = mei_src
-                    tk = verovio.toolkit(False)
-                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
-                    tk.setResourcePath(resource_path)
+                    mei_content = get_mei_content(mei_src)
+                    tk = get_verovio_toolkit()
                     tk.loadData(mei_content)
                     tk.setScale(35)
                     tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
@@ -3291,7 +3280,6 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
         if "har_ngrams3" not in st.session_state:
             pass
         else:
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             if piece.metadata["composer"] is not None:
                 st.subheader("Harmonic Ngram Heatmap: " + piece.metadata["composer"] + ", " + piece.metadata["title"])
             else:
@@ -3357,7 +3345,6 @@ if st.sidebar.checkbox("Explore Harmonic Ngrams"):
             length_choice = st.number_input('Select ngram Length', value=3, step=1)
             include_count = st.selectbox("Include Count of Ngrams", [True, False])
             submitted = st.form_submit_button("Submit")
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             if submitted:
                 har_ngram_df_list = []
                 har_heatmap_list = []
@@ -3519,7 +3506,6 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
         if "sonority_ngrams" not in st.session_state:
             pass
         else:
-            st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
             st.write("Filter Results by Contents of Each Column")
             filtered_son_ngrams = filter_dataframe_ng(st.session_state.sonority_ngrams)
 
@@ -3643,7 +3629,7 @@ if st.sidebar.checkbox("Explore Sonority Ngrams"):
 
 # hr functions
 # one piece
-@st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def piece_homorhythm(piece, length_choice, full_hr_choice):
     hr = piece.homorhythm(ngram_length=length_choice, 
                     full_hr=full_hr_choice)
@@ -3671,7 +3657,7 @@ def piece_homorhythm(piece, length_choice, full_hr_choice):
 
     return hr
 # orpus
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     func = ImportedPiece.homorhythm
     list_of_dfs = corpus.batch(func = func,
@@ -3751,7 +3737,6 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
     if 'hr' not in st.session_state:
         pass
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_hr = filter_dataframe_hr(st.session_state.hr.fillna('-'))
         st.dataframe(filtered_hr, use_container_width=True)
@@ -3771,8 +3756,8 @@ def corpus_homorhythm(corpus, length_choice, full_hr_choice):
         
 # p type function
 # piece
-# @st.cache_data
-def piece_presentation_types(piece, 
+@st.cache_data(**_PIECE_CACHE)
+def piece_presentation_types(piece,
                             length_choice, 
                             limit_entries_choice,
                             body_flex_choice, 
@@ -3795,7 +3780,7 @@ def piece_presentation_types(piece,
         p_types["Time_Entry_Intervals"]= p_types["Time_Entry_Intervals"].apply(lambda x: ', '.join(map(str, x))).copy()  
         return p_types
 #corpus
-# @st.cache_data
+@st.cache_data(**_PIECE_CACHE)
 def presentation_types_corpus(corpus,
                               length_choice, 
                             limit_entries_choice,
@@ -3924,7 +3909,6 @@ if st.sidebar.checkbox("Explore Presentation Types"):
     if 'p_types' not in st.session_state:
         pass
     else:
-        st.write("Did you **change the piece list**?  If so, please **Update and Submit form**")
         st.write("Filter Results by Contents of Each Column")
         filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
         st.dataframe(filtered_p_types, use_container_width=True)
@@ -3997,16 +3981,8 @@ if st.sidebar.checkbox("Explore Presentation Types"):
                     mei_src = st.session_state.get('mei_source', '')
                 if not mei_src:
                     continue
-                if mei_src.startswith('http'):
-                    mei_content = requests.get(mei_src).text
-                elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
-                    with open(mei_src, 'r') as _f:
-                        mei_content = _f.read()
-                else:
-                    mei_content = mei_src
-                tk = verovio.toolkit(False)
-                resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
-                tk.setResourcePath(resource_path)
+                mei_content = get_mei_content(mei_src)
+                tk = get_verovio_toolkit()
                 tk.loadData(mei_content)
                 tk.setScale(40)
                 tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
@@ -4313,7 +4289,6 @@ if st.sidebar.checkbox("Explore Cadences"):
         [Know the code — CRIM Intervals cadence documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md)
         """)
     
-    # st.write("Did you **change the piece list**?  If so, please **Click Update Cadence Results**")
     # if st.button("Update Cadence Results"):
     if corpus_length == 0:
         st.write("Please select one or more pieces")
@@ -4369,19 +4344,9 @@ if st.sidebar.checkbox("Explore Cadences"):
                 if n_cads > 20:
                     st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many cadences may be slow. Consider filtering to 20 or fewer.")
                 if st.button("Render Cadences", key="verovio_cads_render"):
-                    import os, base64, re
-                    # Load MEI content from URL, local file path, or uploaded content
-                    if mei_source.startswith('http'):
-                        response = requests.get(mei_source)
-                        mei_content = response.text
-                    elif mei_source.startswith('/') or mei_source.startswith('Music_Files/'):
-                        with open(mei_source, 'r') as _f:
-                            mei_content = _f.read()
-                    else:
-                        mei_content = mei_source
-                    tk = verovio.toolkit(False)
-                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
-                    tk.setResourcePath(resource_path)
+                    import re
+                    mei_content = get_mei_content(mei_source)
+                    tk = get_verovio_toolkit()
                     tk.loadData(mei_content)
                     tk.setScale(53)
                     tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
@@ -4802,16 +4767,8 @@ if st.sidebar.checkbox("Explore Cadences"):
                     if cad_piece is None:
                         continue
                     mei_src = cad_piece.path
-                    if mei_src.startswith('http'):
-                        mei_content = requests.get(mei_src).text
-                    elif mei_src.startswith('/') or mei_src.startswith('Music_Files/'):
-                        with open(mei_src, 'r') as _f:
-                            mei_content = _f.read()
-                    else:
-                        mei_content = mei_src
-                    tk = verovio.toolkit(False)
-                    resource_path = os.path.join(os.path.dirname(verovio.__file__), 'data')
-                    tk.setResourcePath(resource_path)
+                    mei_content = get_mei_content(mei_src)
+                    tk = get_verovio_toolkit()
                     tk.loadData(mei_content)
                     tk.setScale(53)
                     tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
