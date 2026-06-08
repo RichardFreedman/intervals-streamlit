@@ -347,14 +347,14 @@ test-no-images = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"
 
 [[package]]
 name = "crim-intervals"
-version = "2.0.65"
+version = "2.0.71"
 description = "CRIM intervals package"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "crim_intervals-2.0.65-py3-none-any.whl", hash = "sha256:61c853ec69f7fe1ade5ffa2950c18f32076d83ece05e5c4d4e8b2100b5f20fae"},
-    {file = "crim_intervals-2.0.65.tar.gz", hash = "sha256:ffee987cc4872a335a72649a371634a7c670fe4c34cf15d3471a1075591fc893"},
+    {file = "crim_intervals-2.0.71-py3-none-any.whl", hash = "sha256:e55bfd430c069f77899ed5dfa9d2a71313839f2ee77c96d9d5b1a2b4e5f05729"},
+    {file = "crim_intervals-2.0.71.tar.gz", hash = "sha256:13eea4e8c97412706414a3e85e038f4171c0ee02c96d53af5c0d79634a757d06"},
 ]
 
 [package.dependencies]
@@ -2241,4 +2241,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "82e263d651c70eefa2b867d40b77833ef3898cc4684b47d2a545f9d1a99a3af7"
+content-hash = "fe5f956607b292667d5f48f86073fa968250374381eadbedd89539ee57137d4d"
