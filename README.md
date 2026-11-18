@@ -6,11 +6,9 @@
 
 [Learn about Streamlit](https://docs.streamlit.io/library/api-reference)
 
-## Use it Online at Streamlit.IO
+## Use it Online
 
-[crimintervals](https://crimintervals.streamlit.app/)
-
-This version is mostly stable, but with several users it can perform unexpectedly!
+[intervals-streamlit.crimproject.org](https://intervals-streamlit.crimproject.org/)
 
 ## Run it Locally on your Own Computer
 
