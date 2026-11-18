@@ -12,162 +12,122 @@
 
 This version is mostly stable, but with several users it can perform unexpectedly!
 
-## Run it Locally on your Own Computer in a Virtual Environment
+## Run it Locally on your Own Computer
 
-This version runs well, and is extremely fast!
+Running the app on your own machine is much faster than the shared online version. Everything below
+is done in a terminal; the first setup takes about 15 minutes, and after that starting the app is
+two commands.
 
-### 1. Get Anaconda Navigator to Manage Virtual Environments 
+### 1. Install VS Code
 
-"Virtual Environments" are in effect small computing worlds on your computer.  They allow you to run special sets of tools in a way that keeps them isolated from all other programs.  Different programs require different 'dependencies', and different versions of these dependencies.  So keeping them separate is a good idea.
+[Download Visual Studio Code](https://code.visualstudio.com/download) and install it. We use its
+built-in terminal (**Terminal → New Terminal**) for every step below. Optionally, install the
+**Python** extension from Microsoft (Extensions icon in the left-hand bar).
 
-If you are new to virtual environments, one good solution is to manage environments is with **Anaconda Navigator**.  [Download it for your machine for free](https://www.anaconda.com/download).  [Learn more about Anaconda Navigator](https://learning.anaconda.cloud/).  
+### 2. Install Python with Miniconda
 
+[Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install) is a small installer
+that provides Python and the `conda` command for creating *virtual environments*: self-contained sets
+of libraries kept separate from everything else on your computer.
 
-### 2. Create a New Virtual Environment
-
-Here are the steps:
-
-- A. Click "+ create" at the bottom of Navigator
-- B. Name it (anything you like, but perhaps "crim_streamlit")
-- C. On the **Python** dialogue, select "**3.10.13**" or any version that starts with "3.10"
-- D. Click "create" in the dialogue, and wait a minute or two . . 
-
-![alt text](<images/conda new env.png>)
-
-
-### 3. Create a Project Folder on your Computer
-
-Now you will need to create a dedicated folder on your computer where you will keep the code for the CRIM Intervals Streamlit application.
-
-- Make a **new folder** in the **Documents** folder on your machine.  You can name it as you like, but something simple like "**CRIM Streamlit Code**" will do.  
-- You will not be editing any of the files here, but instead you will sync this folder to an online repository on GitHub.  Don't worry, this won't put anything strange on your computer!
-- Make sure you know where to find this folder, since you will need to point to it in the next step
-
-### 4. Return to Anaconda Navigator and your Virtual Env
-
-- Make sure that the new environment you created is the active one (see image).
-
-- Click on the arrow next your enviroment and select **Open Terminal**
-
-![alt text](<images/conda term env.png>)
-
-- This will create an interactive 'Terminal' session, through which you can write commands to your computer that will download the code you need.
-- You should see something like this, with the **name of your environment**, followed by the **name of your computer**, all followed by a **symbol and space for your cursor**:
+- Download the Miniconda installer for your system from the link above and run it with the default
+  options. (On a Mac, choose the Apple Silicon or Intel version to match your machine.)
+- When it finishes, **quit and reopen VS Code**, open a terminal, and check it works:
 
 ```
-(CRIM_Streamlit_Code) rfreedma@rfreedma-22 ~ % 
+conda --version
 ```
 
-![alt text](<images/env ok.png>)
+> **Windows:** if `conda` is not recognised, open **Anaconda Prompt (miniconda3)** from the Start
+> menu, run `conda init powershell`, then quit and reopen VS Code.
+>
+> **Mac:** if `conda` is not found, run `~/miniconda3/bin/conda init zsh`, then open a new terminal.
 
-### 5. Get the Code from Github via the Terminal
+### 3. Create the Environment
 
-- Now you will first need to make sure you have the 'git' code that will allow you to request code from github.  Install it by pasting the following into your terminal: 
+Create an environment named `streamlit_intervals` with Python 3.11 (type **y** to confirm):
+
+```
+conda create -n streamlit_intervals python=3.11
+```
+
+Then activate it:
+
+```
+conda activate streamlit_intervals
+```
+
+The start of your terminal prompt should now read `(streamlit_intervals)`.
+
+### 4. Get the Code
+
+Install `git` into the environment (if you don't already have it), move to the folder where you want
+the code to live, and clone the repository:
 
 ```
 conda install git
-```
-
-![alt text](<images/conda git install.png>)
-
-- This will in turn ask you to confirm that you want to install this software.  Type **y** for 'yes'.
-- You will see the code install and then something to confirm success, like the following:
-
-![alt text](<images/git conda ok.png>)
-
-### 6. Change the Terminal to Point to your New Project Folder
-
-- Now find the **new project folder** (which we will call a 'directory') you created in Step 3 above.  We will enter the 'path' to that directory in the terminal, preceeded by "cd", like this:
-
-```
-cd Documents/Projects/MyProject
-```
-
-- Your path might look like this:
-
-
-```
-/Users/rfreedma/Documents/CRIM_Python/intervals-streamlit
-```
-
-- The whole command would be (remember ONE space between 'cd' and the path to your folder!)
-
-
-```
-cd /Users/rfreedma/Documents/CRIM_Python/intervals-streamlit
-```
-
-Type that into the Terminal and press enter.  Now the terminal command prompt should include the name of your directory:
-
-![alt text](images/cd.png)
-
-
-### 7.  Sync Your Folder to the GitHub Repository for CRIM Intervals Streamlit
-
-- Now you will issue the command to 'clone' the code and put it in your Project Folder.  Don't worry, you can always delete this, and it will have no effect on any other software on your computer!
-
-- At the terminal prompt paste in the following (remember just one space between each element), and press Enter/Return:
-
-```
+cd ~/Documents
 git clone https://github.com/RichardFreedman/intervals-streamlit.git
-```
-
-- This should only take a few seconds, but you will see the following confirmation:
-
- ![alt text](<images/git confirm.png>)
-
--  If you want to see the files, simply type 'ls' (which will list all the files)
-
-### 8. Install the Requirements for CRIM Intervals Streamlit
-
-- Now you need to install the various dependencies that make Streamlit and CRIM Intervals work together.  
-- First we need to 'change directory' into the folder you just installed.  Copy and paste this into your terminal, then Enter/Return:
-
-```
 cd intervals-streamlit
 ```
 
-- And now install the various `requirements`. Copy and paste the following into your terminal, and then Enter/Return:
+To browse the files, use **File → Open Folder…** in VS Code and choose `intervals-streamlit`.
 
+### 5. Install the Requirements
+
+With the environment active and the terminal inside `intervals-streamlit`, run:
 
 ```
 pip install -r requirements.txt
 ```
 
-- There will be a lot of activity for a minute or two as all the libraries are installed.  But eventually you will return to the command prompt.  But meanwhile you might see this:
+This installs Streamlit, CRIM Intervals and everything they depend on. It takes a few minutes.
 
-![alt text](images/postinstall.png)
-
-
-- Congratulations, you are ready to run Streamlit!
-
-### 9.  Run Streamlit CRIM Intervals
-
-- At the command prompt in the terminal, type the following:
+### 6. Run the App
 
 ```
-streamlit run intervals_streamlit2.py
+python -m streamlit run streamlit_app.py
 ```
 
-- After a brief 30 seconds or so, Streamlit should start in a browser window.  
+> Use `python -m streamlit` rather than plain `streamlit`. If another copy of Streamlit is installed
+> elsewhere on your computer, plain `streamlit` may start that one instead, and you'll see
+> `ModuleNotFoundError: No module named 'crim_intervals'`.
 
-![alt text](images/streamrunning.png)
+After a few seconds the app opens in your web browser (if it doesn't, open the **Local URL** shown in
+the terminal, usually http://localhost:8501).
 
-- The terminal will also show you the local IP address to use to access the application.
+- Choose pieces from CRIM, or upload your own MEI or MusicXML files, in the **sidebar**.
+- Move between the analysis pages (Notes, Melodic Intervals, Cadences, Voice Ranges & Species …)
+  using the links at the top of the sidebar. Your selected pieces stay loaded as you switch pages.
 
-![alt text](<images/streamcommand run.png>)
+To stop the app, click in the terminal and press **Ctrl + C**.
 
-### 10.  Shut Down and Restart
+### Next Time
 
-- When you are finished you can simply close your browser window, and quit Anaconda Navigator and the Terminal application
+```
+conda activate streamlit_intervals
+cd ~/Documents/intervals-streamlit
+python -m streamlit run streamlit_app.py
+```
 
-- If you want to restart another time you will need to:
+### Updating
 
-1.  Open Anaconda Navigator
-2.  Click on your Virtual Environment to activate it
-3.  Open Terminal (as shown above at the start of Step 4)
-4.  'Change Directory' to your project folder (see above) using 'cd' and the rest of the path to your folder as you did in Step 6
-5.  Remember to 'cd intervals-streamlit' so you are inside the correct sub-folder!
-6.  Start the Streamlit App as shown in step 9
+To get the latest version of the app and of CRIM Intervals:
 
+```
+conda activate streamlit_intervals
+cd ~/Documents/intervals-streamlit
+git pull
+pip install --upgrade -r requirements.txt
+```
 
+## How the App is Organized (for contributors)
+
+| Path | What it holds |
+|---|---|
+| `streamlit_app.py` | Entry point: page navigation and the sidebar piece picker |
+| `app_pages/` | One file per analysis page (notes, melodic, cadences, ranges & species, …) |
+| `crim_app/common.py` | Shared imports, constants, piece loading and chart helpers |
+| `crim_app/filters.py` | Interactive table filters used by the pages |
+| `crim_app/ngrams.py` | Cached ngram heat-map builders |
+| `requirements.txt` | Python dependencies (also used by Streamlit Community Cloud) |

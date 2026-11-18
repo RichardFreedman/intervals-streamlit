@@ -347,14 +347,14 @@ test-no-images = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"
 
 [[package]]
 name = "crim-intervals"
-version = "2.0.72"
+version = "2.0.86"
 description = "CRIM intervals package"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "crim_intervals-2.0.72-py3-none-any.whl", hash = "sha256:988ecb39bac89b6c20872beb08d86d739a9d7f4d98d02b0cf92e24d24278f555"},
-    {file = "crim_intervals-2.0.72.tar.gz", hash = "sha256:bb96d87afea273e9ec98b53e29bd3bf62437a9bb3a9d35944804f21e4feb09e4"},
+    {file = "crim_intervals-2.0.86-py3-none-any.whl", hash = "sha256:6602e4981637cb3c334a121f1ff9566ca15193c34bad57e2401e3bdb4320db81"},
+    {file = "crim_intervals-2.0.86.tar.gz", hash = "sha256:a28237ce9f86448517ac9d3e1a9ddbdd7a0d358bae29d451a743ad37cd7f9806"},
 ]
 
 [package.dependencies]
@@ -371,7 +371,7 @@ matplotlib = ">=3.9.2,<4.0.0"
 more-itertools = "8.7.0"
 music21 = "8.3.0"
 numpy = ">=1.20.2,<2.0.0"
-pandas = ">=2.2.0"
+pandas = ">=2.2.0,<3"
 plotly = "5.19.0"
 plotly-express = "0.4.1"
 pyarrow = ">=15.0.0"
@@ -2297,4 +2297,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "fe5f956607b292667d5f48f86073fa968250374381eadbedd89539ee57137d4d"
+content-hash = "05f5dea8bccbd926fc220d8b5b178c70d3ad566f087b5635b4935b9223e59508"
