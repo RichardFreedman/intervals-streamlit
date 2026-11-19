@@ -41,7 +41,9 @@ pages = {
         st.Page("app_pages/model_finder.py", title="Model Finder"),
     ],
 }
-pg = st.navigation(pages, expanded=True)   # show all pages, no "View more"
+# The built-in menu always sits at the top of the sidebar; hide it and draw
+# the same links below the piece picker instead (see the end of the sidebar).
+pg = st.navigation(pages, position="hidden")
 
 # ---------------------------------------------------------------- piece picker
 with st.sidebar:
@@ -59,5 +61,13 @@ with st.sidebar:
         st.caption(f"**{md.get('composer', '')}** — {md.get('title', '')}")
     else:
         st.caption(f"Corpus of {n_selected} pieces")
+
+    # ------------------------------------------------------------ page links
+    st.divider()
+    for section, section_pages in pages.items():
+        if section:
+            st.markdown(f"**{section}**")
+        for page in section_pages:
+            st.page_link(page)
 
 pg.run()

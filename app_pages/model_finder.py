@@ -27,7 +27,7 @@ with st.expander("How to use this tool"):
     - Use the download button to save the interactive chart as an HTML file.
     - **Note:** this tool requires at least two pieces to be selected.
 
-    [Know the code — CRIM Intervals Model Finder documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/14_Model_Finder.md)
+    [Know the code — CRIM Intervals Model Finder documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/16_Model_Finder.md)
     """)
 if corpus_length <= 1 or corpus is None:
     st.write("Please select at least two pieces to compare")
@@ -39,72 +39,31 @@ def model_finder(corpus, n):
     return corpus.modelFinder(n=n)
 
 
-    # Initialize session state
-# if 'ready_to_download' not in st.session_state:
-#     st.session_state.ready_to_download = False
-
-# Main form for settings
-form_col, _ = st.columns([1, 2])
+# ---------------------------------------------------------------- settings
+form_col, _ = st.columns([1, 3])
 with form_col:
- with st.form("Model Finder Settings"):
-    length_choice = st.number_input('Select ngram Length', value=4, step=1)
-    
-    # Plot section
-    soggetto_cross_plot = model_finder(corpus, int(length_choice))
-    st.dataframe(soggetto_cross_plot)
-    fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto")
-    
-    if st.form_submit_button('Submit'):
-        # Prepare data for download but don't show button yet
-        st.session_state.plot_data = soggetto_cross_plot
-    st.plotly_chart(fig)
-    
+    with st.form("Model Finder Settings"):
+        length_choice = st.number_input('Select ngram Length', value=4, step=1, min_value=1)
+        submitted = st.form_submit_button('Submit')
 
-# Separate section for download
-if hasattr(st.session_state, 'plot_data'):
-    def get_model_html():
-        """Convert progress plot to HTML with preserved colors and interactivity"""
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Model Finder Crossplot</title>
-            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 20px;
-                    font-family: Arial, sans-serif;
-                }}
-                .chart-container {{
-                    width: 100%;
-                    height: 600px;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="chart-container" id="chart"></div>
-            <script>
-                var figure = {fig.to_json()};
-                Plotly.newPlot('chart', figure.data, figure.layout, {{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false
-                }});
-            </script>
-        </body>
-        </html>
-        """
-        return html_content
-    
-    html_content = get_model_html()
-    st.download_button(
-        label="Download the Chart",
-        data=html_content,
-        file_name=f"model_finder.html",
-        mime="text/html"
-    )
-else:
-    pass
+if submitted:
+    with st.spinner("Comparing entries across the corpus…"):
+        st.session_state.model_finder_result = (int(length_choice),
+                                                model_finder(corpus, int(length_choice)))
 
+# ---------------------------------------------------------------- results (full width)
+if 'model_finder_result' in st.session_state:
+    n, soggetto_cross_plot = st.session_state.model_finder_result
+    n_pieces = len(soggetto_cross_plot.index)
+    fig = px.imshow(soggetto_cross_plot, color_continuous_scale="YlGnBu", aspect="auto",
+                    text_auto='.2f', zmin=0, zmax=1,
+                    labels=dict(color="Shared entries"))
+    fig.update_layout(title=f"Shared Melodic Entries between Pieces<br><sup>n = {n} · {n_pieces} pieces</sup>",
+                      height=max(450, 60 * n_pieces + 250))
+    fig.update_xaxes(tickangle=-45, title=None)
+    fig.update_yaxes(title=None)
+    show_plotly(fig, f"model_finder_n{n}.html", 'model_finder')
+    with st.expander("Table of shared entries"):
+        st.dataframe(soggetto_cross_plot, use_container_width=True)
+        st.download_button("Download as CSV", soggetto_cross_plot.to_csv(),
+                           file_name=f"model_finder_n{n}.csv", mime='text/csv', key='model_finder_csv')

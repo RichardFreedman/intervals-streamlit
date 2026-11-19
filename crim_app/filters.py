@@ -35,8 +35,10 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:     
-        to_filter_columns = st.multiselect("Filter Notes by Various Fields", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_nr")
+        to_filter_columns = [] if not _show else st.multiselect("Filter Notes by Various Fields", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
             for column in to_filter_columns:
@@ -60,7 +62,7 @@ def filter_dataframe_nr(df: pd.DataFrame) -> pd.DataFrame:
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
         values_list = [x for x in values_list if x != "-"]
-        user_text_input = st.multiselect("Filter on Notes", values_list)
+        user_text_input = [] if not _show else st.multiselect("Filter on Notes", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
                 match_strings = user_text_input
@@ -91,8 +93,10 @@ def filter_dataframe_dur(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:     
-        to_filter_columns = st.multiselect("Filter Durations by Various Fields", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_dur")
+        to_filter_columns = [] if not _show else st.multiselect("Filter Durations by Various Fields", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
             for column in to_filter_columns:
@@ -116,7 +120,7 @@ def filter_dataframe_dur(df: pd.DataFrame) -> pd.DataFrame:
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
         values_list = [x for x in values_list if x != "-"]
-        user_text_input = st.multiselect("Filter on Notes", values_list)
+        user_text_input = [] if not _show else st.multiselect("Filter on Notes", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
                 match_strings = user_text_input
@@ -148,8 +152,10 @@ def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:
-        to_filter_columns = st.multiselect("Filter Melodic Intervals by Various Fields", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_mel")
+        to_filter_columns = [] if not _show else st.multiselect("Filter Melodic Intervals by Various Fields", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -174,7 +180,7 @@ def filter_dataframe_mel(df: pd.DataFrame) -> pd.DataFrame:
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
         values_list = [x for x in values_list if x != "-"]
-        user_text_input = st.multiselect("Filter on Intervals", values_list)
+        user_text_input = [] if not _show else st.multiselect("Filter on Intervals", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
                 match_strings = user_text_input
@@ -205,8 +211,10 @@ def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:    
-        to_filter_columns = st.multiselect("Filter Harmonic Intervals by Various Fields", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_har")
+        to_filter_columns = [] if not _show else st.multiselect("Filter Harmonic Intervals by Various Fields", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -230,7 +238,7 @@ def filter_dataframe_har(df: pd.DataFrame) -> pd.DataFrame:
         values_list = melted['value'].unique()
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
-        user_text_input = st.multiselect("Filter on Intervals", values_list)
+        user_text_input = [] if not _show else st.multiselect("Filter on Intervals", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
                 match_strings = user_text_input
@@ -262,8 +270,10 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:       
-        to_filter_columns = st.multiselect("Filter Ngrams by Various Fields", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_ng")
+        to_filter_columns = [] if not _show else st.multiselect("Filter Ngrams by Various Fields", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         if to_filter_columns:
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
@@ -287,7 +297,7 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
         values_list = melted['value'].unique()
         values_list = [i for i in values_list if i]
         values_list = [element for element in values_list if not pd.isnull(element)]
-        user_text_input = st.multiselect("Filter on Ngrams", values_list)
+        user_text_input = [] if not _show else st.multiselect("Filter on Ngrams", values_list)
         if user_text_input:
             def highlight_matching_strings(val):
                 match_strings = user_text_input
@@ -303,10 +313,12 @@ def filter_dataframe_ng(df: pd.DataFrame) -> pd.DataFrame:
             df = df.style
     return df
 
-def filter_ngrams_by_pattern(df: pd.DataFrame) -> pd.DataFrame:
+def filter_ngrams_by_pattern(df: pd.DataFrame, key=None, return_selected=False):
     """
     Shows a list of unique ngram patterns found across all voice columns,
-    lets the user select which ones to keep, and returns the filtered dataframe.
+    lets the user select which ones to keep, and returns the filtered dataframe
+    (and, with return_selected=True, the selected patterns, or None if all
+    patterns are kept).
     """
     df = df.copy()
     meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
@@ -314,11 +326,16 @@ def filter_ngrams_by_pattern(df: pd.DataFrame) -> pd.DataFrame:
     # Collect all unique ngram patterns across voice columns
     all_patterns = pd.unique(df[voice_cols].values.ravel())
     all_patterns = sorted([p for p in all_patterns if p and not pd.isnull(p)])
-    selected = st.multiselect("Select Ngram Patterns to Display", all_patterns, default=all_patterns)
+    show = st.checkbox("Filter by ngram pattern", value=False,
+                       key=f"show_{key}" if key else "show_ngram_pattern_filter")
+    selected = (st.multiselect("Select Ngram Patterns to Display", all_patterns, default=all_patterns,
+                               key=key) if show else [])
     if selected:
         mask = df[voice_cols].apply(lambda col: col.isin(selected)).any(axis=1)
         df = df[mask].reset_index(drop=True)
-    return df
+    if not return_selected:
+        return df
+    return df, (selected if selected and len(selected) < len(all_patterns) else None)
 
 #for hr
 # st.cache_data(experimental_allow_widgets=True)
@@ -336,8 +353,10 @@ def filter_dataframe_hr(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:      
-        to_filter_columns = st.multiselect("Filter the Homorhythm Results", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_hr")
+        to_filter_columns = [] if not _show else st.multiselect("Filter the Homorhythm Results", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
         for column in to_filter_columns:
@@ -386,8 +405,10 @@ def filter_dataframe_ptypes(df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
         modification_container = st.container()
         with modification_container:     
-            to_filter_columns = st.multiselect("Filter the Presentation Type Results", df.columns)
-            st.write("Remember that initial choices will constrain subsequent filters!")
+            _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_ptypes")
+            to_filter_columns = [] if not _show else st.multiselect("Filter the Presentation Type Results", df.columns)
+            if _show:
+                st.write("Remember that initial choices will constrain subsequent filters!")
             # here we are filtering by column
             # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
             for column in to_filter_columns:
@@ -435,8 +456,10 @@ def filter_dataframe_cads(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     modification_container = st.container()
     with modification_container:     
-        to_filter_columns = st.multiselect("Filter the Cadence Results", df.columns)
-        st.write("Remember that initial choices will constrain subsequent filters!")
+        _show = st.checkbox("Filter results by the contents of each column", value=False, key="show_filters_filter_dataframe_cads")
+        to_filter_columns = [] if not _show else st.multiselect("Filter the Cadence Results", df.columns)
+        if _show:
+            st.write("Remember that initial choices will constrain subsequent filters!")
         # here we are filtering by column
         # to_filter_columns = st.multiselect("Limit by Composer, Title, Date, or Voice", df.columns)
         for column in to_filter_columns:

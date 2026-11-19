@@ -56,6 +56,7 @@ def weighted_notes_fragment():
     limit = c3.toggle("Limit to pitch classes present in data", value=True, key='wn_limit')
     fig = viz.radar_note_plot(nw, pitch_class_order=order, exclude_rests=exclude_rests,
                               limit_to_active=limit, color_grouping=groups[group])
+    fig.update_layout(title_x=0.5, title_xanchor='center')   # room for long piece names
     show_plotly(fig, f"{name}_weighted_notes.html", 'wn')
 
     if st.checkbox("Show Table of Weighted Notes", key='wn_table'):

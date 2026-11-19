@@ -34,9 +34,8 @@ def piece_notes(piece, combine_unisons_choice, combine_rests_choice):
     )
     
     nr_melted = nr_melted.dropna().copy()
-    
-    
-    return nr_melted
+    # pd.melt drops the settings crim_intervals recorded on nr; keep them for chart titles
+    return carry_settings(nr_melted, nr)
 
 
 @st.cache_data(**PIECE_CACHE)
@@ -75,8 +74,8 @@ def corpus_notes(corpus, combine_unisons_choice, combine_rests_choice):
     )
 
     nr_melted = nr_melted.dropna().copy()
-
-    return nr_melted
+    # pd.melt drops the settings crim_intervals recorded on nr; keep them for chart titles
+    return carry_settings(nr_melted, nr)
     
 
 # notes form
@@ -104,18 +103,20 @@ with st.expander("How to use this tool"):
     - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
       refresh the table with the updated view.
 
-    [Know the code — CRIM Intervals notes and rests documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md)
+    [Know the code — CRIM Intervals notes and rests documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/02_Notes_Rests.md) ·
+    [Charts with Plotly](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#bar-graphs-of-notes-in-each-voice)
     """)
 if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
     st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
 else:
 
-    form_col, _ = st.columns([1, 2])
+    form_col = st.container()
     with form_col:
      with st.form("Note Settings"):
-        combine_unisons_choice = st.selectbox(
+        _fc = st.columns(2)   # settings side by side
+        combine_unisons_choice = _fc[0].selectbox(
             "Combine Unisons", [False, True])
-        combine_rests_choice = st.selectbox(
+        combine_rests_choice = _fc[1].selectbox(
             "Combine Rests", [True, False])
         # form submission button
         submitted = st.form_submit_button("Update and Run Search")       
@@ -142,17 +143,18 @@ else:
         pass
     else:
         # filter the nr results
-        st.write("Filter Results by Contents of Each Column")
         if len(st.session_state.nr.fillna('')) > 100000:
             print("Results are too large to display; please filter again")
         else:
             filtered_nr = filter_dataframe_nr(st.session_state.nr.fillna(''))
             st.write("Did you **change the filter**?  If so, please **Update and Submit form**")   
             nr = filtered_nr.data.copy()
+            nr_source = st.session_state.nr   # carries the crim_intervals settings
             # for one piece
             if corpus_length == 1:
                 composer = nr.iloc[0]["Composer"]
                 title = nr.iloc[0]["Title"]
+                chart_title = settings_title(f"Distribution of Notes in {composer}, {title}", nr_source)
                 nr_counts = nr.groupby(['Composer', 'Title', 'Voice', 'Note']).size().reset_index(name='Count')
                 nr_counts['Note'] = pd.CategoricalIndex(nr_counts['Note'], categories=pitch_order, ordered=True)
                 sorted_nr = nr_counts.sort_values('Note').reset_index(drop=True)
@@ -167,7 +169,7 @@ else:
                                     x='Note',
                                     y='Count',
                                     color='Voice',
-                                    title=f"Distribution of Notes in {composer}, {title}")
+                                    title=chart_title)
                     nr_chart.update_layout(xaxis_title="Note",
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -189,7 +191,8 @@ else:
                     nr_chart = px.bar(chart_data,
                                     x='Note',
                                     y='Count',
-                                    title=f"Distribution of Notes in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Notes in {composer}, {title}",
+                                                         nr_source, 'voices combined'))
                     nr_chart.update_layout(xaxis_title="Note",
                                             yaxis_title="Count")
 
@@ -248,7 +251,9 @@ else:
                                 x='Note', 
                                 y='Count',
                                 color=color_grouping,
-                                title="Distribution of Notes in Corpus")
+                                title=settings_title("Distribution of Notes in Corpus", nr_source,
+                                                     f"colored by {color_grouping.lower()}",
+                                                     n_pieces_label(nr)))
                 nr_chart.update_layout(xaxis_title="Note", 
                                         yaxis_title="Count",
                                         legend_title=color_grouping)

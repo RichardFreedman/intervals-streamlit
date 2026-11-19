@@ -295,6 +295,7 @@ def cadence_radar_fragment(cadences):
                                 limit_to_active=limit)
     except ValueError:
         return _no_cadences()
+    fig.update_layout(title_x=0.5, title_xanchor='center')   # room for long piece names
     show_plotly(fig, f"{_cad_name}_cadence_radar.html", 'cad_radar')
 
 

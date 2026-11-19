@@ -40,7 +40,8 @@ def piece_har(piece, kind_choice, directed, compound, against_low):
     har_melted = har_melted.dropna().copy()
     
     
-    return har_melted
+    # pd.melt drops the settings crim_intervals recorded on har; keep them for chart titles
+    return carry_settings(har_melted, har)
 
 @st.cache_data(**PIECE_CACHE)
 def corpus_har(corpus, kind_choice, directed, compound, against_low):
@@ -88,7 +89,8 @@ def corpus_har(corpus, kind_choice, directed, compound, against_low):
 
     har_melted = har_melted.dropna().copy()
 
-    return har_melted
+    # pd.melt drops the settings crim_intervals recorded on har; keep them for chart titles
+    return carry_settings(har_melted, har)
 
 
 # harmonic form
@@ -122,25 +124,27 @@ with st.expander("How to use this tool"):
     - Color grouping options allow you to view the distribution by Composer, Title, or Voice pair.
       The table automatically follows the same grouping.
 
-    [Know the code — CRIM Intervals harmonic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals.md)
+    [Know the code — CRIM Intervals harmonic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/07_Harmonic_Intervals_Sonorities.md) ·
+    [Charts with Plotly](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#bar-charts-with-melodic-and-harmonic-intervals)
     """)
 if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
     st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
 else:
-    form_col, _ = st.columns([1, 2])
+    form_col = st.container()
     with form_col:
      with st.form("Harmonic Interval Settings"):
-        directed = st.selectbox(
+        _fc = st.columns(4)   # settings side by side
+        directed = _fc[0].selectbox(
             "Select Directed Interval Status",
             [True, False])
-        compound = st.selectbox(
+        compound = _fc[1].selectbox(
             "Select Compound Interval Status",
             [True, False])
-        select_kind = st.selectbox(
+        select_kind = _fc[2].selectbox(
             "Select Interval Kind", 
             ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
         kind_choice = interval_kinds[select_kind]
-        against_low = st.selectbox("Calculate Intervals Only Against Lowest Voice", 
+        against_low = _fc[3].selectbox("Calculate Intervals Only Against Lowest Voice", 
                                 [False, True])
         # form submission button
         submitted = st.form_submit_button("Update and Submit")
@@ -169,11 +173,11 @@ else:
         pass
     else:
         # count up the values in each item column--sum for each pitch. make a copy 
-        st.write("Filter Results by Contents of Each Column")
         if len(st.session_state.har.fillna('')) > 100000:
             print("Results are too large to display; please filter again")
         else:
-            filtered_har = filter_dataframe_har(st.session_state.har.fillna(''))   
+            filtered_har = filter_dataframe_har(st.session_state.har.fillna(''))
+            har_source = st.session_state.har   # carries the crim_intervals settings
             st.write("Did you **change the filter**?  If so, please **Update and Submit form**")    
             # for one piece
             if corpus_length  == 1: 
@@ -209,7 +213,7 @@ else:
                                     x='Interval',
                                     y='Count',
                                     color='Voices',
-                                    title=f"Distribution of Intervals in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Harmonic Intervals in {composer}, {title}", har_source))
                     har_chart.update_layout(xaxis_title="Interval",
                                             yaxis_title="Count",
                                             legend_title="Voices")
@@ -224,7 +228,8 @@ else:
                     har_chart = px.bar(chart_data_har,
                                     x='Interval',
                                     y='Count',
-                                    title=f"Distribution of Intervals in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Harmonic Intervals in {composer}, {title}", har_source,
+                                                         'voice pairs combined'))
                     har_chart.update_layout(xaxis_title="Interval",
                                             yaxis_title="Count")
 
@@ -289,7 +294,8 @@ else:
                                 x='Interval', 
                                 y='Count',
                                 color=color_grouping,
-                                title="Distribution of Intervals in Corpus")
+                                title=settings_title("Distribution of Harmonic Intervals in Corpus", har_source,
+                                                     f"colored by {color_grouping.lower()}", n_pieces_label(har)))
                 har_chart.update_layout(xaxis_title="Interval", 
                                         yaxis_title="Count",
                                         legend_title=color_grouping)

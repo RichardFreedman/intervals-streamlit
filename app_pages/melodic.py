@@ -39,9 +39,8 @@ def piece_mel(piece, combine_unisons_choice, combine_rests_choice, kind_choice, 
     )
     
     mel_melted = mel_melted.dropna().copy()
-    
-    
-    return mel_melted
+    # pd.melt drops the settings crim_intervals recorded on mel; keep them for chart titles
+    return carry_settings(mel_melted, mel)
 
 @st.cache_data(**PIECE_CACHE)
 def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice, directed, compound):
@@ -84,8 +83,8 @@ def corpus_mel(corpus, combine_unisons_choice, combine_rests_choice, kind_choice
     )
 
     mel_melted = mel_melted.dropna().copy()
-
-    return mel_melted
+    # pd.melt drops the settings crim_intervals recorded on mel; keep them for chart titles
+    return carry_settings(mel_melted, mel)
 
 # melodic form
 
@@ -119,26 +118,28 @@ with st.expander("How to use this tool"):
     - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
       refresh the table with the updated view.
 
-    [Know the code — CRIM Intervals melodic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md)
+    [Know the code — CRIM Intervals melodic interval documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/06_Melodic_Intervals.md) ·
+    [Charts with Plotly](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#bar-charts-with-melodic-and-harmonic-intervals)
     """)
 if len(crim_piece_selections) == 0 and len(uploaded_files_list)== 0:
     st.write("**No Files Selected! Please Select or Upload One or More Pieces.**")
 else:
-    form_col, _ = st.columns([1, 2])
+    form_col = st.container()
     with form_col:
      with st.form("Melodic Interval Settings"):
-        combine_unisons_choice = st.selectbox(
+        _fc = st.columns(4)   # settings side by side
+        combine_unisons_choice = _fc[0].selectbox(
             "Combine Unisons", [False, True])
-        combine_rests_choice = st.selectbox(
+        combine_rests_choice = _fc[1].selectbox(
             "Combine Rests", [True, False])
-        select_kind = st.selectbox(
+        select_kind = _fc[2].selectbox(
             "Select Interval Kind", 
             ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
         kind_choice = interval_kinds[select_kind]
-        directed = st.selectbox(
+        directed = _fc[3].selectbox(
             "Select Directed Interval Status",
             [True, False])
-        compound = st.selectbox(
+        compound = _fc[0].selectbox(
             "Select Compound Interval Status",
             [True, False])
         # form submission button
@@ -169,12 +170,12 @@ else:
         pass
     else:
         # show corpus data for mel with filter options
-        st.write("Filter Results by Contents of Each Column")
         # st.dataframe(st.session_state.mel)
         if len(st.session_state.mel.fillna('')) > 100000:
             print("Results are too large to display; please filter again")
         else:
-            filtered_mel = filter_dataframe_mel(st.session_state.mel.fillna(''))   
+            filtered_mel = filter_dataframe_mel(st.session_state.mel.fillna(''))
+            mel_source = st.session_state.mel   # carries the crim_intervals settings
             st.write("Did you **change the filter**?  If so, please **Update and Submit form**")    
             # for one piece
             if corpus_length  == 1: 
@@ -210,7 +211,8 @@ else:
                                     x='Interval',
                                     y='Count',
                                     color='Voice',
-                                    title=f"Distribution of Intervals in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Melodic Intervals in {composer}, {title}",
+                                                         mel_source))
                     mel_chart.update_layout(xaxis_title="Interval",
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -225,7 +227,8 @@ else:
                     mel_chart = px.bar(chart_data_mel,
                                     x='Interval',
                                     y='Count',
-                                    title=f"Distribution of Intervals in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Melodic Intervals in {composer}, {title}",
+                                                         mel_source, 'voices combined'))
                     mel_chart.update_layout(xaxis_title="Interval",
                                             yaxis_title="Count")
 
@@ -292,7 +295,9 @@ else:
                                 x='Interval', 
                                 y='Count',
                                 color=color_grouping,
-                                title="Distribution of Intervals in Corpus")
+                                title=settings_title("Distribution of Melodic Intervals in Corpus", mel_source,
+                                                     f"colored by {color_grouping.lower()}",
+                                                     n_pieces_label(mel)))
                 mel_chart.update_layout(xaxis_title="Interval", 
                                         yaxis_title="Count",
                                         legend_title=color_grouping)

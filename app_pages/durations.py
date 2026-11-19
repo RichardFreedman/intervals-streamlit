@@ -8,11 +8,11 @@ piece, corpus, corpus_length, crim_piece_selections, uploaded_files_list = get_s
 # durations
 @st.cache_data(**PIECE_CACHE)
 def piece_durs(piece):
-    # if exclude_rests:
-    #     nr = piece.notes().replace("Rest", np.nan)
-    # else:
-    #     nr = piece.notes()
-    dur = piece.durations()
+    # combineRests=False: each written rest keeps its own length. Combined rests
+    # (the default for notes()) merge a voice's whole wait before an entry into
+    # one long "duration" (40 or 60 quarter notes), which swamps the chart.
+    nr = piece.notes(combineRests=False)
+    dur = piece.durations(df=nr)
     dur = piece.numberParts(dur)
     dur = dur.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'])
     cols_to_move = ['Composer', 'Title']
@@ -33,19 +33,17 @@ def piece_durs(piece):
 
     dur_melted = dur_melted.dropna().copy()
     
-    return dur_melted   
+    # pd.melt drops the settings crim_intervals recorded on dur; keep them for chart titles
+    return carry_settings(dur_melted, dur)
     1
 
 @st.cache_data(**PIECE_CACHE)
 def corpus_durs(corpus):
     func1 = ImportedPiece.notes  # <- NB there are no parentheses here
-    # if exclude_rests:
-    #     list_of_note_dfs = corpus.batch(func = func1, 
-    #                             metadata=False)
-    #     list_of_note_dfs = [df.replace("Rest", np.nan) for df in list_of_note_dfs]
-    # else:
-    list_of_note_dfs = corpus.batch(func = func1, 
-                                metadata=False) 
+    # combineRests=False: keep each written rest separate (see piece_durs)
+    list_of_note_dfs = corpus.batch(func = func1,
+                                kwargs = {'combineRests': False},
+                                metadata=False)
     func2 = ImportedPiece.durations  # <- NB there are no parentheses here
     list_of_dur_dfs = corpus.batch(func = func2,
                                  kwargs = {'df': list_of_note_dfs},
@@ -79,7 +77,8 @@ def corpus_durs(corpus):
 
     dur_melted = dur_melted.dropna().copy()
 
-    return dur_melted
+    # pd.melt drops the settings crim_intervals recorded on dur; keep them for chart titles
+    return carry_settings(dur_melted, dur)
     
 
 # durs form
@@ -105,7 +104,9 @@ with st.expander("How to use this tool"):
       Voices are shown in different colors when "View by Voice" is checked.
     - The **table** shows Composer, Title, Voice (if by voice), Duration, and Count.
     - Common values: 0.5 = eighth note, 1.0 = quarter note, 1.5 = dotted quarter,
-      2.0 = half note, 3.0 = dotted half, 4.0 = whole note.
+      2.0 = half note, 3.0 = dotted half, 4.0 = whole note, 8.0 = breve.
+    - **Rests** are counted one written rest at a time (they are not combined), so a voice
+      that waits several bars before it enters adds several breve rests, not one very long rest.
     - **Note:** if you change the **View by Voice** setting, uncheck and re-check **Show Table** to
       refresh the table with the updated view.
 
@@ -136,12 +137,12 @@ else:
     
     # Display results if they exist
     if 'dur' in st.session_state:
-        st.write("Filter Results by Contents of Each Column")
 
         if len(st.session_state.dur.fillna('')) > 100000:
             st.write("Results are too large to display; please filter again")
         else:
             filtered_dur = filter_dataframe_dur(st.session_state.dur.fillna(''))
+            dur_source = st.session_state.dur   # carries the crim_intervals settings
             dur = filtered_dur.data.copy()
 
             # For one piece
@@ -161,7 +162,7 @@ else:
                                     x='Duration',
                                     y='Count',
                                     color='Voice',
-                                    title=f"Distribution of Durations in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Durations in {composer}, {title}", dur_source, 'rests not combined'))
                     dur_chart.update_layout(xaxis_title="Duration",
                                             yaxis_title="Count",
                                             legend_title="Voice")
@@ -181,7 +182,8 @@ else:
                     dur_chart = px.bar(chart_data_dur,
                                     x='Duration',
                                     y='Count',
-                                    title=f"Distribution of Durations in {composer}, {title}")
+                                    title=settings_title(f"Distribution of Durations in {composer}, {title}", dur_source, 'rests not combined',
+                                                         'voices combined'))
                     dur_chart.update_layout(xaxis_title="Duration",
                                             yaxis_title="Count")
 
@@ -237,8 +239,9 @@ else:
                                 x='Duration', 
                                 y='Count',
                                 color=color_grouping,
-                                title="Distribution of Durations in Corpus")
-                dur_chart.update_layout(xaxis_title="Note", 
+                                title=settings_title("Distribution of Durations in Corpus", dur_source, 'rests not combined',
+                                                     f"colored by {color_grouping.lower()}", n_pieces_label(dur)))
+                dur_chart.update_layout(xaxis_title="Duration", 
                                         yaxis_title="Count",
                                         legend_title=color_grouping)
 

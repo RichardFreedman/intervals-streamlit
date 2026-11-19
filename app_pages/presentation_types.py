@@ -103,17 +103,18 @@ with st.expander("How to use this tool"):
 
     [Know the code — CRIM Intervals presentation type documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/12_Presentation_Types.md)
     """)
-form_col, _ = st.columns([1, 2])
+form_col = st.container()
 with form_col:
  with st.form("Presentation Type Settings"):
-    combine_unisons_choice = st.selectbox(
+    _fc = st.columns(4)   # settings side by side
+    combine_unisons_choice = _fc[0].selectbox(
         "Combine Unisons", [False, True])
-    length_choice = st.number_input('Select ngram Length', value=4, step=1)
-    head_flex_choice = st.number_input('Select Head Flex', value=1, step=1)
-    body_flex_choice = st.number_input('Select Body Flex', value=0, step=1)
-    limit_entries_choice = st.selectbox(
+    length_choice = _fc[1].number_input('Select ngram Length', value=4, step=1)
+    head_flex_choice = _fc[2].number_input('Select Head Flex', value=1, step=1)
+    body_flex_choice = _fc[3].number_input('Select Body Flex', value=0, step=1)
+    limit_entries_choice = _fc[0].selectbox(
         "Limit to Melodic Entries", [True, False])
-    hidden_types_choice = st.selectbox(
+    hidden_types_choice = _fc[1].selectbox(
         "Include Hidden Presentation Types", [False, True])
     # form submission button
     submitted = st.form_submit_button("Update and Submit")
@@ -159,7 +160,6 @@ with form_col:
 if 'p_types' not in st.session_state:
     pass
 else:
-    st.write("Filter Results by Contents of Each Column")
     filtered_p_types = filter_dataframe_ptypes(st.session_state.p_types)
     st.dataframe(filtered_p_types, use_container_width=True)
     # csv = convert_df(filtered_p_types)

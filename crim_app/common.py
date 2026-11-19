@@ -4,7 +4,7 @@ Pages do `from crim_app.common import *`, so everything here (including the
 re-exported libraries) is available to them, as it was in the single-file app.
 """
 # Pages use `from crim_app.common import *`, so modules imported here (base64,
-# pd, px, pio, viz, corpus_sonority_ngrams …) are re-exported to them even if
+# pd, px, pio, viz, get_settings …) are re-exported to them even if
 # this file doesn't use them itself.
 
 # standard library
@@ -22,7 +22,7 @@ import verovio
 
 # CRIM Intervals
 from crim_intervals import CorpusBase, ImportedPiece, importScore
-from crim_intervals.corpus_tools import corpus_sonority_ngrams
+from crim_intervals.main_objs import SETTINGS_KEY, get_settings
 import crim_intervals.visualizations as viz
 
 
@@ -292,6 +292,41 @@ def require_selection():
         st.info("Select or upload one or more pieces in the sidebar to begin.")
         st.stop()
 
+
+
+# ---------------------------------------------------------------- settings
+# CRIM Intervals records the settings behind each result on df.attrs (see
+# get_settings). pandas keeps them through filtering, copy, concat and
+# reset_index, but pd.melt and groupby drop them, so cached functions that
+# reshape a result re-attach them with carry_settings.
+def carry_settings(df, source):
+    """Copy the CRIM settings recorded on `source` onto `df` (returns df)."""
+    settings = get_settings(source)
+    if settings:
+        df.attrs = {**df.attrs, SETTINGS_KEY: settings}
+    return df
+
+
+def settings_parts(df, *extra):
+    """The settings recorded on df as short phrases (as the viz charts show
+    them), followed by any extra phrases such as the chart's own options."""
+    try:
+        parts = viz._data_settings(df)
+    except Exception:   # private helper in crim_intervals; never break a page
+        parts = []
+    return parts + [e for e in extra if e]
+
+
+def settings_title(title, df, *extra):
+    """A Plotly title with the settings as a smaller second line, matching
+    the ready-made crim_intervals.visualizations charts."""
+    parts = settings_parts(df, *extra)
+    return f"{title}<br><sup>{' · '.join(parts)}</sup>" if parts else title
+
+
+def n_pieces_label(df):
+    n = df['Title'].nunique() if 'Title' in df.columns else 1
+    return f"{n} pieces" if n > 1 else None
 
 
 # ---------------------------------------------------------------- charts

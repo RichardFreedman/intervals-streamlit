@@ -25,7 +25,8 @@ with st.expander("How to use this tool"):
     **Species and cadences** — melodic species (top) and cadences (bottom) on one timeline, for one
     piece at a time, to compare where octave species and cadence tones fall.
 
-    [Know the code — Voice Ranges and Melodic Species tutorial](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Voice_Ranges_Melodic_Species.md)
+    [Know the code — Voice Ranges and Melodic Species tutorial](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/13_Voice_Ranges_Melodic_Species.md) ·
+    [Charts](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#voice-range-charts)
     """)
 
 require_selection()
