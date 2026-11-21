@@ -34,6 +34,14 @@ with st.expander("How to use this tool"):
           such a pattern is shown, whether or not that occurrence follows a rest.
         - *All ngrams* — every ngram in every voice.
     - **Include Count** — if True, a bar chart above each heat map shows how many times each pattern occurs.
+    - **Show Paired Plots** (two or more pieces only) — treats the **first piece you selected** as the
+      *model* and every other piece as a *derivative* (for example, the movements of a Mass based on
+      that model). Instead of one heat map per piece, the page shows a **pair** of heat maps for each
+      derivative: the model on top, the derivative below. Both maps in a pair show **only the patterns
+      the model and that derivative share**, so each derivative is limited to ngrams found in the
+      model. This works with any Melodic Entries setting and with the pattern filter. The table, counts
+      and Verovio excerpts are likewise limited to patterns found in the model. To change which piece
+      is the model, change the order in which pieces are selected in the sidebar.
 
     **Reading the results**
     - The **heat map** shows where each ngram pattern appears across the voices and measures of the
@@ -42,6 +50,8 @@ with st.expander("How to use this tool"):
       (for example `melodic: diatonic, directed, compound · n = 4 · thematic entries`), followed by
       the number of patterns selected, if you have narrowed them down.
     - Each piece has its own heat map, so if you select multiple pieces you can compare their patterns visually.
+      With **Show Paired Plots**, the maps come in pairs (model + derivative) instead, each pair headed
+      with the two pieces' names.
     - **Matching colors indicate matching ngrams**, in every heat map on the page: a pattern has the
       same color in each piece of a corpus.
     - Use the **pattern filter** to focus on specific ngrams: the heat maps, the table and the Verovio
@@ -72,6 +82,8 @@ with form_col:
         length_choice = _fc[0].number_input('Select ngram Length', value=3, step=1, min_value=1)
         entry_mode = _fc[1].selectbox("Melodic Entries", list(ENTRY_MODES))
         include_count = _fc[2].selectbox("Include Count of Ngrams", [True, False])
+        paired = (_fc[3].selectbox("Show Paired Plots", [False, True])
+                  if corpus_length > 1 else False)
         submitted = st.form_submit_button("Submit")
 
 if submitted:
@@ -80,7 +92,7 @@ if submitted:
                                           directed, compound, int(length_choice),
                                           entry_mode=entry_mode))
                    for p in pieces]
-    store_ngram_results(STATE_KEY, results, include_count, int(length_choice))
+    store_ngram_results(STATE_KEY, results, include_count, int(length_choice), paired=paired)
     st.session_state[STATE_KEY]['entry_mode'] = entry_mode
     st.session_state.pop('verovio_ngrams_rendered', None)
 

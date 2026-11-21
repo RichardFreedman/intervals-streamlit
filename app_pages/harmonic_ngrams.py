@@ -28,6 +28,13 @@ with st.expander("How to use this tool"):
     - **Calculate Intervals Only Against Lowest Voice** — if True, each voice is measured only against
       the lowest sounding voice, giving a figured-bass style view. If False, all voice pairs are used.
     - **Include Count** — if True, a bar chart above each heat map shows how many times each pattern occurs.
+    - **Show Paired Plots** (two or more pieces only) — treats the **first piece you selected** as the
+      *model* and every other piece as a *derivative*. Instead of one heat map per piece, the page shows
+      a **pair** of heat maps for each derivative: the model on top, the derivative below. Both maps in
+      a pair show **only the patterns the model and that derivative share**, so each derivative is
+      limited to ngrams found in the model. This works with the pattern filter, and the table and
+      counts are likewise limited to patterns found in the model. To change which piece is the model,
+      change the order in which pieces are selected in the sidebar.
 
     **Reading the results**
     - The **heat map** shows where each harmonic ngram pattern appears across the voice pairs and
@@ -62,6 +69,8 @@ with form_col:
         against_low = _fc[3].selectbox("Calculate Intervals Only Against Lowest Voice", [False, True])
         length_choice = _fc[0].number_input('Select ngram Length', value=3, step=1, min_value=1)
         include_count = _fc[1].selectbox("Include Count of Ngrams", [True, False])
+        paired = (_fc[2].selectbox("Show Paired Plots", [False, True])
+                  if corpus_length > 1 else False)
         submitted = st.form_submit_button("Submit")
 
 if submitted:
@@ -69,6 +78,6 @@ if submitted:
         results = [(p, harmonic_ngram_data(p, interval_kinds[select_kind], directed, compound,
                                            against_low, int(length_choice)))
                    for p in pieces]
-    store_ngram_results(STATE_KEY, results, include_count, int(length_choice))
+    store_ngram_results(STATE_KEY, results, include_count, int(length_choice), paired=paired)
 
 ngram_results_section(STATE_KEY, "Harmonic N-grams", corpus=corpus_length > 1, voice_label='Voice Pair')

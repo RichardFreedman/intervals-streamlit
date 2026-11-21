@@ -133,15 +133,82 @@ def show_ngram_heatmaps(charts):
             st.altair_chart(chart, use_container_width=True)
 
 
-def store_ngram_results(state_key, results, include_count, length):
+def _model_patterns(items, selected=None):
+    """Patterns (tuples) of the model, i.e. the first piece in items, in order
+    of first appearance, limited to the pattern strings in selected if given."""
+    keep = None if selected is None else set(selected)
+    return [p for p in _patterns_in_order([items[0][1]]) if keep is None or convertTuple(p) in keep]
+
+
+def build_paired_heatmaps(items, selected=None, include_count=True, chart_title='N-grams'):
+    """Pair the model (first item) with each other piece, as in the tutorial's
+    "Heat Map of Shared Ngrams in Two or More Pieces".
+
+    Both charts of a pair show only the patterns the model and that piece share
+    (and, if given, that are in selected). Colors are registered once from the
+    model, so a pattern has the same color in every pair.
+    Returns a list of (label, model_chart, derivative_chart); the charts are
+    None if the pair shares no patterns.
+    """
+    model_label, model_ng, model_dur = items[0]
+    model_pats = _model_patterns(items, selected)
+    pairs = []
+    with _COLOR_LOCK:
+        viz.color_manager.reset()
+        viz.pre_register_patterns(model_pats)
+        for label, ngrams, durations in items[1:]:
+            present = set(_patterns_in_order([ngrams]))
+            shared = [p for p in model_pats if p in present]
+            if not shared:   # an empty selected_patterns would mean "all patterns"
+                pairs.append((label, None, None))
+                continue
+            model_chart = viz.plot_ngrams_heatmap(model_ng, model_dur, selected_patterns=shared,
+                                                  voices=[], includeCount=include_count,
+                                                  title=f"{chart_title} in {model_label} (model)")
+            deriv_chart = viz.plot_ngrams_heatmap(ngrams, durations, selected_patterns=shared,
+                                                  voices=[], includeCount=include_count,
+                                                  title=f"{chart_title} in {label}")
+            pairs.append((label, model_chart, deriv_chart))
+    return pairs
+
+
+def show_paired_heatmaps(model_label, pairs):
+    st.caption(f"Model: **{model_label}** (the first piece selected). Each pair shows only the "
+               "patterns the model shares with the other piece.")
+    for i, (label, model_chart, deriv_chart) in enumerate(pairs, start=1):
+        st.markdown(f"##### Pair {i}: {model_label} · {label}")
+        if model_chart is None:
+            st.info(f"{label} shares none of the model's patterns (among those selected).")
+            continue
+        st.altair_chart(model_chart, use_container_width=True)
+        st.altair_chart(deriv_chart, use_container_width=True)
+
+
+def limit_table_to_model(table, items):
+    """Keep only the table cells holding a pattern found in the model (the
+    first item); rows left with no pattern are dropped."""
+    model_strings = {convertTuple(p) for p in _model_patterns(items)}
+    meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in table.columns]
+    voices = [c for c in table.columns if c not in meta]
+    table = table.copy()
+    table[voices] = table[voices].where(table[voices].isin(model_strings))
+    return table.dropna(how='all', subset=voices).reset_index(drop=True)
+
+
+def store_ngram_results(state_key, results, include_count, length, paired=False):
     """Save [(piece, (ngrams, durations, detail)), ...] and the form choices
     for display, and reset the pattern filter (its options change with the
-    new results)."""
+    new results). paired: show the model (first piece) paired with each of
+    the others, limited to the model's patterns (needs two or more pieces)."""
+    items = [(piece_label(p), ng, dur) for p, (ng, dur, _) in results]
+    paired = bool(paired) and len(items) > 1
+    table = pd.concat([ngram_table(det, p) for p, (_, _, det) in results])
     st.session_state[state_key] = {
-        'items': [(piece_label(p), ng, dur) for p, (ng, dur, _) in results],
-        'table': pd.concat([ngram_table(det, p) for p, (_, _, det) in results]),
+        'items': items,
+        'table': limit_table_to_model(table, items) if paired else table,
         'include_count': include_count,
         'length': length,
+        'paired': paired,
     }
     st.session_state.pop(f"{state_key}_patterns", None)
 
@@ -173,9 +240,15 @@ def ngram_results_section(state_key, chart_title, corpus, voice_label='Voice'):
     st.caption("Filter by pattern to focus the heat maps and the table below on the patterns you keep.")
     filtered, selected = filter_ngrams_by_pattern(results['table'], key=f"{state_key}_patterns",
                                                   return_selected=True)
-    show_ngram_heatmaps(build_ngram_heatmaps(results['items'], selected=selected,
-                                             include_count=results['include_count'],
-                                             chart_title=chart_title))
+    if results.get('paired'):
+        show_paired_heatmaps(results['items'][0][0],
+                             build_paired_heatmaps(results['items'], selected=selected,
+                                                   include_count=results['include_count'],
+                                                   chart_title=chart_title))
+    else:
+        show_ngram_heatmaps(build_ngram_heatmaps(results['items'], selected=selected,
+                                                 include_count=results['include_count'],
+                                                 chart_title=chart_title))
 
     mode = st.radio("Table View", ["Ngrams by Voice, Measure and Beat",
                                    "Counts of Ngrams" + (" by Composer and Title" if corpus else "")],
