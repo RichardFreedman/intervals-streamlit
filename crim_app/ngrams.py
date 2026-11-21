@@ -18,23 +18,39 @@ from crim_app.filters import convertTuple, filter_ngrams_by_pattern
 _COLOR_LOCK = threading.Lock()
 
 
+# Choices for the melodic "Entries" setting: label -> piece.entries(anywhere=...),
+# or None for all n-grams (no entries filter).
+ENTRY_MODES = {   # first is the page default
+    "Entries only (after rest or fermata)": False,
+    "Entry patterns, all occurrences": True,
+    "All ngrams": None,
+}
+
+
 @st.cache_data(**PIECE_CACHE)
 def melodic_ngram_data(piece, combine_unisons_choice, kind_choice, directed, compound, length_choice,
-                       entries_only=False):
+                       entry_mode="Entries only (after rest or fermata)"):
     """Return (ngrams, durations, detail) for one piece.
 
     ngrams/durations are the raw crim_intervals results (offset index, tuple
     patterns, settings attached) for the heat map; detail is the same n-grams
     with a Measure/Beat index for the table and Verovio rendering.
+
+    entry_mode is a key of ENTRY_MODES. Both entry modes are thematic (the
+    pattern must occur more than once); "all occurrences" also keeps the
+    instances of entry patterns that don't follow a rest (anywhere=True).
     """
     nr = piece.numberParts(piece.notes(combineUnisons=combine_unisons_choice))
     mel = piece.melodic(df=nr, kind=kind_choice, directed=directed, compound=compound, end=False)
-    if entries_only:
-        ngrams = piece.entries(df=mel, n=length_choice, thematic=True, anywhere=True, exclude=['Rest'])
-        durations = piece.durations(df=mel, n=length_choice, mask_df=ngrams)
-    else:
+    anywhere = ENTRY_MODES[entry_mode]
+    if anywhere is None:
         ngrams = piece.ngrams(df=mel, n=length_choice, exclude=['Rest'])
-        durations = piece.durations(df=mel, n=length_choice)
+    else:
+        ngrams = piece.entries(df=mel, n=length_choice, thematic=True, anywhere=anywhere,
+                               exclude=['Rest'])
+    # mask_df gives durations the same rows as ngrams: plot_ngrams_heatmap
+    # pairs the two frames by row position, so extra rows misplace the bars
+    durations = piece.durations(df=mel, n=length_choice, mask_df=ngrams)
     return ngrams, durations, piece.detailIndex(ngrams, offset=False)
 
 
@@ -45,7 +61,7 @@ def harmonic_ngram_data(piece, kind_choice, directed, compound, against_low, len
     har = piece.harmonic(df=nr, kind=kind_choice, directed=directed, compound=compound,
                          againstLow=against_low)
     ngrams = piece.ngrams(df=har, n=length_choice, exclude=['Rest'])
-    durations = piece.durations(df=har, n=length_choice)
+    durations = piece.durations(df=har, n=length_choice, mask_df=ngrams)   # see melodic_ngram_data
     return ngrams, durations, piece.detailIndex(ngrams, offset=False)
 
 

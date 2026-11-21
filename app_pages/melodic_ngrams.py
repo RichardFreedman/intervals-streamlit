@@ -26,8 +26,13 @@ with st.expander("How to use this tool"):
       If False, only absolute size is reported.
     - **Compound** — if True, intervals larger than an octave are kept as-is.
       If False, they are reduced to simple intervals.
-    - **Melodic Entries Only** — if True, only ngrams that follow a significant break (rest, fermata,
-      or section boundary) are returned, focusing on thematic entries. If False, all ngrams are included.
+    - **Melodic Entries** — which ngrams to keep:
+        - *Entries only (after rest or fermata)* (default) — only the occurrences that actually begin
+          after a rest or fermata (or at the start), for patterns that enter this way more than once.
+        - *Entry patterns, all occurrences* — patterns that appear at least once as an entry (after a
+          rest or fermata, or at the start of the piece) and occur more than once; every occurrence of
+          such a pattern is shown, whether or not that occurrence follows a rest.
+        - *All ngrams* — every ngram in every voice.
     - **Include Count** — if True, a bar chart above each heat map shows how many times each pattern occurs.
 
     **Reading the results**
@@ -65,7 +70,7 @@ with form_col:
         select_kind = _fc[3].selectbox("Select Interval Kind",
                                    ["diatonic", "chromatic", "with quality", "zero-based diatonic"])
         length_choice = _fc[0].number_input('Select ngram Length', value=3, step=1, min_value=1)
-        entries_only = _fc[1].selectbox("Melodic Entries Only?", [True, False])
+        entry_mode = _fc[1].selectbox("Melodic Entries", list(ENTRY_MODES))
         include_count = _fc[2].selectbox("Include Count of Ngrams", [True, False])
         submitted = st.form_submit_button("Submit")
 
@@ -73,12 +78,16 @@ if submitted:
     with st.spinner("Finding ngrams…"):
         results = [(p, melodic_ngram_data(p, combine_unisons_choice, interval_kinds[select_kind],
                                           directed, compound, int(length_choice),
-                                          entries_only=entries_only))
+                                          entry_mode=entry_mode))
                    for p in pieces]
     store_ngram_results(STATE_KEY, results, include_count, int(length_choice))
+    st.session_state[STATE_KEY]['entry_mode'] = entry_mode
     st.session_state.pop('verovio_ngrams_rendered', None)
 
-filtered_ngrams = ngram_results_section(STATE_KEY, "Melodic N-grams", corpus=corpus_length > 1)
+# the chart subtitle says "thematic entries" for both entry modes, so name the mode in the title
+_mode = st.session_state.get(STATE_KEY, {}).get('entry_mode', "All ngrams")
+_title = "Melodic N-grams" if _mode == "All ngrams" else f"Melodic N-grams ({_mode})"
+filtered_ngrams = ngram_results_section(STATE_KEY, _title, corpus=corpus_length > 1)
 
 # ---------------------------------------------------------------- Verovio
 if filtered_ngrams is not None:
