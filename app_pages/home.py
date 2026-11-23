@@ -6,8 +6,7 @@ from crim_app.common import get_selection
 st.title("CRIM Intervals Search Tools")
 st.subheader("A web application for analysis of musical patterns using the CRIM Intervals library.")
 st.markdown("[Watch a video guide to this application.](https://haverford.box.com/s/hls1cabixjpu0ergckktmnlk0uoyz1su)")
-st.markdown("[Learn more about CRIM Intervals](https://github.com/HCDigitalScholarship/intervals)")
-st.markdown("Follow detailed explanations of various CRIM Intervals methods via the [Tutorials](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/01_Introduction_and_Corpus.md)")
+st.markdown("[Learn more about CRIM Intervals](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/00_Concise_Guide.md)")
 st.markdown("Learn more about this web application (and how to contribute or adapt it) via the [Github Repository for CRIM Intervals on Streamlit](https://github.com/RichardFreedman/intervals-streamlit/blob/main/README.md)")
 
 st.markdown("""
