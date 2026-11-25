@@ -53,6 +53,44 @@ with st.expander("How to use this tool"):
     """)
 
 
+def cadence_offsets(df):
+    """Offset of each cadence: the `Offset` column if present, else the index (same value)."""
+    return df['Offset'] if 'Offset' in df.columns else pd.Series(df.index, index=df.index)
+
+
+def show_cadence_examples(filtered, offsets, piece_for_row):
+    """Render each cadence row as its own excerpt (measure-1 … measure+1), with the
+    notes sounding at the cadence's offset highlighted.
+
+    piece_for_row(row) -> (ImportedPiece, mei_source) or (None, None)
+    """
+    n_cads = len(filtered)
+    if n_cads > 20:
+        st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many "
+                   "cadences may be slow. Consider filtering to 20 or fewer.")
+    st.caption(f"Showing {n_cads} cadence(s). Highlighted notes are those sounding "
+               "at the cadential arrival.")
+    for (_, row), offset in zip(filtered.iterrows(), offsets):
+        cad_piece, mei_src = piece_for_row(row)
+        if cad_piece is None or not mei_src:
+            continue
+        meas = int(row['Measure'])
+        ids = tuple(note_ids_at_offset(cad_piece, offset))
+        caption = (
+            f"**{row['Composer']}**, *{row['Title']}* — "
+            f"**Measure** {meas}, **Beat** {row['Beat']} | **Tone** {row['Tone']} | "
+            f"**Type** {row['CadType']} | **CVFs** {row['CVFs']}"
+        )
+        st.divider()
+        try:
+            pages = render_highlighted_excerpt(mei_src, meas - 1, meas + 1, ids)
+        except ValueError as e:
+            st.warning(f"{caption}\n\nCould not render: {e}")
+            continue
+        for i, svg in enumerate(pages):
+            show_svg(svg, caption if i == 0 else "")
+
+
 if corpus_length == 0:
     st.write("Please select one or more pieces")
     st.stop()
@@ -85,6 +123,7 @@ elif corpus_length == 1:
         # cadences = piece.cadences()
         st.subheader("Detailed View of Cadences")
         filtered_cadences = filter_dataframe_cads(cadences)
+        offsets = cadence_offsets(filtered_cadences)
         sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
                     'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                     'SinceLast', 'ToNext']
@@ -98,55 +137,16 @@ elif corpus_length == 1:
             file_name = download_name,
             key=14,
             mime='text/csv')
-        # Verovio cadence rendering
-        st.markdown("#### View Filtered Cadences with Verovio")
+        # Verovio cadence rendering, one highlighted excerpt per row
         mei_source = st.session_state.get('mei_source', '')
-        if not mei_source:
-            st.warning("MEI source not available for rendering.")
-        else:
-            n_cads = len(filtered_cadences)
-            if n_cads > 20:
-                st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many cadences may be slow. Consider filtering to 20 or fewer.")
-            if st.button("Render Cadences", key="verovio_cads_render"):
-                mei_content = get_mei_content(mei_source)
-                tk = get_verovio_toolkit()
-                tk.loadData(mei_content)
-                tk.setScale(53)
-                tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
-                rendered = []
-                for cad in filtered_cadences.index:
-                    c_meas = filtered_cadences.loc[cad]["Measure"]
-                    c_tone = filtered_cadences.loc[cad]["Tone"]
-                    c_type = filtered_cadences.loc[cad]["CadType"]
-                    c_beat = filtered_cadences.loc[cad]["Beat"]
-                    cvfs = filtered_cadences.loc[cad]["CVFs"]
-                    low = int(c_meas - 1)
-                    high = int(c_meas)
-                    mr = str(low) + "-" + str(high)
-                    tk.select({"measureRange": mr})
-                    tk.redoLayout()
-                    count = tk.getPageCount()
-                    for page in range(1, count + 1):
-                        music = tk.renderToSVG(page)
-                        label = (
-                            f"**Composer:** {composer} | **Title:** {title} | "
-                            f"**Measure:** {c_meas} | **Beat:** {c_beat} | "
-                            f"**Tone:** {c_tone} | **Type:** {c_type} | **CVFs:** {cvfs}"
-                        )
-                        rendered.append((label, music))
-                st.session_state.verovio_rendered = rendered
-            # Display stored renders (persists across reruns)
-            if st.session_state.get('verovio_rendered'):
+        if st.checkbox("Show each cadence in the table in notation (highlighted)",
+                       key="cad_show_notation"):
+            if not mei_source:
+                st.warning("MEI source not available for rendering.")
+            else:
                 st.subheader("Cadence Excerpts")
-                st.write(f"Showing {len(st.session_state.verovio_rendered)} excerpt(s)")
-                for label, music in st.session_state.verovio_rendered:
-                    st.divider()
-                    svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
-                    svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
-                    st.markdown(
-                        f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
-                        unsafe_allow_html=True
-                    )
+                show_cadence_examples(filtered_cadences, offsets,
+                                      lambda row: (piece, mei_source))
 else:
     _cad_corpus_key = st.session_state.get('_corpus_load_key')
     if st.session_state.get('cad_corpus_key') != _cad_corpus_key:
@@ -182,10 +182,11 @@ else:
     if st.checkbox("Show Full Cadence Table and Render with Verovio"):
         st.subheader("Detailed View of Cadences")
         filtered_cadences = filter_dataframe_cads(cadences)
+        offsets = cadence_offsets(filtered_cadences)
         sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
                     'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                     'SinceLast', 'ToNext']
-        filtered_cadences = filtered_cadences[sel_cols] 
+        filtered_cadences = filtered_cadences[sel_cols]
         st.dataframe(filtered_cadences, use_container_width=True)
         download_name = "corpus_cadence_results.csv"
         # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')
@@ -196,62 +197,17 @@ else:
             mime='text/csv',
             key=15,
             )
-        # Verovio cadence rendering (corpus)
-        st.markdown("#### View Filtered Cadences with Verovio")
-        n_cads = len(filtered_cadences)
-        if n_cads > 20:
-            st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many cadences may be slow. Consider filtering to 20 or fewer.")
-        if st.button("Render Cadences", key="verovio_corpus_cads_render"):
-            # Build a title -> piece lookup from the corpus
-            piece_by_title = {
-                p.metadata['title']: p
-                for p in st.session_state.corpus.scores
-            }
-            rendered = []
-            for _, row in filtered_cadences.iterrows():
-                cad_title = row["Title"]
-                cad_composer = row["Composer"]
-                c_meas = row["Measure"]
-                c_tone = row["Tone"]
-                c_type = row["CadType"]
-                c_beat = row["Beat"]
-                cvfs = row["CVFs"]
-                cad_piece = piece_by_title.get(cad_title)
-                if cad_piece is None:
-                    continue
-                mei_src = cad_piece.path
-                mei_content = get_mei_content(mei_src)
-                tk = get_verovio_toolkit()
-                tk.loadData(mei_content)
-                tk.setScale(53)
-                tk.setOptions({"adjustPageHeight": True, "pageWidth": 2000})
-                low = int(c_meas - 1)
-                high = int(c_meas)
-                mr = str(low) + "-" + str(high)
-                tk.select({"measureRange": mr})
-                tk.redoLayout()
-                count = tk.getPageCount()
-                for page in range(1, count + 1):
-                    music = tk.renderToSVG(page)
-                    label = (
-                        f"**Composer:** {cad_composer} | **Title:** {cad_title} | "
-                        f"**Measure:** {c_meas} | **Beat:** {c_beat} | "
-                        f"**Tone:** {c_tone} | **Type:** {c_type} | **CVFs:** {cvfs}"
-                    )
-                    rendered.append((label, music))
-            st.session_state.verovio_corpus_rendered = rendered
-        # Display stored renders (persists across reruns)
-        if 'verovio_corpus_rendered' in st.session_state:
+        # Verovio cadence rendering (corpus), one highlighted excerpt per row
+        if st.checkbox("Show each cadence in the table in notation (highlighted)",
+                       key="cad_corpus_show_notation"):
+            piece_by_title = {p.metadata['title']: p for p in st.session_state.corpus.scores}
+
+            def _piece_for_row(row):
+                p = piece_by_title.get(row['Title'])
+                return (p, p.path) if p is not None else (None, None)
+
             st.subheader("Cadence Excerpts")
-            st.write(f"Showing {len(st.session_state.verovio_corpus_rendered)} excerpt(s)")
-            for label, music in st.session_state.verovio_corpus_rendered:
-                st.divider()
-                svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
-                svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
-                st.markdown(
-                    f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
-                    unsafe_allow_html=True
-                )
+            show_cadence_examples(filtered_cadences, offsets, _piece_for_row)
 
 # ---------------------------------------------------------------- charts
 # All charts come from crim_intervals.visualizations and work the same way for

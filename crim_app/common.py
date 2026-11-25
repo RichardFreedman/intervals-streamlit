@@ -8,6 +8,7 @@ re-exported libraries) is available to them, as it was in the single-file app.
 # this file doesn't use them itself.
 
 # standard library
+import ast
 import base64
 import os
 import re
@@ -72,6 +73,156 @@ def get_verovio_toolkit():
     tk = verovio.toolkit(False)
     tk.setResourcePath(os.path.join(os.path.dirname(verovio.__file__), 'data'))
     return tk
+
+
+# ------------------------------------------------- highlighted score excerpts
+# Adapted from the MCP server's notation.py: render an excerpt with Verovio and
+# colour a supplied list of MEI xml:ids. music21's MEI reader stores each
+# note's xml:id as note.id, and Verovio keeps those ids on the SVG <g> elements,
+# so ids taken from the piece's music21 objects line up with the rendered score.
+
+HIGHLIGHT_COLOR = "#d62728"
+
+
+def note_ids_at_offset(piece, offset):
+    """xml:ids of the notes sounding (attacked or held) in each voice at `offset`."""
+    objs = piece._getM21Objs()          # offset index × one column per voice
+    ids = []
+    for col in objs.columns:
+        s = objs[col].dropna()
+        s = s[s.index <= offset]
+        if s.empty:
+            continue
+        n, start = s.iloc[-1], s.index[-1]
+        if not getattr(n, 'isNote', False):
+            continue                      # rest (or chord) – nothing to colour
+        if start + n.quarterLength <= offset:
+            continue                      # note ended before the offset
+        if isinstance(n.id, str):         # real xml:id, not a music21 memory id
+            ids.append(n.id)
+    return ids
+
+
+def _voice_name(piece, voice):
+    """Accept a part name ('Altus') or a staff number ('2', as numberParts gives)."""
+    names = piece._getPartNames()
+    if voice in names:
+        return voice
+    by_number = {num: name for name, num in piece._getPartNumberDict().items()}
+    return by_number.get(str(voice))
+
+
+def note_ids_in_span(piece, voice, start, n_notes, combine_unisons=False):
+    """xml:ids of the `n_notes` notes in `voice` that begin at offset `start`.
+
+    Notes are counted as crim_intervals counts them for melodic n-grams (so an
+    n-gram of n intervals spans n + 1 notes); with combine_unisons, repeated
+    pitches count once but every MEI note in them is highlighted, as are tied
+    continuations. Returns (ids, (first_measure, last_measure)), or ([], None).
+    """
+    voice = _voice_name(piece, voice)
+    if voice is None:
+        return [], None
+    events = piece.notes(combineUnisons=combine_unisons)[voice].dropna()
+    events = events[events.index >= start]
+    sounding = events[events != 'Rest']
+    if sounding.empty:
+        return [], None
+    last = sounding.index[min(n_notes, len(sounding)) - 1]
+    later = events.index[events.index > last]
+    end = later[0] if len(later) else piece.score.highestTime
+    objs = piece._getM21Objs()[voice].dropna()
+    span = [o for o in objs[(objs.index >= start) & (objs.index < end)]
+            if getattr(o, 'isNote', False)]
+    ids = [o.id for o in span if isinstance(o.id, str)]
+    measures = [o.measureNumber for o in span if o.measureNumber is not None]
+    return ids, ((min(measures), max(measures)) if measures else None)
+
+
+def as_list(value, cast=str):
+    """A table cell that holds a list, a str(list) or a ', '-joined string, as a list."""
+    if isinstance(value, (list, tuple)):
+        items = list(value)
+    else:
+        text = str(value).strip()
+        try:
+            items = ast.literal_eval(text) if text.startswith('[') else None
+        except (ValueError, SyntaxError):
+            items = None
+        if not isinstance(items, (list, tuple)):
+            items = [t.strip() for t in text.split(',') if t.strip()]
+    return [cast(i) for i in items]
+
+
+def merge_spans(spans):
+    """Combine [(ids, (m1, m2)), ...] into (all_ids, (first, last)) for one excerpt."""
+    ids = [i for span_ids, _ in spans for i in span_ids]
+    ranges = [r for _, r in spans if r]
+    if not ranges:
+        return ids, None
+    return ids, (min(r[0] for r in ranges), max(r[1] for r in ranges))
+
+
+def offset_at(piece, measure, beat):
+    """Offset of the first event at (measure, beat), for tables that only keep Measure/Beat."""
+    key = '_app_measure_beat_offsets'
+    if key not in piece.analyses:
+        idx = piece.detailIndex(piece.notes(), measure=True, beat=True, offset=True).index
+        lookup = {}
+        for m, b, o in zip(idx.get_level_values('Measure'), idx.get_level_values('Beat'),
+                           idx.get_level_values('Offset')):
+            lookup.setdefault((float(m), round(float(b), 4)), o)
+        piece.analyses[key] = lookup
+    return piece.analyses[key].get((float(measure), round(float(beat), 4)))
+
+
+def _highlight_svg(svg: str, ids, color=HIGHLIGHT_COLOR) -> str:
+    """Inject a <style> block that colours the given element ids."""
+    if not ids:
+        return svg
+    sel = ', '.join(f'[id="{i}"], [id="{i}"] *' for i in ids)
+    css = f'<style>{sel} {{ fill: {color} !important; color: {color} !important; }}</style>'
+    return re.sub(r'(<svg\b[^>]*>)', lambda m: m.group(1) + css, svg, count=1)
+
+
+@st.cache_data(show_spinner=False, max_entries=300)
+def render_highlighted_excerpt(mei_source: str, start: int, end: int,
+                               highlight_ids: tuple = (), scale: int = 45,
+                               page_width: int = 2000) -> list:
+    """Render measures start–end of an MEI source as SVG pages, with notes highlighted.
+
+    Cached on (source, range, ids), so reruns of the page don't re-render.
+    Returns a list of SVG strings (one per Verovio page), XML declaration stripped.
+    """
+    tk = get_verovio_toolkit()
+    tk.setOptions({
+        "scale": scale,
+        "pageWidth": page_width,
+        "adjustPageHeight": True,
+        "breaks": "auto",
+        "footer": "none",
+        "header": "none",
+    })
+    if not tk.loadData(get_mei_content(mei_source)):
+        raise ValueError(f"Verovio failed to load MEI from {mei_source[:80]}")
+    tk.select({"measureRange": f"{max(1, start)}-{end}"})
+    tk.redoLayout()
+    pages = []
+    for page in range(1, tk.getPageCount() + 1):
+        svg = re.sub(r'<\?xml[^?]*\?>', '', tk.renderToSVG(page)).strip()
+        pages.append(_highlight_svg(svg, highlight_ids))
+    return pages
+
+
+def show_svg(svg: str, caption: str = ""):
+    """Display an SVG string as a base64 <img>, which renders more reliably than components.html."""
+    b64 = base64.b64encode(svg.encode('utf-8')).decode()
+    st.markdown(
+        f'{caption}<br/><img src="data:image/svg+xml;base64,{b64}" '
+        # fills the column; how large the notes look is set by page_width in
+        # render_highlighted_excerpt (fewer measures per line = larger notes)
+        f'style="width:100%;height:auto;margin-top:4px;"/>',
+        unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def plotly_fig_to_html(fig_json: str, title: str) -> str:

@@ -121,6 +121,9 @@ with form_col:
     if submitted:
         if "p_types" in st.session_state.keys():
             del st.session_state.p_types
+        # remembered for the highlighted notation below
+        st.session_state.p_types_settings = {'length': int(length_choice),
+                                             'combine_unisons': combine_unisons_choice}
         if corpus_length == 0:
             st.write("Please select one or more pieces")
         # one piece
@@ -135,7 +138,7 @@ with form_col:
             sel_cols = ['Composer', 'Title', 'Presentation_Type', 'Soggetti', 'Number_Entries',
                         'Measures_Beats', 'Melodic_Entry_Intervals', 'Time_Entry_Intervals',
                         'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice', 
-                        'Count_Non_Overlaps', 'Progress']
+                        'Count_Non_Overlaps', 'Progress', 'Offsets']
             p_types = p_types[sel_cols]
             #Set up session state for these returns
             if "p_types" not in st.session_state:
@@ -152,7 +155,7 @@ with form_col:
             sel_cols = ['Composer', 'Title', 'Presentation_Type', 'Soggetti', 'Number_Entries',
                         'Measures_Beats', 'Melodic_Entry_Intervals', 'Time_Entry_Intervals',
                         'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice', 
-                        'Count_Non_Overlaps', 'Progress']
+                        'Count_Non_Overlaps', 'Progress', 'Offsets']
             p_types = p_types[sel_cols]
             # Set up session state for these returns
             if "p_types" not in st.session_state:
@@ -191,75 +194,37 @@ else:
     n_ptypes = len(filtered_p_types)
     if n_ptypes > 20:
         st.warning(f"There are {n_ptypes} presentation types in the filtered list. Consider filtering to 20 or fewer.")
-    if st.button("Render Presentation Types with Verovio", key="verovio_ptypes_render"):
-        # Build piece lookup: for corpus use corpus.scores; for single piece use mei_source
+    if st.checkbox("Show each presentation type in the table in notation (highlighted)",
+                   key="ptypes_show_notation"):
+        settings = st.session_state.get('p_types_settings', {'length': 4, 'combine_unisons': False})
+        n_notes = settings['length'] + 1         # soggetto of n intervals = n + 1 notes
         if corpus_length > 1:
-            piece_by_title = {
-                p.metadata['title']: p
-                for p in st.session_state.corpus.scores
-            }
-        rendered = []
-        for _, row in filtered_p_types.iterrows():
-            pt_title = row["Title"]
-            pt_composer = row["Composer"]
-            this_p_type = row["Presentation_Type"]
-            p_voices = row["Voices"]
-            n_voices = row["Number_Entries"]
-            soggetti = row["Soggetti"]
-            mint = row["Melodic_Entry_Intervals"]
-            tint = row["Time_Entry_Intervals"]
-            flexed = row["Flexed_Entries"]
-            parallel = row["Parallel_Voice"]
-            non_overlaps = row["Count_Non_Overlaps"]
-            ml = row["Measures_Beats"]
-            # Measures_Beats is a list in single-piece but a comma-separated string in corpus
-            if isinstance(ml, list):
-                ml_items = ml
-            else:
-                ml_items = [item.strip() for item in str(ml).split(',')]
-            first_part_first = int(float(ml_items[0].split('/')[0]))
-            first_part_last = int(float(ml_items[-1].split('/')[0]))
-            mr = str(first_part_first) + "-" + str(first_part_last + 3)
-            # Get MEI content
-            if corpus_length > 1:
-                cad_piece = piece_by_title.get(pt_title)
-                if cad_piece is None:
-                    continue
-                mei_src = cad_piece.path
-            else:
-                mei_src = st.session_state.get('mei_source', '')
-            if not mei_src:
-                continue
-            mei_content = get_mei_content(mei_src)
-            tk = get_verovio_toolkit()
-            tk.loadData(mei_content)
-            tk.setScale(40)
-            tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
-            tk.select({"measureRange": mr})
-            tk.redoLayout()
-            count = tk.getPageCount()
-            for page in range(1, count + 1):
-                music = tk.renderToSVG(page)
-                label = (
-                    f"**Composer:** {pt_composer} | **Title:** {pt_title} | "
-                    f"**Measures:** {mr} | **Type:** {this_p_type} | "
-                    f"**Voices:** {p_voices} | **Entries:** {n_voices} | "
-                    f"**Soggetti:** {soggetti} | **Melodic Intervals:** {mint} | "
-                    f"**Time Intervals:** {tint} | **Flexed:** {flexed} | "
-                    f"**Parallel:** {parallel} | **Non-Overlaps:** {non_overlaps}"
-                )
-                rendered.append((label, music))
-        st.session_state.verovio_ptypes_rendered = rendered
-    # Display stored renders (persists across reruns)
-    if 'verovio_ptypes_rendered' in st.session_state:
+            piece_by_title = {p.metadata['title']: p for p in st.session_state.corpus.scores}
         st.subheader("Presentation Type Excerpts")
-        st.write(f"Showing {len(st.session_state.verovio_ptypes_rendered)} excerpt(s)")
-        for label, music in st.session_state.verovio_ptypes_rendered:
-            st.divider()
-            st.markdown(label)
-            svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
-            svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
-            st.markdown(
-                f'<img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;"/>',
-                unsafe_allow_html=True
+        st.caption("Highlighted notes are the soggetto in each entry, in every voice.")
+        for _, row in filtered_p_types.iterrows():
+            if corpus_length > 1:
+                pt_piece = piece_by_title.get(row["Title"])
+                mei_src = pt_piece.path if pt_piece is not None else ''
+            else:
+                pt_piece, mei_src = piece, st.session_state.get('mei_source', '')
+            if pt_piece is None or not mei_src:
+                continue
+            offsets = as_list(row["Offsets"], float)
+            voices = as_list(row["Voices"])
+            ids, span = merge_spans(
+                [note_ids_in_span(pt_piece, v, o, n_notes, settings['combine_unisons'])
+                 for o, v in zip(offsets, voices)])
+            if not ids or span is None:
+                continue
+            caption = (
+                f"**{row['Composer']}**, *{row['Title']}* — **Measures** {span[0]}–{span[1]} | "
+                f"**Type** {row['Presentation_Type']} | **Voices** {', '.join(voices)} | "
+                f"**Entries** {row['Number_Entries']} | **Soggetti** {row['Soggetti']} | "
+                f"**Melodic Intervals** {row['Melodic_Entry_Intervals']} | "
+                f"**Time Intervals** {row['Time_Entry_Intervals']} | **Flexed** {row['Flexed_Entries']} | "
+                f"**Parallel** {row['Parallel_Voice']} | **Non-Overlaps** {row['Count_Non_Overlaps']}"
             )
+            st.divider()
+            for i, svg in enumerate(render_highlighted_excerpt(mei_src, span[0], span[1], tuple(ids), page_width=2700)):
+                show_svg(svg, caption if i == 0 else "")

@@ -51,7 +51,7 @@ def melodic_ngram_data(piece, combine_unisons_choice, kind_choice, directed, com
     # mask_df gives durations the same rows as ngrams: plot_ngrams_heatmap
     # pairs the two frames by row position, so extra rows misplace the bars
     durations = piece.durations(df=mel, n=length_choice, mask_df=ngrams)
-    return ngrams, durations, piece.detailIndex(ngrams, offset=False)
+    return ngrams, durations, piece.detailIndex(ngrams, offset=True)
 
 
 @st.cache_data(**PIECE_CACHE)
@@ -62,7 +62,7 @@ def harmonic_ngram_data(piece, kind_choice, directed, compound, against_low, len
                          againstLow=against_low)
     ngrams = piece.ngrams(df=har, n=length_choice, exclude=['Rest'])
     durations = piece.durations(df=har, n=length_choice, mask_df=ngrams)   # see melodic_ngram_data
-    return ngrams, durations, piece.detailIndex(ngrams, offset=False)
+    return ngrams, durations, piece.detailIndex(ngrams, offset=True)
 
 
 def ngram_table(detail, piece):
@@ -70,7 +70,7 @@ def ngram_table(detail, piece):
     table = detail.map(convertTuple).dropna().reset_index()
     table = table.assign(Composer=piece.metadata['composer'], Title=piece.metadata['title'],
                          Date=piece.metadata['date'])
-    front = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in table.columns]
+    front = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset'] if c in table.columns]
     return table[front + [c for c in table.columns if c not in front]]
 
 
@@ -188,7 +188,7 @@ def limit_table_to_model(table, items):
     """Keep only the table cells holding a pattern found in the model (the
     first item); rows left with no pattern are dropped."""
     model_strings = {convertTuple(p) for p in _model_patterns(items)}
-    meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in table.columns]
+    meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset'] if c in table.columns]
     voices = [c for c in table.columns if c not in meta]
     table = table.copy()
     table[voices] = table[voices].where(table[voices].isin(model_strings))
@@ -215,7 +215,7 @@ def store_ngram_results(state_key, results, include_count, length, paired=False)
 
 def ngram_count_table(filtered, corpus, voice_label='Voice'):
     """Counts of each pattern (per Composer/Title for a corpus)."""
-    meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered.columns]
+    meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset'] if c in filtered.columns]
     voices = [c for c in filtered.columns if c not in meta]
     melted = (filtered.melt(id_vars=meta, value_vars=voices, var_name=voice_label, value_name='Ngram')
                       .dropna(subset=['Ngram']))
@@ -254,7 +254,7 @@ def ngram_results_section(state_key, chart_title, corpus, voice_label='Voice'):
                                    "Counts of Ngrams" + (" by Composer and Title" if corpus else "")],
                     horizontal=True, key=f"{state_key}_table_mode")
     if mode.startswith("Ngrams by"):
-        meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat'] if c in filtered.columns]
+        meta = [c for c in ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset'] if c in filtered.columns]
         voices = [c for c in filtered.columns if c not in meta]
         mask = filtered[voices].apply(lambda col: col.notna() & (col.astype(str).str.strip() != '')).any(axis=1)
         table = filtered[mask].reset_index(drop=True)

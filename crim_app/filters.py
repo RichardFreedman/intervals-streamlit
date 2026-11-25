@@ -321,7 +321,7 @@ def filter_ngrams_by_pattern(df: pd.DataFrame, key=None, return_selected=False):
     patterns are kept).
     """
     df = df.copy()
-    meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+    meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset']
     voice_cols = [c for c in df.columns if c not in meta_cols]
     # Collect all unique ngram patterns across voice columns
     all_patterns = pd.unique(df[voice_cols].values.ravel())

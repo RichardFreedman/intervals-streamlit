@@ -94,7 +94,7 @@ if submitted:
                    for p in pieces]
     store_ngram_results(STATE_KEY, results, include_count, int(length_choice), paired=paired)
     st.session_state[STATE_KEY]['entry_mode'] = entry_mode
-    st.session_state.pop('verovio_ngrams_rendered', None)
+    st.session_state[STATE_KEY]['combine_unisons'] = combine_unisons_choice
 
 # the chart subtitle says "thematic entries" for both entry modes, so name the mode in the title
 _mode = st.session_state.get(STATE_KEY, {}).get('entry_mode', "All ngrams")
@@ -109,44 +109,37 @@ if filtered_ngrams is not None:
     n_ng = len(filtered_ngrams)
     if n_ng > 20:
         st.warning(f"There are {n_ng} ngrams in the filtered list. Consider filtering to 20 or fewer before rendering.")
-    if st.button("Render Ngrams with Verovio", key="verovio_ngrams_render"):
+    if st.checkbox("Show each ngram in the table in notation (highlighted)",
+                   key="ngrams_show_notation"):
+        results = st.session_state[STATE_KEY]
+        n_notes = results['length'] + 1          # n intervals span n + 1 notes
+        combine = results.get('combine_unisons', False)
         piece_by_title = {p.metadata['title']: p for p in pieces}
-        length = st.session_state[STATE_KEY]['length']
-        ng_pad = 2 if length <= 3 else 3 if length <= 5 else 5
-        meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat']
+        meta_cols = ['Composer', 'Title', 'Date', 'Measure', 'Beat', 'Offset']
         voice_cols = [c for c in filtered_ngrams.columns if c not in meta_cols]
-        toolkits = {}
-        rendered = []
+        st.subheader("Ngram Excerpts")
+        st.caption("Highlighted notes are the notes of each ngram, in every voice listed.")
         for _, row in filtered_ngrams.iterrows():
             ng_piece = piece_by_title.get(row["Title"])
             if ng_piece is None:
                 continue
-            if row["Title"] not in toolkits:   # load each piece's MEI once
-                tk = get_verovio_toolkit()
-                tk.loadData(get_mei_content(ng_piece.path))
-                tk.setScale(35)
-                tk.setOptions({"adjustPageHeight": True, "pageWidth": 3000})
-                toolkits[row["Title"]] = tk
-            tk = toolkits[row["Title"]]
-            c_meas = int(row["Measure"])
-            c_beat = row["Beat"] if "Beat" in row.index else ""
-            voice_patterns = {v: row[v] for v in voice_cols if pd.notna(row[v]) and row[v] != ''}
+            voice_patterns = {v: row[v] for v in voice_cols
+                              if pd.notna(row[v]) and str(row[v]).strip() != ''}
+            if not voice_patterns:
+                continue
+            # Offset comes from detailIndex(offset=True); older stored results lack it
+            start = (row["Offset"] if "Offset" in row.index
+                     else offset_at(ng_piece, row["Measure"], row["Beat"]))
+            if start is None:
+                continue
+            ids, span = merge_spans(
+                [note_ids_in_span(ng_piece, v, start, n_notes, combine) for v in voice_patterns])
+            if not ids or span is None:
+                continue
+            m1, m2 = span
             voices_str = ", ".join(f"{v}: {p}" for v, p in voice_patterns.items())
-            tk.select({"measureRange": f"{c_meas}-{c_meas + ng_pad}"})
-            tk.redoLayout()
-            for page in range(1, tk.getPageCount() + 1):
-                label = (f"**Composer:** {row['Composer']} | **Title:** {row['Title']} | "
-                         f"**Measure:** {c_meas} | **Beat:** {c_beat} | **Voices/Ngrams:** {voices_str}")
-                rendered.append((label, tk.renderToSVG(page)))
-        st.session_state.verovio_ngrams_rendered = rendered
-    if st.session_state.get('verovio_ngrams_rendered'):
-        st.subheader("Ngram Excerpts")
-        st.write(f"Showing {len(st.session_state.verovio_ngrams_rendered)} excerpt(s)")
-        for label, music in st.session_state.verovio_ngrams_rendered:
+            caption = (f"**{row['Composer']}**, *{row['Title']}* — **Measure** {int(row['Measure'])}, "
+                       f"**Beat** {row['Beat']} | **Voices/Ngrams:** {voices_str}")
             st.divider()
-            svg_clean = re.sub(r'<\?xml[^?]*\?>', '', music).strip()
-            svg_b64 = base64.b64encode(svg_clean.encode('utf-8')).decode()
-            st.markdown(
-                f'{label}<br/><img src="data:image/svg+xml;base64,{svg_b64}" style="width:100%;max-width:2000px;margin-top:4px;"/>',
-                unsafe_allow_html=True
-            )
+            for i, svg in enumerate(render_highlighted_excerpt(ng_piece.path, m1, m2, tuple(ids))):
+                show_svg(svg, caption if i == 0 else "")
