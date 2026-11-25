@@ -45,8 +45,13 @@ with st.expander("How to use this tool"):
     The **Voice Ranges & Species** page can also plot cadences alongside melodic species.
 
     **Rendering Results in Score**
-    Results can be rendered as musical notation using Verovio. Consider filtering to a meaningful
-    subset before rendering, as large result sets will be slow.
+    Results can be rendered as musical notation using Verovio. Open the full cadence table and tick
+    **Show each cadence in the table in notation (highlighted)**: each cadence in the (filtered) table
+    is shown as its own excerpt, from the measure before the cadence to the measure after, with a
+    caption giving its composer, title, measure, beat, tone, type and CVFs. In each excerpt, the
+    notes of the cadential voice functions are **highlighted in red at the moment of the
+    perfection**, where the cadence concludes. Consider filtering to a meaningful subset before
+    rendering, as large result sets will be slow.
 
     [Know the code — CRIM Intervals cadence documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/11_Cadences.md) ·
     [Cadence charts](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#cadence-radar-plots)
@@ -68,19 +73,25 @@ def show_cadence_examples(filtered, offsets, piece_for_row):
     if n_cads > 20:
         st.warning(f"There are {n_cads} cadences in the filtered list. Rendering many "
                    "cadences may be slow. Consider filtering to 20 or fewer.")
-    st.caption(f"Showing {n_cads} cadence(s). Highlighted notes are those sounding "
-               "at the cadential arrival.")
+    st.caption(f"Showing {n_cads} cadence(s). Highlighted notes are those of the cadential "
+               "voice functions (CVFs) at the perfection, where the cadence concludes.")
     for (_, row), offset in zip(filtered.iterrows(), offsets):
         cad_piece, mei_src = piece_for_row(row)
         if cad_piece is None or not mei_src:
             continue
         meas = int(row['Measure'])
-        ids = tuple(note_ids_at_offset(cad_piece, offset))
+        # only the voices with a cadential voice function (PartMap), at the perfection
+        part_map = cadence_part_map(cad_piece, offset)
+        voices = (sorted({p for parts in part_map.values() for p in parts})
+                  if part_map else None)
+        ids = tuple(note_ids_at_offset(cad_piece, offset, voices=voices))
         caption = (
             f"**{row['Composer']}**, *{row['Title']}* — "
             f"**Measure** {meas}, **Beat** {row['Beat']} | **Tone** {row['Tone']} | "
             f"**Type** {row['CadType']} | **CVFs** {row['CVFs']}"
         )
+        if part_map:
+            caption += f" | **Voices** {describe_part_map(cad_piece, part_map)}"
         st.divider()
         try:
             pages = render_highlighted_excerpt(mei_src, meas - 1, meas + 1, ids)
@@ -99,7 +110,7 @@ elif corpus_length == 1:
     composer = piece.metadata['composer']
     _cad_single_piece_key = st.session_state.get('_piece_load_key')
     if st.session_state.get('cad_single_piece_key') != _cad_single_piece_key:
-        cadences = piece.cadences()
+        cadences = with_voices_column(piece, piece.cadences(voice_detail=True))
         cadences['Title'] = title
         cadences['Composer'] = composer
         grouped_cadences = cadences.groupby(['Tone', 'CadType', 'CVFs'])['Title'].count()
@@ -125,9 +136,9 @@ elif corpus_length == 1:
         filtered_cadences = filter_dataframe_cads(cadences)
         offsets = cadence_offsets(filtered_cadences)
         sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
-                    'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
+                    'Voices', 'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                     'SinceLast', 'ToNext']
-        filtered_cadences = filtered_cadences[sel_cols]
+        filtered_cadences = filtered_cadences[[c for c in sel_cols if c in filtered_cadences.columns]]
         st.dataframe(filtered_cadences, use_container_width=True)
         # to download csv
         download_name = piece.metadata['title'] + '_cadence_results.csv'
@@ -154,7 +165,7 @@ else:
         failed_pieces = []
         for piece in st.session_state.corpus.scores:
             try:
-                df = piece.cadences(keep_keys=True)
+                df = with_voices_column(piece, piece.cadences(keep_keys=True, voice_detail=True))
                 df = df.assign(
                     Composer=piece.metadata['composer'],
                     Title=piece.metadata['title'],
@@ -184,9 +195,9 @@ else:
         filtered_cadences = filter_dataframe_cads(cadences)
         offsets = cadence_offsets(filtered_cadences)
         sel_cols = ['Composer', 'Title', 'Measure', 'Beat', 'Tone', 'CadType', 'CVFs',
-                    'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
+                    'Voices', 'LeadingTones', 'Sounding', 'RelLow', 'RelTone', 'TSig', 'Progress',
                     'SinceLast', 'ToNext']
-        filtered_cadences = filtered_cadences[sel_cols]
+        filtered_cadences = filtered_cadences[[c for c in sel_cols if c in filtered_cadences.columns]]
         st.dataframe(filtered_cadences, use_container_width=True)
         download_name = "corpus_cadence_results.csv"
         # filtered_cadences = filtered_cadences.to_csv().encode('utf-8')

@@ -60,6 +60,12 @@ with st.expander("How to use this tool"):
     - The **table** can be viewed as individual ngram locations (by voice, measure, and beat) or as
       a count summary of how often each pattern appears.
 
+    **Rendering Results in Score**
+    Tick **Show each ngram in the table in notation (highlighted)** to see each row of the (filtered)
+    table as its own excerpt, rendered with Verovio. In each excerpt, every melodic pattern is
+    **highlighted in red from its first note to its last**, in each voice where it appears at that
+    point. Consider filtering by pattern first, as large result sets will be slow.
+
     [Know the code — CRIM Intervals ngram documentation](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/08_Ngrams_Heat_Maps.md) ·
     [Charts](https://github.com/HCDigitalScholarship/intervals/blob/main/tutorial/17_Visualizations_Summary.md#ngram-heat-maps)
     """)

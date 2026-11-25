@@ -84,11 +84,16 @@ def get_verovio_toolkit():
 HIGHLIGHT_COLOR = "#d62728"
 
 
-def note_ids_at_offset(piece, offset):
-    """xml:ids of the notes sounding (attacked or held) in each voice at `offset`."""
+def note_ids_at_offset(piece, offset, voices=None):
+    """xml:ids of the notes sounding (attacked or held) at `offset`.
+
+    voices: part names or staff numbers to include (default: every voice).
+    """
     objs = piece._getM21Objs()          # offset index × one column per voice
+    cols = objs.columns if voices is None else [
+        v for v in (_voice_name(piece, x) for x in voices) if v in objs.columns]
     ids = []
-    for col in objs.columns:
+    for col in cols:
         s = objs[col].dropna()
         s = s[s.index <= offset]
         if s.empty:
@@ -101,6 +106,45 @@ def note_ids_at_offset(piece, offset):
         if isinstance(n.id, str):         # real xml:id, not a music21 memory id
             ids.append(n.id)
     return ids
+
+
+def cadence_part_map(piece, offset):
+    """PartMap of the cadence at `offset`: CVF letter -> staff numbers, e.g.
+    {'C': ['1'], 'T': ['3'], 'B': ['4']}, or None if not found.
+
+    Read from piece.cadences(voice_detail=True), which crim_intervals memoizes,
+    so this is cheap after the first call.
+    """
+    cads = piece.cadences(voice_detail=True)
+    match = cads[cads.index == offset]
+    if match.empty or 'PartMap' not in match.columns:
+        return None
+    return match['PartMap'].iloc[0]
+
+
+def with_voices_column(piece, cadences):
+    """Replace the PartMap dict column of cadences(voice_detail=True) with a readable
+    'Voices' string column (see describe_part_map), placed after CVFs.
+
+    A string keeps the table filterable and the CSV readable; dicts can't be
+    counted or compared by the column filters.
+    """
+    if 'PartMap' not in cadences.columns:
+        return cadences
+    df = cadences.copy()
+    voices = df.pop('PartMap').apply(lambda m: describe_part_map(piece, m))
+    pos = df.columns.get_loc('CVFs') + 1 if 'CVFs' in df.columns else len(df.columns)
+    df.insert(pos, 'Voices', voices)
+    return df
+
+
+def describe_part_map(piece, part_map):
+    """'C: Superius (1), T: Tenor (3), B: Bassus (4)', in score order (highest voice first)."""
+    if not part_map:
+        return ''
+    pairs = [(int(num), cvf) for cvf, nums in part_map.items() for num in nums]
+    return ', '.join(f"{cvf}: {_voice_name(piece, str(num)) or '?'} ({num})"
+                     for num, cvf in sorted(pairs))
 
 
 def _voice_name(piece, voice):

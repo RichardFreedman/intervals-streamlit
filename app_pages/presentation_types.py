@@ -97,7 +97,10 @@ with st.expander("How to use this tool"):
     **Rendering Results in Score**
     There is also an option to render each Presentation Type in your results as musical notation
     (using Verovio), with a brief summary of the metadata for that item — including composer, title,
-    measures, presentation type, and other relevant information from the table.
+    measures, presentation type, and other relevant information from the table. Tick
+    **Show each presentation type in the table in notation (highlighted)**: in each excerpt, every
+    melodic entry of the soggetto is **highlighted in red from its first note to its last**, in each
+    voice that takes part, and the excerpt spans the measures from the first entry to the end of the last.
     **Note:** if your results table is large, rendering can be slow. Consider filtering to a
     meaningful subset before rendering!
 
