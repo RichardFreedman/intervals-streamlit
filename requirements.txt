@@ -1,7 +1,7 @@
 # Direct dependencies of the CRIM Intervals Streamlit app (streamlit_app.py).
 # crim-intervals pins its own analysis stack (music21, numpy<2, pandas<3,
 # altair, plotly, verovio, ...), so those are not repeated here.
-crim-intervals>=2.0.86
+crim-intervals>=2.0.94
 streamlit==1.43.0
 # pyarrow (used by Streamlit tables) must support numpy 1.x, which crim-intervals requires
 pyarrow==17.0.0
