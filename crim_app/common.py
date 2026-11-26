@@ -229,6 +229,21 @@ def _highlight_svg(svg: str, ids, color=HIGHLIGHT_COLOR) -> str:
     return re.sub(r'(<svg\b[^>]*>)', lambda m: m.group(1) + css, svg, count=1)
 
 
+def _measure_range(mei: str, start: int, end: int) -> str:
+    """Verovio measureRange for start–end, clamped to the measures in the MEI.
+
+    If either end of the range names a measure that doesn't exist (e.g. end+1 past
+    the final bar), Verovio ignores the whole selection and renders the entire
+    piece, so each end is snapped inward to the nearest measure that exists.
+    """
+    nums = sorted({int(n) for n in re.findall(r'<measure\b[^>]*?\sn="(\d+)"', mei)})
+    if not nums:
+        return f"{max(1, start)}-{end}"
+    lo = next((n for n in nums if n >= start), nums[-1])
+    hi = next((n for n in reversed(nums) if n <= end), nums[0])
+    return f"{min(lo, hi)}-{max(lo, hi)}"
+
+
 @st.cache_data(show_spinner=False, max_entries=300)
 def render_highlighted_excerpt(mei_source: str, start: int, end: int,
                                highlight_ids: tuple = (), scale: int = 45,
@@ -247,9 +262,10 @@ def render_highlighted_excerpt(mei_source: str, start: int, end: int,
         "footer": "none",
         "header": "none",
     })
-    if not tk.loadData(get_mei_content(mei_source)):
+    mei = get_mei_content(mei_source)
+    if not tk.loadData(mei):
         raise ValueError(f"Verovio failed to load MEI from {mei_source[:80]}")
-    tk.select({"measureRange": f"{max(1, start)}-{end}"})
+    tk.select({"measureRange": _measure_range(mei, start, end)})
     tk.redoLayout()
     pages = []
     for page in range(1, tk.getPageCount() + 1):
