@@ -140,9 +140,10 @@ with form_col:
                                                 combine_unisons_choice)         
             sel_cols = ['Composer', 'Title', 'Presentation_Type', 'Soggetti', 'Number_Entries',
                         'Measures_Beats', 'Melodic_Entry_Intervals', 'Time_Entry_Intervals',
-                        'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice', 
-                        'Count_Non_Overlaps', 'Progress', 'Offsets']
-            p_types = p_types[sel_cols]
+                        'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice',
+                        'Progress', 'Offsets']
+            if p_types is not None:
+                p_types = p_types[sel_cols]
             #Set up session state for these returns
             if "p_types" not in st.session_state:
                 st.session_state.p_types = p_types          
@@ -157,9 +158,10 @@ with form_col:
                         combine_unisons_choice)            
             sel_cols = ['Composer', 'Title', 'Presentation_Type', 'Soggetti', 'Number_Entries',
                         'Measures_Beats', 'Melodic_Entry_Intervals', 'Time_Entry_Intervals',
-                        'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice', 
-                        'Count_Non_Overlaps', 'Progress', 'Offsets']
-            p_types = p_types[sel_cols]
+                        'Voices', 'Flexed_Entries', 'Parallel_Entries', 'Parallel_Voice',
+                        'Progress', 'Offsets']
+            if p_types is not None:
+                p_types = p_types[sel_cols]
             # Set up session state for these returns
             if "p_types" not in st.session_state:
                 st.session_state.p_types = p_types
@@ -226,7 +228,7 @@ else:
                 f"**Entries** {row['Number_Entries']} | **Soggetti** {row['Soggetti']} | "
                 f"**Melodic Intervals** {row['Melodic_Entry_Intervals']} | "
                 f"**Time Intervals** {row['Time_Entry_Intervals']} | **Flexed** {row['Flexed_Entries']} | "
-                f"**Parallel** {row['Parallel_Voice']} | **Non-Overlaps** {row['Count_Non_Overlaps']}"
+                f"**Parallel** {row['Parallel_Voice']}"
             )
             st.divider()
             for i, svg in enumerate(render_highlighted_excerpt(mei_src, span[0], span[1], tuple(ids), page_width=2700)):
